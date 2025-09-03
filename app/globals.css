@@ -1,0 +1,235 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Updated to Stone Mentors color scheme */
+    --background: oklch(1 0 0); /* White #FFFFFF */
+    --foreground: oklch(0.21 0 0); /* Dark Gray #343A40 */
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.21 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.21 0 0);
+
+    /* Stone Mentors Primary Colors */
+    --primary: oklch(0.35 0.15 152); /* Verde Escuro #05593D */
+    --primary-foreground: oklch(1 0 0); /* White */
+    --secondary: oklch(0.65 0.2 152); /* Verde Claro #0DAD60 */
+    --secondary-foreground: oklch(1 0 0);
+
+    --muted: oklch(0.98 0 0); /* Cinza Claro #F8F9FA */
+    --muted-foreground: oklch(0.43 0 0); /* Cinza Médio #6C757D */
+    --accent: oklch(0.65 0.2 152); /* Verde Claro for accents */
+    --accent-foreground: oklch(1 0 0);
+
+    /* Status Colors */
+    --destructive: oklch(0.55 0.2 25); /* Vermelho #DC3545 */
+    --destructive-foreground: oklch(1 0 0);
+    --warning: oklch(0.75 0.15 85); /* Amarelo #FFC107 */
+    --warning-foreground: oklch(0.21 0 0);
+    --info: oklch(0.55 0.2 250); /* Azul #0D6EFD */
+    --info-foreground: oklch(1 0 0);
+
+    --border: oklch(0.9 0 0);
+    --input: oklch(0.9 0 0);
+    --ring: oklch(0.65 0.2 152);
+
+    --chart-1: oklch(0.65 0.2 152); /* Verde Claro */
+    --chart-2: oklch(0.35 0.15 152); /* Verde Escuro */
+    --chart-3: oklch(0.55 0.2 25); /* Vermelho */
+    --chart-4: oklch(0.75 0.15 85); /* Amarelo */
+    --chart-5: oklch(0.55 0.2 250); /* Azul */
+
+    --radius: 0.5rem;
+
+    /* Sidebar Colors */
+    --sidebar: oklch(0.35 0.15 152); /* Verde Escuro */
+    --sidebar-foreground: oklch(1 0 0);
+    --sidebar-primary: oklch(0.65 0.2 152); /* Verde Claro */
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.4 0.15 152);
+    --sidebar-accent-foreground: oklch(1 0 0);
+    --sidebar-border: oklch(0.3 0.15 152);
+    --sidebar-ring: oklch(0.65 0.2 152);
+  }
+
+  .dark {
+    --background: oklch(0.21 0 0);
+    --foreground: oklch(0.98 0 0);
+    --card: oklch(0.25 0 0);
+    --card-foreground: oklch(0.98 0 0);
+    --popover: oklch(0.25 0 0);
+    --popover-foreground: oklch(0.98 0 0);
+    --primary: oklch(0.65 0.2 152);
+    --primary-foreground: oklch(0.21 0 0);
+    --secondary: oklch(0.35 0.15 152);
+    --secondary-foreground: oklch(0.98 0 0);
+    --muted: oklch(0.25 0 0);
+    --muted-foreground: oklch(0.7 0 0);
+    --accent: oklch(0.35 0.15 152);
+    --accent-foreground: oklch(0.98 0 0);
+    --destructive: oklch(0.55 0.2 25);
+    --destructive-foreground: oklch(0.98 0 0);
+    --border: oklch(0.3 0 0);
+    --input: oklch(0.3 0 0);
+    --ring: oklch(0.65 0.2 152);
+    --chart-1: oklch(0.65 0.2 152);
+    --chart-2: oklch(0.35 0.15 152);
+    --chart-3: oklch(0.55 0.2 25);
+    --chart-4: oklch(0.75 0.15 85);
+    --chart-5: oklch(0.55 0.2 250);
+    --sidebar: oklch(0.25 0 0);
+    --sidebar-foreground: oklch(0.98 0 0);
+    --sidebar-primary: oklch(0.65 0.2 152);
+    --sidebar-primary-foreground: oklch(0.21 0 0);
+    --sidebar-accent: oklch(0.3 0 0);
+    --sidebar-accent-foreground: oklch(0.98 0 0);
+    --sidebar-border: oklch(0.3 0 0);
+    --sidebar-ring: oklch(0.65 0.2 152);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-poppins;
+  }
+}
+
+@layer components {
+  /* Stone Mentors custom utility classes */
+  .stone-green-dark {
+    @apply text-[oklch(0.35_0.15_152)];
+  }
+  
+  .stone-green-light {
+    @apply text-[oklch(0.65_0.2_152)];
+  }
+  
+  .bg-stone-green-dark {
+    @apply bg-[oklch(0.35_0.15_152)];
+  }
+  
+  .bg-stone-green-light {
+    @apply bg-[oklch(0.65_0.2_152)];
+  }
+  
+  .border-stone-green-dark {
+    @apply border-[oklch(0.35_0.15_152)];
+  }
+  
+  .border-stone-green-light {
+    @apply border-[oklch(0.65_0.2_152)];
+  }
+
+  /* Custom component styles */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 px-4 py-2 rounded-md font-medium transition-colors;
+  }
+
+  .card-stone {
+    @apply bg-card text-card-foreground rounded-lg border shadow-soft p-6;
+  }
+
+  .input-stone {
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Enhanced login page styles */
+  .login-card {
+    @apply bg-white/95 backdrop-blur-sm border-0 shadow-2xl;
+  }
+
+  .login-input {
+    @apply h-12 border-2 border-muted/30 focus:border-stone-green-dark transition-all duration-200 rounded-xl bg-background/50;
+  }
+
+  .login-button {
+    @apply w-full h-12 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 border-0;
+  }
+
+  .floating-icon {
+    @apply absolute text-stone-green-light/60 animate-bounce;
+  }
+
+  .background-blur {
+    @apply absolute inset-0 overflow-hidden;
+  }
+
+  .blur-circle {
+    @apply absolute rounded-full blur-3xl;
+  }
+
+  /* Glassmorphism effects */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/10 backdrop-blur-md border border-white/10;
+  }
+
+  /* Enhanced shadows */
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(13, 173, 96, 0.3);
+  }
+
+  .shadow-glow-lg {
+    box-shadow: 0 0 40px rgba(13, 173, 96, 0.2);
+  }
+}
+
+@layer utilities {
+  /* Custom animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  /* Custom keyframes */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}

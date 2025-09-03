@@ -1,0 +1,251 @@
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { LogOut, Menu, X, ChevronLeft } from "lucide-react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { 
+  faTachometerAlt, 
+  faUsers, 
+  faBuilding, 
+  faComments, 
+  faChartLine, 
+  faCog,
+  faBell
+} from "@fortawesome/free-solid-svg-icons"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import Image from "next/image"
+import { cn } from "@/lib/utils"
+
+const navigation = [
+  { name: "Dashboard", href: "/admin/dashboard", icon: faTachometerAlt },
+  { name: "Mentores", href: "/admin/mentores", icon: faUsers },
+  { name: "Negócios", href: "/admin/negocios", icon: faBuilding },
+  { name: "Mentorias", href: "/admin/mentorias", icon: faComments },
+  { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine },
+  { name: "Configurações", href: "/admin/configuracoes", icon: faCog },
+]
+
+interface AdminLayoutProps {
+  children: React.ReactNode
+}
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const { user, logout } = useAuth()
+  const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-stone-green-dark to-stone-green-light transform transition-all duration-300 ease-in-out shadow-2xl",
+          sidebarCollapsed ? "w-20" : "w-72",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex items-center justify-center h-20 px-6 border-b border-white/20 relative">
+            <div className={cn(
+              "flex items-center gap-3 transition-all duration-300",
+              sidebarCollapsed ? "gap-0" : "gap-3"
+            )}>
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+                <Image
+                  src="/logo-stone.png"
+                  alt="Stone Mentors Logo"
+                  width={48}
+                  height={48}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+              {!sidebarCollapsed && (
+                <div className="text-white">
+                  <h1 className="font-bold text-xl">Stone Mentors</h1>
+                  <p className="text-xs text-white/80">Painel Administrativo</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Toggle Button */}
+            <button
+              onClick={toggleSidebar}
+              className="absolute -right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 transition-colors"
+            >
+              <ChevronLeft 
+                className={cn(
+                  "h-3 w-3 text-stone-green-dark transition-transform duration-300",
+                  sidebarCollapsed ? "rotate-180" : ""
+                )} 
+              />
+            </button>
+          </div>
+
+          {/* User Profile */}
+          <div className={cn(
+            "px-6 py-6 border-b border-white/20 transition-all duration-300",
+            sidebarCollapsed ? "px-3" : "px-6"
+          )}>
+            <div className={cn(
+              "p-3 bg-white/10 rounded-xl backdrop-blur-sm transition-all duration-300",
+              sidebarCollapsed ? "p-2" : "p-3"
+            )}>
+              <div className={cn(
+                "flex items-center gap-3 transition-all duration-300",
+                sidebarCollapsed ? "justify-center" : "gap-3"
+              )}>
+                <Avatar className="h-12 w-12 ring-2 ring-white/20">
+                  <AvatarFallback className="bg-white/20 text-white text-lg font-semibold">
+                    {user?.name?.charAt(0) || "A"}
+                  </AvatarFallback>
+                </Avatar>
+                {!sidebarCollapsed && (
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold truncate">{user?.name}</p>
+                    <p className="text-white/80 text-sm truncate">Administrador</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                      <span className="text-xs text-white/80">Online</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <nav className="flex-1 px-4 py-6 space-y-2">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative",
+                    isActive 
+                      ? "bg-white/20 text-white shadow-lg backdrop-blur-sm transform scale-105" 
+                      : "text-white/80 hover:text-white hover:bg-white/10 hover:transform hover:scale-105",
+                    sidebarCollapsed ? "justify-center px-2" : "px-4"
+                  )}
+                  title={sidebarCollapsed ? item.name : undefined}
+                >
+                  <FontAwesomeIcon 
+                    icon={item.icon} 
+                    className={cn(
+                      "h-5 w-5 transition-all duration-200",
+                      isActive ? "text-white" : "text-white/80 group-hover:text-white"
+                    )} 
+                  />
+                  {!sidebarCollapsed && (
+                    <>
+                      <span className="font-medium">{item.name}</span>
+                      {isActive && (
+                        <div className="ml-auto w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Tooltip for collapsed sidebar */}
+                  {sidebarCollapsed && (
+                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {item.name}
+                    </div>
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* Bottom Actions */}
+          <div className={cn(
+            "p-4 space-y-2 transition-all duration-300",
+            sidebarCollapsed ? "px-2" : "p-4"
+          )}>
+            <Button
+              onClick={logout}
+              variant="ghost"
+              size="sm"
+              className={cn(
+                "w-full justify-start text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200",
+                sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+              )}
+              title={sidebarCollapsed ? "Sair" : undefined}
+            >
+              <LogOut className="h-4 w-4 mr-3" />
+              {!sidebarCollapsed && "Sair"}
+              
+              {/* Tooltip for collapsed sidebar */}
+              {sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Sair
+                </div>
+              )}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className={cn(
+        "transition-all duration-300",
+        sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+      )}>
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-6 shadow-sm">
+          <div className="flex items-center gap-6">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="lg:hidden p-2" 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+            >
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {navigation.find((item) => item.href === pathname)?.name || "Dashboard"}
+              </h1>
+              <p className="text-gray-600">Painel de Controle Administrativo 👨‍💼</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" className="relative p-2">
+              <FontAwesomeIcon icon={faBell} className="h-5 w-5 text-gray-600" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+            </Button>
+            <div className="h-8 w-px bg-gray-200"></div>
+            <Avatar className="h-10 w-10 ring-2 ring-stone-green-light/20">
+              <AvatarFallback className="bg-stone-green-light text-white font-semibold">
+                {user?.name?.charAt(0) || "A"}
+              </AvatarFallback>
+            </Avatar>
+          </div>
+        </header>
+
+        {/* Page content */}
+        <main className="p-6 bg-gray-50 min-h-[calc(100vh-5rem)]">{children}</main>
+      </div>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden backdrop-blur-sm" 
+          onClick={() => setSidebarOpen(false)} 
+        />
+      )}
+    </div>
+  )
+}
