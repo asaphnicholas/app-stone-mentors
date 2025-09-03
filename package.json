@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "azure": "node server.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.1",
