@@ -1,2 +1,2 @@
 [config]
-command = npm run build && npm run azure
+command = npm install && npm run build
