@@ -7,7 +7,9 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "azure": "node server.js"
+    "azure": "node server.js",
+    "pm2": "pm2 start ecosystem.config.js --env production",
+    "start:azure": "npm run build && npm run azure"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.0.1",
