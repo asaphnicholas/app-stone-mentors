@@ -18,7 +18,10 @@ export function ProtectedRoute({ children, requiredRole, fallbackPath = "/" }: P
 
   useEffect(() => {
     if (!isLoading) {
+      console.log('ProtectedRoute check:', { isAuthenticated, user, requiredRole })
+      
       if (!isAuthenticated) {
+        console.log('Not authenticated, redirecting to:', fallbackPath)
         router.push(fallbackPath)
         return
       }
@@ -26,6 +29,7 @@ export function ProtectedRoute({ children, requiredRole, fallbackPath = "/" }: P
       if (requiredRole && user?.role !== requiredRole) {
         // Redirect to appropriate dashboard based on user role
         const redirectPath = user?.role === "admin" ? "/admin/dashboard" : "/mentor/dashboard"
+        console.log('Role mismatch, redirecting to:', redirectPath)
         router.push(redirectPath)
         return
       }

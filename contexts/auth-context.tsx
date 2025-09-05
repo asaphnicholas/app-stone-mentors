@@ -76,15 +76,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       const { user } = await authService.register(userData)
+      console.log('Register success, user:', user)
+      
       setState({
         user,
         isLoading: false,
         isAuthenticated: true,
       })
 
-      // Redirect to mentor dashboard after registration
-      router.push("/mentor/dashboard")
+      console.log('State updated, redirecting to dashboard')
+      // Small delay to ensure state is updated before redirect
+      setTimeout(() => {
+        router.push("/mentor/dashboard")
+      }, 100)
     } catch (error) {
+      console.log('Register error:', error)
       setState((prev) => ({ ...prev, isLoading: false }))
       throw error
     }
