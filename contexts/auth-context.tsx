@@ -2,11 +2,25 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { AuthService, type AuthState } from "@/lib/auth"
+import { authService, type User } from "@/lib/services/auth"
 import { useRouter } from "next/navigation"
+
+interface AuthState {
+  user: User | null
+  isLoading: boolean
+  isAuthenticated: boolean
+}
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
+  register: (userData: {
+    nome: string
+    email: string
+    senha: string
+    telefone: string
+    competencias: string
+    area_atuacao: string
+  }) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -22,11 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check for existing authentication on mount
-    const user = AuthService.getCurrentUser()
+    const user = authService.getCurrentUser()
     setState({
       user,
       isLoading: false,
-      isAuthenticated: !!user,
+      isAuthenticated: authService.isAuthenticated(),
     })
   }, [])
 
@@ -34,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, isLoading: true }))
 
     try {
-      const { user } = await AuthService.login(email, password)
+      const { user } = await authService.login({ email, senha: password })
       setState({
         user,
         isLoading: false,
@@ -42,11 +56,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       // Redirect based on user role
-      if (user.role === "admin") {
-        router.push("/admin/dashboard")
-      } else {
-        router.push("/mentor/dashboard")
-      }
+      const redirectPath = authService.getRedirectPath()
+      router.push(redirectPath)
+    } catch (error) {
+      setState((prev) => ({ ...prev, isLoading: false }))
+      throw error
+    }
+  }
+
+  const register = async (userData: {
+    nome: string
+    email: string
+    senha: string
+    telefone: string
+    competencias: string
+    area_atuacao: string
+  }) => {
+    setState((prev) => ({ ...prev, isLoading: true }))
+
+    try {
+      const { user } = await authService.register(userData)
+      setState({
+        user,
+        isLoading: false,
+        isAuthenticated: true,
+      })
+
+      // Redirect to mentor dashboard after registration
+      router.push("/mentor/dashboard")
     } catch (error) {
       setState((prev) => ({ ...prev, isLoading: false }))
       throw error
@@ -54,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
-    await AuthService.logout()
+    await authService.logout()
     setState({
       user: null,
       isLoading: false,
@@ -63,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/")
   }
 
-  return <AuthContext.Provider value={{ ...state, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ ...state, login, register, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

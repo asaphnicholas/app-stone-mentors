@@ -1,318 +1,538 @@
 "use client"
 
-import { MetricCard } from "@/components/ui/metric-card"
-import { WelcomeBanner } from "@/components/ui/welcome-banner"
-import { NewBusinessCard } from "@/components/ui/new-business-card"
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { 
-  faComments, 
-  faClock, 
-  faStar, 
-  faTrendingUp, 
-  faCalendar, 
-  faMapMarkerAlt,
-  faUserTie,
-  faPhone,
-  faEnvelope,
-  faBuilding,
-  faLocationDot,
-  faClock as faClockRegular,
+  faUsers, 
+  faUserCheck, 
+  faHandshake, 
+  faGraduationCap, 
+  faChartLine,
+  faTachometerAlt,
+  faBookOpen,
   faCheckCircle,
-  faExclamationTriangle,
+  faPlay,
+  faClock,
+  faBuilding,
+  faUser,
+  faCalendarAlt,
   faArrowRight,
-  faPlus
+  faAward,
+  faTrophy,
+  faRocket
 } from "@fortawesome/free-solid-svg-icons"
-import { faCalendarAlt } from "@fortawesome/free-regular-svg-icons"
+import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/toast"
+import Link from "next/link"
 
-// Mock data
-const mentorMetrics = [
-  {
-    title: "Mentorias Ativas",
-    value: "3",
-    icon: faComments,
-    trend: { value: "+1", period: "esta semana", direction: "up" as const },
-    color: "green" as const,
-    description: "Sessões em andamento"
-  },
-  {
-    title: "Próxima Agendada",
-    value: "Hoje 15h",
-    icon: faClock,
-    color: "blue" as const,
-    description: "Tech Startup - João Silva"
-  },
-  {
-    title: "NPS Médio",
-    value: "9.2",
-    icon: faStar,
-    trend: { value: "+0.3", period: "último mês", direction: "up" as const },
-    color: "yellow" as const,
-    description: "Satisfação dos mentorados"
-  },
-  {
-    title: "Tempo Médio",
-    value: "45min",
-    icon: faTrendingUp,
-    trend: { value: "-5min", period: "último mês", direction: "down" as const },
-    color: "purple" as const,
-    description: "Por sessão"
-  },
-]
+// Hook para detectar hidratação
+function useHydration() {
+  const [isHydrated, setIsHydrated] = useState(false)
 
-const newBusiness = {
-  nome: "Padaria do Bairro",
-  contato: "Maria Santos",
-  telefone: "(11) 99999-9999",
-  email: "maria@padaria.com",
-  segmento: "Alimentação",
-  localizacao: "Centro, São Paulo",
-  tempoFila: "3 dias",
-  prioridade: "Alta"
+  useEffect(() => {
+    setIsHydrated(true)
+  }, [])
+
+  return isHydrated
 }
 
-const upcomingMentorings = [
-  {
-    id: 1,
-    business: "Tech Startup",
-    contact: "João Silva",
-    date: "Hoje",
-    time: "15:00",
-    type: "Follow-up",
-    location: "Presencial - Escritório",
-    status: "confirmado",
-    priority: "Alta"
+// Tipos para os dados do mentor
+interface MentorDashboardData {
+  mentorias: {
+    total_realizadas: number
+    ativas: number
+    concluidas: number
+    tempo_medio_mentoria: string
+  }
+  conteudos: {
+    total_materiais: number
+    concluidos: number
+    progresso_percentual: number
+    ultimo_material: string
+  }
+  mentoria_ativa: {
+    id: string
+    negocio_nome: string
+    empreendedor_nome: string
+    data_inicio: string
+    status: string
+    proxima_sessao: string
+    progresso_percentual: number
+  } | null
+  qualificacao: {
+    status: "qualificado" | "em_progresso" | "nao_qualificado"
+    pode_mentorar: boolean
+  }
+}
+
+// Mock data - substitua pela chamada real da API
+const mockMentorData: MentorDashboardData = {
+  mentorias: {
+    total_realizadas: 8,
+    ativas: 1,
+    concluidas: 7,
+    tempo_medio_mentoria: "3 meses"
   },
-  {
-    id: 2,
-    business: "Loja de Roupas",
-    contact: "Ana Costa",
-    date: "Amanhã",
-    time: "10:00",
-    type: "Diagnóstico",
-    location: "Online - Zoom",
-    status: "pendente",
-    priority: "Média"
+  conteudos: {
+    total_materiais: 12,
+    concluidos: 10,
+    progresso_percentual: 83,
+    ultimo_material: "Protocolo de Mentoria Avançada"
   },
-  {
-    id: 3,
-    business: "Restaurante Familiar",
-    contact: "Carlos Oliveira",
-    date: "Sexta-feira",
-    time: "14:30",
-    type: "Follow-up",
-    location: "Presencial - Local do cliente",
-    status: "confirmado",
-    priority: "Baixa"
+  mentoria_ativa: {
+    id: "ment-001",
+    negocio_nome: "TechStart Solutions",
+    empreendedor_nome: "João Silva",
+    data_inicio: "2024-01-15",
+    status: "Em andamento",
+    proxima_sessao: "2024-12-20T14:00:00",
+    progresso_percentual: 65
   },
-]
+  qualificacao: {
+    status: "qualificado",
+    pode_mentorar: true
+  }
+}
+
+// Componente de Loading
+const LoadingState = () => (
+  <div className="space-y-8">
+    <div className="bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright rounded-2xl p-8 text-white shadow-xl">
+      <div className="flex items-center gap-6">
+        <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+          <FontAwesomeIcon icon={faHandshake} className="h-10 w-10 text-white" />
+        </div>
+        <div className="flex-1">
+          <h1 className="text-4xl font-bold mb-2">Dashboard do Mentor</h1>
+          <p className="text-white/90 text-xl">Carregando seus dados...</p>
+          <p className="text-white/80 text-base">Aguarde um momento</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {[1, 2, 3].map((i) => (
+        <Card key={i} className="animate-pulse border-0 shadow-lg">
+          <CardContent className="p-0">
+            <div className="h-32 bg-gradient-to-br from-gray-200 to-gray-300 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="h-3 bg-white/60 rounded w-3/4 mb-2"></div>
+                  <div className="h-6 bg-white/80 rounded w-1/2"></div>
+                </div>
+                <div className="w-12 h-12 bg-white/40 rounded-xl"></div>
+              </div>
+            </div>
+            <div className="p-6">
+              <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+              <div className="h-2 bg-gray-200 rounded w-2/3"></div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+    <Card className="animate-pulse border-0 shadow-lg">
+      <CardContent className="p-6">
+        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="space-y-3">
+          <div className="h-4 bg-gray-200 rounded w-full"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+)
 
 export default function MentorDashboard() {
-  const handleNewBusinessAction = (action: string) => {
-    console.log("Ação:", action)
-    // TODO: Implement action logic
-  }
+  const { user } = useAuth()
+  const { addToast } = useToast()
+  const [dashboardData, setDashboardData] = useState<MentorDashboardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const isHydrated = useHydration()
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'Alta': return 'bg-red-100 text-red-700 border-red-200'
-      case 'Média': return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      case 'Baixa': return 'bg-green-100 text-green-700 border-green-200'
-      default: return 'bg-gray-100 text-gray-700 border-gray-200'
+  useEffect(() => {
+    if (isHydrated) {
+      loadDashboardData()
+    }
+  }, [isHydrated])
+
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true)
+      // Simular carregamento - substitua pela chamada real da API
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setDashboardData(mockMentorData)
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao carregar dados",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const getStatusIcon = (status: string) => {
-    return status === "confirmado" ? faCheckCircle : faExclamationTriangle
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
   }
 
-  const getStatusColor = (status: string) => {
-    return status === "confirmado" 
-      ? "bg-green-100 text-green-700 border-green-200" 
-      : "bg-yellow-100 text-yellow-700 border-yellow-200"
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  // Renderizar loading state até hidratação completa ou enquanto carrega dados
+  if (!isHydrated || isLoading) {
+    return <LoadingState />
+  }
+
+  if (!dashboardData) {
+    return <div>Erro ao carregar dados do dashboard</div>
   }
 
   return (
     <div className="space-y-8">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-stone-green-dark to-stone-green-light rounded-2xl p-6 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Novo Negócio Atribuído!</h2>
-            <p className="text-white/90">Você tem 1 novo negócio aguardando atendimento</p>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-white/10 -translate-y-16 translate-x-16"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-white/5 -translate-y-16 -translate-x-8"></div>
+        
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon={faHandshake} className="h-10 w-10 text-white" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold mb-2">
+                Olá, {user?.nome || 'Mentor'}!
+              </h1>
+              <p className="text-white/90 text-xl">Acompanhe suas mentorias e desenvolvimento</p>
+              <p className="text-white/80 text-base">Transforme negócios através da sua experiência</p>
+            </div>
           </div>
-          <Button 
-            className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            onClick={() => console.log("Ver detalhes do novo negócio")}
-          >
-            <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
-            Ver Detalhes
-          </Button>
+          
+          {dashboardData.qualificacao.pode_mentorar && (
+            <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg">
+              <FontAwesomeIcon icon={faTrophy} className="h-6 w-6" />
+              <div>
+                <span className="font-bold text-lg block">Mentor Qualificado</span>
+                <span className="text-white/90 text-sm">Pronto para mentorar</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {mentorMetrics.map((metric, index) => (
-          <Card key={index} className="hover:shadow-lg transition-all duration-200 border-0 shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  metric.color === 'green' ? 'bg-green-100 text-green-600' :
-                  metric.color === 'blue' ? 'bg-blue-100 text-blue-600' :
-                  metric.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                  'bg-purple-100 text-purple-600'
-                }`}>
-                  <FontAwesomeIcon icon={metric.icon} className="h-6 w-6" />
-                </div>
-                {metric.trend && (
-                  <Badge className={`${
-                    metric.trend.direction === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                  } border-0`}>
-                    {metric.trend.value}
-                  </Badge>
-                )}
-              </div>
-              <div className="space-y-1">
-                <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
-                <p className="text-sm font-medium text-gray-700">{metric.title}</p>
-                <p className="text-xs text-gray-500">{metric.description}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* New Business Card */}
-        <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-200">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <FontAwesomeIcon icon={faUserTie} className="h-5 w-5 text-stone-green-dark" />
-                Novo Negócio Atribuído
-              </CardTitle>
-              <Badge className="bg-red-100 text-red-700 border-red-200">
-                {newBusiness.prioridade}
-              </Badge>
-            </div>
-            <CardDescription>Negócio aguardando seu primeiro contato</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <FontAwesomeIcon icon={faBuilding} className="h-4 w-4 text-gray-500" />
-                <div>
-                  <p className="font-semibold text-gray-900">{newBusiness.nome}</p>
-                  <p className="text-sm text-gray-600">{newBusiness.segmento}</p>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Total de Mentorias */}
+        <Card className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-lg overflow-hidden">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-stone-green-light to-stone-green-dark p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 -translate-y-8 translate-x-8"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 -translate-y-10 -translate-x-6"></div>
               
-              <div className="grid grid-cols-1 gap-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <FontAwesomeIcon icon={faUserTie} className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-700">{newBusiness.contato}</span>
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-white/90 mb-2">Mentorias Realizadas</h3>
+                  <div className="text-3xl font-bold text-white mb-1">
+                    {dashboardData.mentorias.total_realizadas}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-700">{newBusiness.telefone}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-700">{newBusiness.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <FontAwesomeIcon icon={faLocationDot} className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-700">{newBusiness.localizacao}</span>
+                
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faHandshake} className="h-7 w-7 text-white" />
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button className="flex-1 bg-stone-green-dark hover:bg-stone-green-light text-white">
-                <FontAwesomeIcon icon={faPhone} className="h-4 w-4 mr-2" />
-                Entrar em Contato
-              </Button>
-              <Button variant="outline" className="flex-1">
-                <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 mr-2" />
-                Já Agendei
-              </Button>
+            <div className="p-6 bg-white">
+              <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                Total de negócios que você já mentorou com sucesso
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-stone-green-light/10 text-stone-green-dark">
+                  <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
+                  {dashboardData.mentorias.concluidas} concluídas
+                </div>
+                <span className="text-xs text-gray-500 font-medium">
+                  Tempo médio: {dashboardData.mentorias.tempo_medio_mentoria}
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Upcoming Mentorings */}
-        <Card className="border-0 shadow-sm hover:shadow-lg transition-all duration-200">
+        {/* Conteúdos Concluídos */}
+        <Card className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-lg overflow-hidden">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-stone-green-light to-stone-green-dark p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 -translate-y-8 translate-x-8"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 -translate-y-10 -translate-x-6"></div>
+              
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-white/90 mb-2">Conteúdos Concluídos</h3>
+                  <div className="text-3xl font-bold text-white mb-1">
+                    {dashboardData.conteudos.concluidos}/{dashboardData.conteudos.total_materiais}
+                  </div>
+                </div>
+                
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faGraduationCap} className="h-7 w-7 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white">
+              <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                Seu progresso na trilha de conhecimento
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Progresso</span>
+                  <span className="font-semibold text-stone-green-dark">
+                    {dashboardData.conteudos.progresso_percentual}%
+                  </span>
+                </div>
+                <Progress 
+                  value={dashboardData.conteudos.progresso_percentual} 
+                  className="h-2"
+                />
+                <p className="text-xs text-gray-500">
+                  Último: {dashboardData.conteudos.ultimo_material}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Status de Qualificação */}
+        <Card className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-lg overflow-hidden">
+          <CardContent className="p-0">
+            <div className="bg-gradient-to-br from-stone-green-light to-stone-green-dark p-6 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 -translate-y-8 translate-x-8"></div>
+              <div className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-white/5 -translate-y-10 -translate-x-6"></div>
+              
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-white/90 mb-2">Status de Qualificação</h3>
+                  <div className="text-2xl font-bold text-white mb-1">
+                    {dashboardData.qualificacao.status === 'qualificado' ? 'Qualificado' : 'Em Progresso'}
+                  </div>
+                </div>
+                
+                <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faAward} className="h-7 w-7 text-white" />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-white">
+              <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                {dashboardData.qualificacao.pode_mentorar 
+                  ? 'Você está apto para mentorar negócios'
+                  : 'Continue estudando para se qualificar'
+                }
+              </p>
+              <div className="flex items-center gap-3">
+                <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${
+                  dashboardData.qualificacao.pode_mentorar 
+                    ? 'bg-emerald-50 text-emerald-600' 
+                    : 'bg-amber-50 text-amber-600'
+                }`}>
+                  <FontAwesomeIcon 
+                    icon={dashboardData.qualificacao.pode_mentorar ? faCheckCircle : faClock} 
+                    className="h-3 w-3 mr-2" 
+                  />
+                  {dashboardData.qualificacao.pode_mentorar ? 'Ativo' : 'Pendente'}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mentoria Ativa */}
+      {dashboardData.mentoria_ativa && (
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-stone-green-light/10 to-stone-green-dark/10">
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-gray-900 flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendarAlt} className="h-5 w-5 text-stone-green-dark" />
-              Próximas Mentorias
-            </CardTitle>
-            <CardDescription>Suas mentorias agendadas para os próximos dias</CardDescription>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
+                <FontAwesomeIcon icon={faRocket} className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-900">Mentoria Ativa</CardTitle>
+                <CardDescription className="text-gray-600">Acompanhe o progresso da sua mentoria atual</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {upcomingMentorings.map((mentoring) => (
-                <div
-                  key={mentoring.id}
-                  className="p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors group"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold text-gray-900">{mentoring.business}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {mentoring.type}
-                        </Badge>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Informações do Negócio */}
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">{dashboardData.mentoria_ativa.negocio_nome}</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-stone-green-dark" />
+                      <div>
+                        <p className="text-sm text-gray-600">Empreendedor</p>
+                        <p className="font-semibold text-gray-900">{dashboardData.mentoria_ativa.empreendedor_nome}</p>
                       </div>
-                      <p className="text-sm text-gray-600 flex items-center gap-2">
-                        <FontAwesomeIcon icon={faUserTie} className="h-3 w-3" />
-                        {mentoring.contact}
-                      </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge className={`text-xs border ${getStatusColor(mentoring.status)}`}>
-                        <FontAwesomeIcon icon={getStatusIcon(mentoring.status)} className="h-3 w-3 mr-1" />
-                        {mentoring.status === "confirmado" ? "Confirmado" : "Pendente"}
-                      </Badge>
-                      <Badge className={`text-xs border ${getPriorityColor(mentoring.priority)}`}>
-                        {mentoring.priority}
-                      </Badge>
+                    <div className="flex items-center gap-3">
+                      <FontAwesomeIcon icon={faCalendarAlt} className="h-5 w-5 text-stone-green-dark" />
+                      <div>
+                        <p className="text-sm text-gray-600">Início da Mentoria</p>
+                        <p className="font-semibold text-gray-900">{formatDate(dashboardData.mentoria_ativa.data_inicio)}</p>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={faClockRegular} className="h-3 w-3" />
-                      <span>{mentoring.date} às {mentoring.time}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} className="h-3 w-3" />
-                      <span className="truncate">{mentoring.location}</span>
+                    <div className="flex items-center gap-3">
+                      <FontAwesomeIcon icon={faClock} className="h-5 w-5 text-stone-green-dark" />
+                      <div>
+                        <p className="text-sm text-gray-600">Próxima Sessão</p>
+                        <p className="font-semibold text-gray-900">{formatDateTime(dashboardData.mentoria_ativa.proxima_sessao)}</p>
+                      </div>
                     </div>
                   </div>
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <Badge className="bg-stone-green-light/10 text-stone-green-dark border-0 text-sm py-1 px-3">
+                    <FontAwesomeIcon icon={faPlay} className="h-3 w-3 mr-2" />
+                    {dashboardData.mentoria_ativa.status}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Progresso */}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-lg font-semibold text-gray-900">Progresso da Mentoria</h4>
+                    <span className="text-2xl font-bold text-stone-green-dark">
+                      {dashboardData.mentoria_ativa.progresso_percentual}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={dashboardData.mentoria_ativa.progresso_percentual} 
+                    className="h-3"
+                  />
+                  <p className="text-sm text-gray-500 mt-2">
+                    Mentoria em andamento há {Math.floor((Date.now() - new Date(dashboardData.mentoria_ativa.data_inicio).getTime()) / (1000 * 60 * 60 * 24 * 30))} meses
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <Link href={`/mentoria/${dashboardData.mentoria_ativa.id}`}>
+                    <Button className="w-full bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-12">
+                      <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
+                      Acessar Mentoria
+                    </Button>
+                  </Link>
                   
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <Button variant="ghost" size="sm" className="w-full text-stone-green-dark hover:text-stone-green-light hover:bg-stone-green-dark/5">
-                      <FontAwesomeIcon icon={faArrowRight} className="h-3 w-3 mr-2" />
-                      Ver Detalhes
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button variant="outline" className="border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white">
+                      Agendar Sessão
+                    </Button>
+                    <Button variant="outline" className="border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white">
+                      Ver Relatórios
                     </Button>
                   </div>
                 </div>
-              ))}
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-gray-200">
-              <Button variant="outline" className="w-full">
-                <FontAwesomeIcon icon={faPlus} className="h-4 w-4 mr-2" />
-                Agendar Nova Mentoria
-              </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
+
+      {/* Quick Actions */}
+      <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm">
+        <CardHeader className="pb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-2xl font-bold text-gray-900">Ações Rápidas</CardTitle>
+              <CardDescription className="text-gray-600">Acesso rápido às principais funcionalidades</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link href="/trilha-conhecimento">
+              <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-stone-green-light to-stone-green-dark text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <FontAwesomeIcon icon={faBookOpen} className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-stone-green-dark transition-colors text-lg mb-2">
+                        Trilha de Conhecimento
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">Continue seus estudos e desenvolvimento</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/mentorias">
+              <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-stone-green-light to-stone-green-dark text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <FontAwesomeIcon icon={faUsers} className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-stone-green-dark transition-colors text-lg mb-2">
+                        Minhas Mentorias
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">Gerencie todas as suas mentorias</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link href="/perfil">
+              <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-stone-green-light to-stone-green-dark text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <FontAwesomeIcon icon={faUser} className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-stone-green-dark transition-colors text-lg mb-2">
+                        Meu Perfil
+                      </h3>
+                      <p className="text-sm text-gray-600 leading-relaxed">Atualize suas informações e preferências</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

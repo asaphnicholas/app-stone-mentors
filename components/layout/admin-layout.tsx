@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -14,7 +14,8 @@ import {
   faComments, 
   faChartLine, 
   faCog,
-  faBell
+  faBell,
+  faFileText
 } from "@fortawesome/free-solid-svg-icons"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -25,6 +26,7 @@ const navigation = [
   { name: "Dashboard", href: "/admin/dashboard", icon: faTachometerAlt },
   { name: "Mentores", href: "/admin/mentores", icon: faUsers },
   { name: "Negócios", href: "/admin/negocios", icon: faBuilding },
+  { name: "Conteúdos", href: "/admin/conteudos", icon: faFileText },
   { name: "Mentorias", href: "/admin/mentorias", icon: faComments },
   { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine },
   { name: "Configurações", href: "/admin/configuracoes", icon: faCog },
@@ -39,6 +41,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed)
@@ -49,9 +56,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-stone-green-dark to-stone-green-light transform transition-all duration-300 ease-in-out shadow-2xl",
-          sidebarCollapsed ? "w-20" : "w-72",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-stone-green-dark via-stone-green-light to-stone-green-bright transform transition-all duration-300 ease-in-out shadow-2xl",
+          !isMounted ? "w-72" : (sidebarCollapsed ? "w-20" : "w-72"),
+          !isMounted ? "-translate-x-full lg:translate-x-0" : (sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0")
         )}
       >
         <div className="flex flex-col h-full">
@@ -59,7 +66,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <div className="flex items-center justify-center h-20 px-6 border-b border-white/20 relative">
             <div className={cn(
               "flex items-center gap-3 transition-all duration-300",
-              sidebarCollapsed ? "gap-0" : "gap-3"
+              !isMounted ? "gap-3" : (sidebarCollapsed ? "gap-0" : "gap-3")
             )}>
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg overflow-hidden">
                 <Image
@@ -70,7 +77,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   className="object-cover w-full h-full"
                 />
               </div>
-              {!sidebarCollapsed && (
+              {(!isMounted || !sidebarCollapsed) && (
                 <div className="text-white">
                   <h1 className="font-bold text-xl">Stone Mentors</h1>
                   <p className="text-xs text-white/80">Painel Administrativo</p>
@@ -107,12 +114,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               )}>
                 <Avatar className="h-12 w-12 ring-2 ring-white/20">
                   <AvatarFallback className="bg-white/20 text-white text-lg font-semibold">
-                    {user?.name?.charAt(0) || "A"}
+                    {user?.nome?.charAt(0) || "A"}
                   </AvatarFallback>
                 </Avatar>
                 {!sidebarCollapsed && (
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold truncate">{user?.name}</p>
+                    <p className="text-white font-semibold truncate">{user?.nome}</p>
                     <p className="text-white/80 text-sm truncate">Administrador</p>
                     <div className="flex items-center gap-1 mt-1">
                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
@@ -200,7 +207,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main content */}
       <div className={cn(
         "transition-all duration-300",
-        sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+        !isMounted ? "lg:pl-72" : (sidebarCollapsed ? "lg:pl-20" : "lg:pl-72")
       )}>
         {/* Header */}
         <header className="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-6 shadow-sm">
@@ -214,10 +221,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {navigation.find((item) => item.href === pathname)?.name || "Dashboard"}
-              </h1>
-              <p className="text-gray-600">Painel de Controle Administrativo 👨‍💼</p>
+              {/* <h1 className="text-2xl font-bold text-gray-900">
+                {navigation.find((item) => item.href === pathname)?.name || "Administrador"}
+              </h1> */}
+              {/* <p className="text-gray-600">Painel de Controle Administrativo 👨‍💼</p> */}
             </div>
           </div>
 
@@ -227,11 +234,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </Button>
             <div className="h-8 w-px bg-gray-200"></div>
-            <Avatar className="h-10 w-10 ring-2 ring-stone-green-light/20">
-              <AvatarFallback className="bg-stone-green-light text-white font-semibold">
-                {user?.name?.charAt(0) || "A"}
-              </AvatarFallback>
-            </Avatar>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.nome || "Admin"}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
+              <Avatar className="h-10 w-10 ring-2 ring-stone-green-light/20">
+                <AvatarFallback className="bg-stone-green-light text-white font-semibold">
+                  {user?.nome?.charAt(0) || "A"}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </header>
 

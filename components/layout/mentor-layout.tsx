@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils"
 
 const navigation = [
   { name: "Dashboard", href: "/mentor/dashboard", icon: faTachometerAlt },
-  { name: "Treinamento", href: "/mentor/treinamento", icon: faGraduationCap },
+  { name: "Trilha de Conhecimento", href: "/mentor/trilha-conhecimento", icon: faGraduationCap },
   { name: "Mentorias", href: "/mentor/mentorias", icon: faComments },
   { name: "Desempenho", href: "/mentor/desempenho", icon: faChartLine },
 ]
@@ -37,6 +37,11 @@ export function MentorLayout({ children }: MentorLayoutProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed)
@@ -47,8 +52,8 @@ export function MentorLayout({ children }: MentorLayoutProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-stone-green-dark to-stone-green-light transform transition-all duration-300 ease-in-out shadow-2xl",
-          sidebarCollapsed ? "w-20" : "w-72",
+          "fixed inset-y-0 left-0 z-50 bg-gradient-to-b from-stone-green-dark via-stone-green-light to-stone-green-bright transform transition-all duration-300 ease-in-out shadow-2xl",
+          !isMounted ? "w-72" : (sidebarCollapsed ? "w-20" : "w-72"),
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
@@ -105,7 +110,7 @@ export function MentorLayout({ children }: MentorLayoutProps) {
               )}>
                 <Avatar className="h-12 w-12 ring-2 ring-white/20">
                   <AvatarFallback className="bg-white/20 text-white text-lg font-semibold">
-                    {user?.name?.charAt(0) || "M"}
+                    {user?.nome?.charAt(0) || "M"}
                   </AvatarFallback>
                 </Avatar>
                 {!sidebarCollapsed && (
@@ -217,7 +222,7 @@ export function MentorLayout({ children }: MentorLayoutProps) {
       {/* Main content */}
       <div className={cn(
         "transition-all duration-300",
-        sidebarCollapsed ? "lg:pl-20" : "lg:pl-72"
+        !isMounted ? "lg:pl-72" : (sidebarCollapsed ? "lg:pl-20" : "lg:pl-72")
       )}>
         {/* Header */}
         <header className="bg-white border-b border-gray-200 h-20 flex items-center justify-between px-6 shadow-sm">
@@ -234,7 +239,7 @@ export function MentorLayout({ children }: MentorLayoutProps) {
               <h1 className="text-2xl font-bold text-gray-900">
                 {navigation.find((item) => item.href === pathname)?.name || "Dashboard"}
               </h1>
-              <p className="text-gray-600">Bem-vindo de volta, {user?.name?.split(" ")[0]}! 👋</p>
+              
             </div>
           </div>
 
@@ -244,11 +249,17 @@ export function MentorLayout({ children }: MentorLayoutProps) {
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
             </Button>
             <div className="h-8 w-px bg-gray-200"></div>
-            <Avatar className="h-10 w-10 ring-2 ring-stone-green-light/20">
-              <AvatarFallback className="bg-stone-green-light text-white font-semibold">
-                {user?.name?.charAt(0) || "M"}
-              </AvatarFallback>
-            </Avatar>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-gray-900">{user?.nome || "Mentor"}</p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+              </div>
+              <Avatar className="h-10 w-10 ring-2 ring-stone-green-light/20">
+                <AvatarFallback className="bg-stone-green-light text-white font-semibold">
+                  {user?.nome?.charAt(0) || "M"}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </header>
 

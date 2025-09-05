@@ -12,15 +12,15 @@
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.21 0 0);
 
-    /* Stone Mentors Primary Colors */
-    --primary: oklch(0.35 0.15 152); /* Verde Escuro #05593D */
+    /* Stone Mentors Primary Colors - Gradiente Verde Mais Escuro */
+    --primary: oklch(0.55 0.18 145); /* Verde Escuro #4A8B3A */
     --primary-foreground: oklch(1 0 0); /* White */
-    --secondary: oklch(0.65 0.2 152); /* Verde Claro #0DAD60 */
+    --secondary: oklch(0.65 0.18 140); /* Verde Médio #5DB557 */
     --secondary-foreground: oklch(1 0 0);
 
     --muted: oklch(0.98 0 0); /* Cinza Claro #F8F9FA */
     --muted-foreground: oklch(0.43 0 0); /* Cinza Médio #6C757D */
-    --accent: oklch(0.65 0.2 152); /* Verde Claro for accents */
+    --accent: oklch(0.65 0.18 140); /* Verde Médio for accents #5DB557 */
     --accent-foreground: oklch(1 0 0);
 
     /* Status Colors */
@@ -33,10 +33,10 @@
 
     --border: oklch(0.9 0 0);
     --input: oklch(0.9 0 0);
-    --ring: oklch(0.65 0.2 152);
+    --ring: oklch(0.65 0.18 140);
 
-    --chart-1: oklch(0.65 0.2 152); /* Verde Claro */
-    --chart-2: oklch(0.35 0.15 152); /* Verde Escuro */
+    --chart-1: oklch(0.65 0.18 140); /* Verde Médio #5DB557 */
+    --chart-2: oklch(0.55 0.18 145); /* Verde Escuro #4A8B3A */
     --chart-3: oklch(0.55 0.2 25); /* Vermelho */
     --chart-4: oklch(0.75 0.15 85); /* Amarelo */
     --chart-5: oklch(0.55 0.2 250); /* Azul */
@@ -44,14 +44,14 @@
     --radius: 0.5rem;
 
     /* Sidebar Colors */
-    --sidebar: oklch(0.35 0.15 152); /* Verde Escuro */
+    --sidebar: oklch(0.55 0.18 145); /* Verde Escuro #4A8B3A */
     --sidebar-foreground: oklch(1 0 0);
-    --sidebar-primary: oklch(0.65 0.2 152); /* Verde Claro */
+    --sidebar-primary: oklch(0.65 0.18 140); /* Verde Médio #5DB557 */
     --sidebar-primary-foreground: oklch(1 0 0);
-    --sidebar-accent: oklch(0.4 0.15 152);
+    --sidebar-accent: oklch(0.6 0.18 142);
     --sidebar-accent-foreground: oklch(1 0 0);
-    --sidebar-border: oklch(0.3 0.15 152);
-    --sidebar-ring: oklch(0.65 0.2 152);
+    --sidebar-border: oklch(0.5 0.18 145);
+    --sidebar-ring: oklch(0.65 0.18 140);
   }
 
   .dark {
@@ -61,32 +61,32 @@
     --card-foreground: oklch(0.98 0 0);
     --popover: oklch(0.25 0 0);
     --popover-foreground: oklch(0.98 0 0);
-    --primary: oklch(0.65 0.2 152);
+    --primary: oklch(0.65 0.18 140);
     --primary-foreground: oklch(0.21 0 0);
-    --secondary: oklch(0.35 0.15 152);
+    --secondary: oklch(0.55 0.18 145);
     --secondary-foreground: oklch(0.98 0 0);
     --muted: oklch(0.25 0 0);
     --muted-foreground: oklch(0.7 0 0);
-    --accent: oklch(0.35 0.15 152);
+    --accent: oklch(0.55 0.18 145);
     --accent-foreground: oklch(0.98 0 0);
     --destructive: oklch(0.55 0.2 25);
     --destructive-foreground: oklch(0.98 0 0);
     --border: oklch(0.3 0 0);
     --input: oklch(0.3 0 0);
-    --ring: oklch(0.65 0.2 152);
-    --chart-1: oklch(0.65 0.2 152);
-    --chart-2: oklch(0.35 0.15 152);
+    --ring: oklch(0.65 0.18 140);
+    --chart-1: oklch(0.65 0.18 140);
+    --chart-2: oklch(0.55 0.18 145);
     --chart-3: oklch(0.55 0.2 25);
     --chart-4: oklch(0.75 0.15 85);
     --chart-5: oklch(0.55 0.2 250);
     --sidebar: oklch(0.25 0 0);
     --sidebar-foreground: oklch(0.98 0 0);
-    --sidebar-primary: oklch(0.65 0.2 152);
+    --sidebar-primary: oklch(0.65 0.18 140);
     --sidebar-primary-foreground: oklch(0.21 0 0);
     --sidebar-accent: oklch(0.3 0 0);
     --sidebar-accent-foreground: oklch(0.98 0 0);
     --sidebar-border: oklch(0.3 0 0);
-    --sidebar-ring: oklch(0.65 0.2 152);
+    --sidebar-ring: oklch(0.65 0.18 140);
   }
 
   * {
@@ -99,29 +99,41 @@
 }
 
 @layer components {
-  /* Stone Mentors custom utility classes */
+  /* Stone Mentors custom utility classes - Gradiente Verde Mais Escuro */
   .stone-green-dark {
-    @apply text-[oklch(0.35_0.15_152)];
+    @apply text-[oklch(0.55_0.18_145)]; /* Verde Escuro #4A8B3A */
   }
   
   .stone-green-light {
-    @apply text-[oklch(0.65_0.2_152)];
+    @apply text-[oklch(0.65_0.18_140)]; /* Verde Médio #5DB557 */
+  }
+  
+  .stone-green-bright {
+    @apply text-[oklch(0.75_0.18_135)]; /* Verde Claro #6BB547 */
   }
   
   .bg-stone-green-dark {
-    @apply bg-[oklch(0.35_0.15_152)];
+    @apply bg-[oklch(0.55_0.18_145)]; /* Verde Escuro #4A8B3A */
   }
   
   .bg-stone-green-light {
-    @apply bg-[oklch(0.65_0.2_152)];
+    @apply bg-[oklch(0.65_0.18_140)]; /* Verde Médio #5DB557 */
+  }
+  
+  .bg-stone-green-bright {
+    @apply bg-[oklch(0.75_0.18_135)]; /* Verde Claro #6BB547 */
   }
   
   .border-stone-green-dark {
-    @apply border-[oklch(0.35_0.15_152)];
+    @apply border-[oklch(0.55_0.18_145)]; /* Verde Escuro #4A8B3A */
   }
   
   .border-stone-green-light {
-    @apply border-[oklch(0.65_0.2_152)];
+    @apply border-[oklch(0.65_0.18_140)]; /* Verde Médio #5DB557 */
+  }
+  
+  .border-stone-green-bright {
+    @apply border-[oklch(0.75_0.18_135)]; /* Verde Claro #6BB547 */
   }
 
   /* Custom component styles */
@@ -151,7 +163,7 @@
   }
 
   .login-button {
-    @apply w-full h-12 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 border-0;
+    @apply w-full h-12 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 border-0;
   }
 
   .floating-icon {

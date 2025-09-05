@@ -51,10 +51,11 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Stone Mentors custom colors
+        // Stone Mentors custom colors - Gradiente Verde Mais Escuro
         "stone-green": {
-          dark: "oklch(0.35 0.15 152)",
-          light: "oklch(0.65 0.2 152)",
+          dark: "oklch(0.55 0.18 145)", // Verde Escuro #4A8B3A
+          light: "oklch(0.65 0.18 140)", // Verde Médio #5DB557
+          bright: "oklch(0.75 0.18 135)", // Verde Claro #6BB547
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar))",

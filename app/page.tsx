@@ -2,6 +2,7 @@
 
 import type React from "react"
 import Image from "next/image"
+import Link from "next/link"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -41,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex bg-white">
       {/* Seção Esquerda - Promocional */}
-      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-stone-green-dark to-stone-green-light relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-stone-green-dark via-stone-green-light to-stone-green-bright relative overflow-hidden">
         {/* Background pattern */}
         <div className="absolute inset-0 bg-black/5"></div>
         
@@ -49,10 +50,10 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col justify-center px-12 text-white">
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-4 leading-tight">
-              Simplifique a gestão com nosso dashboard
+            Sua jornada como mentor em um só lugar.
             </h1>
             <p className="text-lg text-white/90 leading-relaxed">
-              Simplifique a gestão da sua mentoria com nosso painel de administração intuitivo e eficiente
+            Formação, agendamentos e registro do impacto
             </p>
           </div>
 
@@ -101,9 +102,9 @@ export default function LoginPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center space-y-2">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-stone-green-dark to-stone-green-light rounded-2xl flex items-center justify-center shadow-lg mb-6 overflow-hidden">
+            <div className="mx-auto w-20 h-20 items-center justify-center  ">
               <Image
-                src="/logo-stone.png"
+                src="/lofo-impulso-sembg.png"
                 alt="Stone Mentors Logo"
                 width={48}
                 height={48}
@@ -117,7 +118,7 @@ export default function LoginPage() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Demo credentials */}
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+            {/* <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
               <div className="flex items-center gap-2 mb-2">
                 <Award className="w-4 h-4 text-stone-green-dark" />
                 <p className="font-medium text-sm text-stone-green-dark">Credenciais de demonstração</p>
@@ -127,7 +128,7 @@ export default function LoginPage() {
                 <p><span className="font-medium">Mentor:</span> mentor@stonementors.com</p>
                 <p><span className="font-medium">Senha:</span> 123456</p>
               </div>
-            </div>
+            </div> */}
 
             {/* Email field */}
             <div className="space-y-2">
@@ -187,7 +188,7 @@ export default function LoginPage() {
             {/* Submit button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 border-0"
+              className="w-full h-12 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 border-0"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -211,7 +212,7 @@ export default function LoginPage() {
             </div>
 
             {/* Social login buttons */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <Button
                 type="button"
                 variant="outline"
@@ -232,17 +233,17 @@ export default function LoginPage() {
                   Facebook
                 </div>
               </Button>
-            </div>
+            </div> */}
 
             {/* Sign up link */}
             <div className="text-center text-sm">
               <span className="text-gray-600">Não tem uma conta? </span>
-              <button
-                type="button"
+              <Link
+                href="/register"
                 className="text-stone-green-dark hover:text-stone-green-light font-medium transition-colors"
               >
                 Cadastre-se
-              </button>
+              </Link>
             </div>
           </form>
         </div>
