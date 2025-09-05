@@ -1,6 +1,6 @@
 import { apiService } from './api'
 import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config/env'
-import { isValidAreaAtuacao } from '@/lib/constants/areas-atuacao'
+import { isValidAreaAtuacao, type AreaAtuacao } from '@/lib/constants/areas-atuacao'
 
 // Error class
 class ApiError extends Error {
@@ -53,7 +53,7 @@ export interface RegisterRequest {
   senha: string
   telefone: string
   competencias: string
-  area_atuacao: string
+  area_atuacao: AreaAtuacao
 }
 
 export interface RegisterResponse {

@@ -2,32 +2,48 @@
 // CREATE TYPE area_atuacao AS ENUM (...)
 export const AREAS_ATUACAO = [
   { 
-    value: "comunicacao_marketing", 
-    label: "Comunicação & Marketing" 
-  },
-  { 
-    value: "contabilidade_financas", 
-    label: "Contabilidade & Finanças" 
-  },
-  { 
-    value: "juridico", 
-    label: "Jurídico" 
-  },
-  { 
-    value: "tecnologia", 
+    value: "TECNOLOGIA", 
     label: "Tecnologia" 
   },
   { 
-    value: "recursos_humanos", 
-    label: "Recursos Humanos" 
+    value: "VAREJO", 
+    label: "Varejo" 
   },
   { 
-    value: "comercial_vendas", 
+    value: "SERVICOS", 
+    label: "Serviços" 
+  },
+  { 
+    value: "INDUSTRIA", 
+    label: "Indústria" 
+  },
+  { 
+    value: "SAUDE", 
+    label: "Saúde" 
+  },
+  { 
+    value: "EDUCACAO", 
+    label: "Educação" 
+  },
+  { 
+    value: "FINANCEIRO", 
+    label: "Financeiro" 
+  },
+  { 
+    value: "AGRONEGOCIO", 
+    label: "Agronegócio" 
+  },
+  { 
+    value: "COMERCIAL_VENDAS", 
     label: "Comercial & Vendas" 
   },
   { 
-    value: "outras", 
-    label: "Outras" 
+    value: "COMUNICACAO_MARKETING", 
+    label: "Comunicação & Marketing" 
+  },
+  { 
+    value: "OUTROS", 
+    label: "Outros" 
   },
 ] as const
 
