@@ -46,8 +46,27 @@ export default function RegisterPage() {
     }
   }, [searchParams, addToast])
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove todos os caracteres não numéricos
+    const numbers = value.replace(/\D/g, '')
+    
+    // Aplica a formatação baseada no tamanho
+    if (numbers.length <= 2) {
+      return numbers
+    } else if (numbers.length <= 7) {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`
+    } else {
+      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`
+    }
+  }
+
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    if (field === 'telefone') {
+      const formattedValue = formatPhoneNumber(value)
+      setFormData(prev => ({ ...prev, [field]: formattedValue }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
   }
 
   const validateForm = () => {
@@ -228,9 +247,9 @@ export default function RegisterPage() {
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center space-y-2">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-stone-green-dark via-stone-green-light to-stone-green-bright rounded-2xl flex items-center justify-center shadow-lg mb-6 overflow-hidden">
+            <div className="mx-auto w-20 h-20 items-center justify-center  ">
               <Image
-                src="/logo-stone.png"
+                src="/lofo-impulso-sembg.png"
                 alt="Stone Mentors Logo"
                 width={48}
                 height={48}
@@ -314,6 +333,7 @@ export default function RegisterPage() {
                   value={formData.telefone}
                   onChange={(e) => handleInputChange("telefone", e.target.value)}
                   className="pl-10 h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200 rounded-xl"
+                  maxLength={15}
                   required
                 />
               </div>
