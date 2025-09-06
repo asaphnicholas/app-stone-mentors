@@ -3,7 +3,8 @@
 import type React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,10 +12,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { type RegisterRequest } from "@/lib/services/auth"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -26,8 +29,22 @@ export default function RegisterPage() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [inviteToken, setInviteToken] = useState<string | null>(null)
   const { register, isLoading } = useAuth()
   const { addToast } = useToast()
+
+  // Detect invite token from URL
+  useEffect(() => {
+    const token = searchParams.get('token')
+    if (token) {
+      setInviteToken(token)
+      addToast({
+        type: "info",
+        title: "Convite detectado",
+        message: "Você está se cadastrando através de um convite. Sua conta será ativada automaticamente como MENTOR. Após o cadastro, você precisará completar o protocolo de qualificação.",
+      })
+    }
+  }, [searchParams, addToast])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -115,20 +132,30 @@ export default function RegisterPage() {
     if (!validateForm()) return
 
     try {
-      await register({
+      const registerData: RegisterRequest = {
         nome: formData.nome,
         email: formData.email,
         senha: formData.senha,
         telefone: formData.telefone,
         competencias: formData.competencias,
-        area_atuacao: formData.area_atuacao,
-      })
+        area_atuacao: formData.area_atuacao as any, // Type assertion for area_atuacao
+        invite_token: inviteToken,
+      }
+      
+      await register(registerData)
 
       addToast({
         type: "success",
         title: "Cadastro realizado com sucesso!",
-        message: "Bem-vindo à plataforma Stone Mentors!",
+        message: inviteToken 
+          ? "Sua conta foi criada e ativada automaticamente como MENTOR. Faça login para acessar a plataforma e complete o protocolo de qualificação."
+          : "Sua conta foi criada. Agora você pode fazer login para acessar a plataforma.",
       })
+
+      // Redirect to login page after successful registration
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 2000)
     } catch (error) {
       addToast({
         type: "error",
@@ -213,6 +240,25 @@ export default function RegisterPage() {
             <h2 className="text-3xl font-bold text-gray-900">Criar conta</h2>
             <p className="text-gray-600">Junte-se à nossa comunidade de mentores</p>
           </div>
+
+          {/* Invite Information */}
+          {inviteToken && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <User className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-900 mb-1">Convite de Mentor Detectado</h4>
+                  <div className="text-sm text-blue-800 space-y-1">
+                    <p>✅ Sua conta será <strong>ativada automaticamente</strong></p>
+                    <p>✅ Role definido como <strong>MENTOR</strong></p>
+                    <p>⚠️ Após o cadastro, complete o <strong>protocolo de qualificação</strong></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">

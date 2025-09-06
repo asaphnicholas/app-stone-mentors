@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { authService, type User } from "@/lib/services/auth"
+import { authService, type User, type RegisterRequest } from "@/lib/services/auth"
 import { useRouter } from "next/navigation"
 
 interface AuthState {
@@ -13,14 +13,7 @@ interface AuthState {
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
-  register: (userData: {
-    nome: string
-    email: string
-    senha: string
-    telefone: string
-    competencias: string
-    area_atuacao: string
-  }) => Promise<void>
+  register: (userData: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -64,31 +57,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const register = async (userData: {
-    nome: string
-    email: string
-    senha: string
-    telefone: string
-    competencias: string
-    area_atuacao: string
-  }) => {
+  const register = async (userData: RegisterRequest) => {
     setState((prev) => ({ ...prev, isLoading: true }))
 
     try {
-      const { user } = await authService.register(userData)
-      console.log('Register success, user:', user)
+      const response = await authService.register(userData)
+      console.log('Register success, response:', response)
+      
+      // Get the stored user data
+      const user = authService.getCurrentUser()
+      console.log('Stored user:', user)
       
       setState({
         user,
         isLoading: false,
-        isAuthenticated: true,
+        isAuthenticated: false, // User is not authenticated yet, needs to login
       })
 
-      console.log('State updated, redirecting to dashboard')
-      // Small delay to ensure state is updated before redirect
-      setTimeout(() => {
-        router.push("/mentor/dashboard")
-      }, 100)
+      console.log('Registration completed, user needs to login')
+      // Don't redirect to dashboard since user is not authenticated
+      // They need to login first
     } catch (error) {
       console.log('Register error:', error)
       setState((prev) => ({ ...prev, isLoading: false }))

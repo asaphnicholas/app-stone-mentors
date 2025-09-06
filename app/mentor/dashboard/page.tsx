@@ -27,6 +27,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/toast"
+import { mentorDashboardService, type MentorDashboard } from "@/lib/services/mentor-dashboard"
 import Link from "next/link"
 
 // Hook para detectar hidratação
@@ -40,63 +41,6 @@ function useHydration() {
   return isHydrated
 }
 
-// Tipos para os dados do mentor
-interface MentorDashboardData {
-  mentorias: {
-    total_realizadas: number
-    ativas: number
-    concluidas: number
-    tempo_medio_mentoria: string
-  }
-  conteudos: {
-    total_materiais: number
-    concluidos: number
-    progresso_percentual: number
-    ultimo_material: string
-  }
-  mentoria_ativa: {
-    id: string
-    negocio_nome: string
-    empreendedor_nome: string
-    data_inicio: string
-    status: string
-    proxima_sessao: string
-    progresso_percentual: number
-  } | null
-  qualificacao: {
-    status: "qualificado" | "em_progresso" | "nao_qualificado"
-    pode_mentorar: boolean
-  }
-}
-
-// Mock data - substitua pela chamada real da API
-const mockMentorData: MentorDashboardData = {
-  mentorias: {
-    total_realizadas: 8,
-    ativas: 1,
-    concluidas: 7,
-    tempo_medio_mentoria: "3 meses"
-  },
-  conteudos: {
-    total_materiais: 12,
-    concluidos: 10,
-    progresso_percentual: 83,
-    ultimo_material: "Protocolo de Mentoria Avançada"
-  },
-  mentoria_ativa: {
-    id: "ment-001",
-    negocio_nome: "TechStart Solutions",
-    empreendedor_nome: "João Silva",
-    data_inicio: "2024-01-15",
-    status: "Em andamento",
-    proxima_sessao: "2024-12-20T14:00:00",
-    progresso_percentual: 65
-  },
-  qualificacao: {
-    status: "qualificado",
-    pode_mentorar: true
-  }
-}
 
 // Componente de Loading
 const LoadingState = () => (
@@ -152,7 +96,7 @@ const LoadingState = () => (
 export default function MentorDashboard() {
   const { user } = useAuth()
   const { addToast } = useToast()
-  const [dashboardData, setDashboardData] = useState<MentorDashboardData | null>(null)
+  const [dashboardData, setDashboardData] = useState<MentorDashboard | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const isHydrated = useHydration()
 
@@ -165,9 +109,8 @@ export default function MentorDashboard() {
   const loadDashboardData = async () => {
     try {
       setIsLoading(true)
-      // Simular carregamento - substitua pela chamada real da API
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setDashboardData(mockMentorData)
+      const data = await mentorDashboardService.getDashboard()
+      setDashboardData(data)
     } catch (error) {
       addToast({
         type: "error",
@@ -226,11 +169,11 @@ export default function MentorDashboard() {
             </div>
           </div>
           
-          {dashboardData.qualificacao.pode_mentorar && (
+          {dashboardData.status_qualificacao.is_qualified && (
             <div className="flex items-center gap-3 bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-xl shadow-lg">
               <FontAwesomeIcon icon={faTrophy} className="h-6 w-6" />
               <div>
-                <span className="font-bold text-lg block">Mentor Qualificado</span>
+                <span className="font-bold text-lg block">{dashboardData.status_qualificacao.status_text}</span>
                 <span className="text-white/90 text-sm">Pronto para mentorar</span>
               </div>
             </div>
@@ -251,7 +194,7 @@ export default function MentorDashboard() {
                 <div className="flex-1">
                   <h3 className="text-sm font-medium text-white/90 mb-2">Mentorias Realizadas</h3>
                   <div className="text-3xl font-bold text-white mb-1">
-                    {dashboardData.mentorias.total_realizadas}
+                    {dashboardData.mentorias_realizadas.total_mentorias}
                   </div>
                 </div>
                 
@@ -268,10 +211,10 @@ export default function MentorDashboard() {
               <div className="flex items-center gap-3">
                 <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-stone-green-light/10 text-stone-green-dark">
                   <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
-                  {dashboardData.mentorias.concluidas} concluídas
+                  {dashboardData.mentorias_realizadas.concluidas} concluídas
                 </div>
                 <span className="text-xs text-gray-500 font-medium">
-                  Tempo médio: {dashboardData.mentorias.tempo_medio_mentoria}
+                  Tempo médio: {dashboardData.mentorias_realizadas.tempo_medio_meses} meses
                 </span>
               </div>
             </div>
@@ -289,7 +232,7 @@ export default function MentorDashboard() {
                 <div className="flex-1">
                   <h3 className="text-sm font-medium text-white/90 mb-2">Conteúdos Concluídos</h3>
                   <div className="text-3xl font-bold text-white mb-1">
-                    {dashboardData.conteudos.concluidos}/{dashboardData.conteudos.total_materiais}
+                    {dashboardData.conteudos_concluidos.concluidos}/{dashboardData.conteudos_concluidos.total_materiais}
                   </div>
                 </div>
                 
@@ -307,15 +250,15 @@ export default function MentorDashboard() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Progresso</span>
                   <span className="font-semibold text-stone-green-dark">
-                    {dashboardData.conteudos.progresso_percentual}%
+                    {dashboardData.conteudos_concluidos.progresso_percentual}%
                   </span>
                 </div>
                 <Progress 
-                  value={dashboardData.conteudos.progresso_percentual} 
+                  value={dashboardData.conteudos_concluidos.progresso_percentual} 
                   className="h-2"
                 />
                 <p className="text-xs text-gray-500">
-                  Último: {dashboardData.conteudos.ultimo_material}
+                  Último: {dashboardData.conteudos_concluidos.ultimo_material}
                 </p>
               </div>
             </div>
@@ -333,7 +276,7 @@ export default function MentorDashboard() {
                 <div className="flex-1">
                   <h3 className="text-sm font-medium text-white/90 mb-2">Status de Qualificação</h3>
                   <div className="text-2xl font-bold text-white mb-1">
-                    {dashboardData.qualificacao.status === 'qualificado' ? 'Qualificado' : 'Em Progresso'}
+                    {dashboardData.status_qualificacao.status_text}
                   </div>
                 </div>
                 
@@ -345,22 +288,22 @@ export default function MentorDashboard() {
 
             <div className="p-6 bg-white">
               <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                {dashboardData.qualificacao.pode_mentorar 
+                {dashboardData.status_qualificacao.is_qualified 
                   ? 'Você está apto para mentorar negócios'
                   : 'Continue estudando para se qualificar'
                 }
               </p>
               <div className="flex items-center gap-3">
                 <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold ${
-                  dashboardData.qualificacao.pode_mentorar 
+                  dashboardData.status_qualificacao.is_active 
                     ? 'bg-emerald-50 text-emerald-600' 
                     : 'bg-amber-50 text-amber-600'
                 }`}>
                   <FontAwesomeIcon 
-                    icon={dashboardData.qualificacao.pode_mentorar ? faCheckCircle : faClock} 
+                    icon={dashboardData.status_qualificacao.is_active ? faCheckCircle : faClock} 
                     className="h-3 w-3 mr-2" 
                   />
-                  {dashboardData.qualificacao.pode_mentorar ? 'Ativo' : 'Pendente'}
+                  {dashboardData.status_qualificacao.is_active ? 'Ativo' : 'Pendente'}
                 </div>
               </div>
             </div>
@@ -421,26 +364,10 @@ export default function MentorDashboard() {
                 </div>
               </div>
 
-              {/* Progresso */}
+              {/* Ações */}
               <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-lg font-semibold text-gray-900">Progresso da Mentoria</h4>
-                    <span className="text-2xl font-bold text-stone-green-dark">
-                      {dashboardData.mentoria_ativa.progresso_percentual}%
-                    </span>
-                  </div>
-                  <Progress 
-                    value={dashboardData.mentoria_ativa.progresso_percentual} 
-                    className="h-3"
-                  />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Mentoria em andamento há {Math.floor((Date.now() - new Date(dashboardData.mentoria_ativa.data_inicio).getTime()) / (1000 * 60 * 60 * 24 * 30))} meses
-                  </p>
-                </div>
-
                 <div className="space-y-4">
-                  <Link href={`/mentoria/${dashboardData.mentoria_ativa.id}`}>
+                  <Link href={`/mentor/mentorias/${dashboardData.mentoria_ativa.negocio_id}`}>
                     <Button className="w-full bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-12">
                       <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
                       Acessar Mentoria
@@ -477,7 +404,7 @@ export default function MentorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link href="/trilha-conhecimento">
+            <Link href="/mentor/trilha-conhecimento">
               <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -495,7 +422,7 @@ export default function MentorDashboard() {
               </Card>
             </Link>
 
-            <Link href="/mentorias">
+            <Link href="/mentor/mentorias">
               <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -513,7 +440,7 @@ export default function MentorDashboard() {
               </Card>
             </Link>
 
-            <Link href="/perfil">
+            {/* <Link href="/perfil">
               <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -529,7 +456,7 @@ export default function MentorDashboard() {
                   </div>
                 </CardContent>
               </Card>
-            </Link>
+            </Link> */}
           </div>
         </CardContent>
       </Card>

@@ -22,10 +22,10 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/mentor/dashboard", icon: faTachometerAlt },
-  { name: "Trilha de Conhecimento", href: "/mentor/trilha-conhecimento", icon: faGraduationCap },
-  { name: "Mentorias", href: "/mentor/mentorias", icon: faComments },
-  { name: "Desempenho", href: "/mentor/desempenho", icon: faChartLine },
+  { name: "Dashboard", href: "/mentor/dashboard", icon: faTachometerAlt, disabled: false },
+  { name: "Trilha de Conhecimento", href: "/mentor/trilha-conhecimento", icon: faGraduationCap, disabled: false },
+  { name: "Mentorias", href: "/mentor/mentorias", icon: faComments, disabled: false },
+  { name: "Desempenho", href: "/mentor/desempenho", icon: faChartLine, disabled: true },
 ]
 
 interface MentorLayoutProps {
@@ -131,6 +131,42 @@ export function MentorLayout({ children }: MentorLayoutProps) {
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const isDisabled = item.disabled
+              
+              if (isDisabled) {
+                return (
+                  <div
+                    key={item.name}
+                    className={cn(
+                      "flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative cursor-not-allowed opacity-50",
+                      sidebarCollapsed ? "justify-center px-2" : "px-4"
+                    )}
+                  >
+                    <FontAwesomeIcon 
+                      icon={item.icon} 
+                      className="h-5 w-5 text-white/40"
+                    />
+                    {!sidebarCollapsed && (
+                      <span className="font-medium text-white/40">{item.name}</span>
+                    )}
+                    
+                    {/* Tooltip for collapsed sidebar */}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.name} - Em desenvolvimento
+                      </div>
+                    )}
+                    
+                    {/* Tooltip for expanded sidebar */}
+                    {!sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.name} - Em desenvolvimento
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+              
               return (
                 <Link
                   key={item.name}
@@ -176,25 +212,35 @@ export function MentorLayout({ children }: MentorLayoutProps) {
             "p-4 space-y-2 transition-all duration-300",
             sidebarCollapsed ? "px-2" : "p-4"
           )}>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "w-full justify-start text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200",
-                sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
-              )}
-              title={sidebarCollapsed ? "Configurações" : undefined}
-            >
-              <FontAwesomeIcon icon={faCog} className="h-4 w-4 mr-3" />
-              {!sidebarCollapsed && "Configurações"}
+            <div className="relative group">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                className={cn(
+                  "w-full justify-start text-white/40 hover:text-white/40 hover:bg-transparent rounded-xl transition-all duration-200 cursor-not-allowed opacity-50",
+                  sidebarCollapsed ? "justify-center px-2" : "justify-start px-4"
+                )}
+                title={sidebarCollapsed ? "Configurações - Em desenvolvimento" : undefined}
+              >
+              <FontAwesomeIcon icon={faCog} className="h-4 w-4 mr-3 text-white/40" />
+              {!sidebarCollapsed && <span className="text-white/40">Configurações</span>}
               
               {/* Tooltip for collapsed sidebar */}
               {sidebarCollapsed && (
                 <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                  Configurações
+                  Configurações - Em desenvolvimento
                 </div>
               )}
-            </Button>
+              </Button>
+              
+              {/* Tooltip for expanded sidebar */}
+              {!sidebarCollapsed && (
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                  Configurações - Em desenvolvimento
+                </div>
+              )}
+            </div>
             <Button
               onClick={logout}
               variant="ghost"
@@ -237,7 +283,7 @@ export function MentorLayout({ children }: MentorLayoutProps) {
             </Button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {navigation.find((item) => item.href === pathname)?.name || "Dashboard"}
+                {navigation.find((item) => item.href === pathname)?.name }
               </h1>
               
             </div>

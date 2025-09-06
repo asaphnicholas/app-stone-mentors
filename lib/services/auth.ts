@@ -54,11 +54,21 @@ export interface RegisterRequest {
   telefone: string
   competencias: string
   area_atuacao: AreaAtuacao
+  invite_token?: string | null
 }
 
 export interface RegisterResponse {
-  user: User
-  tokens: AuthTokens
+  id: string
+  nome: string
+  email: string
+  role: 'admin' | 'mentor'
+  status: 'ativo' | 'inativo' | 'pendente'
+  telefone: string
+  competencias: string
+  area_atuacao: string
+  protocolo_concluido: boolean
+  created_at: string
+  last_login: string | null
 }
 
 class AuthService {
@@ -96,7 +106,8 @@ class AuthService {
       // Prepare registration data with role as mentor
       const registrationData = {
         ...userData,
-        role: 'mentor' as const
+        role: 'mentor' as const,
+        invite_token: userData.invite_token || null
       }
 
       const response = await apiService.post<RegisterResponse>(
@@ -105,9 +116,23 @@ class AuthService {
         false // Don't include auth token for registration
       )
 
-      // Store tokens and user data
-      this.storeTokens(response.tokens)
-      this.storeUser(response.user)
+      // For registration, we only store user data (no tokens since user needs to login)
+      // Convert RegisterResponse to User format for storage
+      const userToStore: User = {
+        id: response.id,
+        nome: response.nome,
+        email: response.email,
+        role: response.role,
+        status: response.status === 'pendente' ? 'inativo' : response.status,
+        telefone: response.telefone,
+        competencias: response.competencias,
+        area_atuacao: response.area_atuacao,
+        protocolo_concluido: response.protocolo_concluido,
+        created_at: response.created_at,
+        last_login: response.last_login || ''
+      }
+      
+      this.storeUser(userToStore)
 
       return response
     } catch (error) {

@@ -15,7 +15,8 @@ import {
   faChartLine, 
   faCog,
   faBell,
-  faFileText
+  faFileText,
+  faUserPlus
 } from "@fortawesome/free-solid-svg-icons"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -23,13 +24,14 @@ import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 const navigation = [
-  { name: "Dashboard", href: "/admin/dashboard", icon: faTachometerAlt },
-  { name: "Mentores", href: "/admin/mentores", icon: faUsers },
-  { name: "Negócios", href: "/admin/negocios", icon: faBuilding },
-  { name: "Conteúdos", href: "/admin/conteudos", icon: faFileText },
-  { name: "Mentorias", href: "/admin/mentorias", icon: faComments },
-  { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine },
-  { name: "Configurações", href: "/admin/configuracoes", icon: faCog },
+  { name: "Dashboard", href: "/admin/dashboard", icon: faTachometerAlt, disabled: false },
+  { name: "Mentores", href: "/admin/mentores", icon: faUsers, disabled: false },
+  { name: "Convidar Mentor", href: "/admin/convidar-mentor", icon: faUserPlus, disabled: false },
+  { name: "Negócios", href: "/admin/negocios", icon: faBuilding, disabled: false },
+  { name: "Conteúdos", href: "/admin/conteudos", icon: faFileText, disabled: false },
+  { name: "Mentorias", href: "/admin/mentorias", icon: faComments, disabled: true },
+  { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine, disabled: true },
+  { name: "Configurações", href: "/admin/configuracoes", icon: faCog, disabled: true },
 ]
 
 interface AdminLayoutProps {
@@ -135,6 +137,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
               const isActive = pathname === item.href
+              const isDisabled = item.disabled
+              
+              if (isDisabled) {
+                return (
+                  <div
+                    key={item.name}
+                    className={cn(
+                      "flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group relative cursor-not-allowed opacity-50",
+                      sidebarCollapsed ? "justify-center px-2" : "px-4"
+                    )}
+                  >
+                    <FontAwesomeIcon 
+                      icon={item.icon} 
+                      className="h-5 w-5 text-white/40"
+                    />
+                    {!sidebarCollapsed && (
+                      <span className="font-medium text-white/40">{item.name}</span>
+                    )}
+                    
+                    {/* Tooltip for collapsed sidebar */}
+                    {sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.name} - Em desenvolvimento
+                      </div>
+                    )}
+                    
+                    {/* Tooltip for expanded sidebar */}
+                    {!sidebarCollapsed && (
+                      <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        {item.name} - Em desenvolvimento
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+              
               return (
                 <Link
                   key={item.name}

@@ -23,9 +23,14 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Stone Mentors Platform",
+  title: "Impulso Stone Mentors",
   description: "Plataforma de mentoria para empreendedores",
-  generator: "Stone Mentors",
+  generator: "Impulso Stone Mentors",
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 }
 
 export default function RootLayout({

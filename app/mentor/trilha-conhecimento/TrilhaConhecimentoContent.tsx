@@ -319,6 +319,14 @@ export default function TrilhaConhecimentoContent() {
             <div className="text-right">
               <div className="text-4xl font-bold text-stone-green-dark">{getProgressPercentage()}%</div>
               <div className="text-gray-600 text-base">Concluído</div>
+              {progressSummary?.pode_mentorar && getProgressPercentage() === 100 && (
+                <div className="mt-3">
+                  <Badge className="bg-gradient-to-r from-emerald-500 to-green-600 text-white border-0 px-4 py-2 text-sm font-semibold shadow-lg">
+                    <FontAwesomeIcon icon={faTrophy} className="h-4 w-4 mr-2" />
+                    Qualificado
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
           
@@ -337,7 +345,7 @@ export default function TrilhaConhecimentoContent() {
             <div className="absolute inset-0 bg-gradient-to-r from-stone-green-dark to-stone-green-light rounded-full opacity-20"></div>
           </div>
           
-          {qualificationStatus?.missing_requirements && qualificationStatus.missing_requirements.length > 0 && (
+          {/* {qualificationStatus?.missing_requirements && qualificationStatus.missing_requirements.length > 0 && (
             <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
               <div className="flex items-center gap-3 mb-3">
                 <FontAwesomeIcon icon={faAward} className="h-5 w-5 text-amber-600" />
@@ -352,7 +360,7 @@ export default function TrilhaConhecimentoContent() {
                 ))}
               </ul>
             </div>
-          )}
+          )} */}
         </CardContent>
       </Card>
 
@@ -581,7 +589,7 @@ export default function TrilhaConhecimentoContent() {
 
       {/* Complete Material Dialog */}
       <Dialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-white">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-gray-900">Concluir Material</DialogTitle>
             <DialogDescription className="text-gray-600">

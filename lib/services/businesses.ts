@@ -42,6 +42,8 @@ export interface CreateBusinessRequest {
   area_atuacao: string
   localizacao?: string
   tamanho_empresa?: string
+  nome_empreendedor: string
+  telefone: string
   faturamento_mensal?: number
   numero_funcionarios?: number
   desafios_principais?: string
@@ -70,9 +72,13 @@ export interface AvailableMentor {
   id: string
   nome: string
   email: string
-  areas_especializacao: string
-  experiencia_anos: number
-  negocios_ativo: number
+  role: string
+  status: string
+  telefone: string
+  area_atuacao: string
+  protocolo_concluido: boolean
+  created_at: string
+  last_login: string
 }
 
 export interface AssignMentorRequest {
@@ -160,7 +166,7 @@ class BusinessesService {
       console.log('BusinessesService.getAvailableMentors')
       
       const result = await apiService.get<AvailableMentor[]>(
-        `${API_ENDPOINTS.ADMIN.BUSINESSES}/mentors/available`,
+        `${API_ENDPOINTS.ADMIN.USERS}?role=mentor&status=ativo`,
         true
       )
       console.log('BusinessesService.getAvailableMentors - Resultado:', result)
