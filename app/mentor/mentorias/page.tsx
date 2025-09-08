@@ -31,12 +31,13 @@ import {
   faPlay,
   faCheck,
   faEdit,
-  faSpinner
+  faSpinner,
+  faHistory
 } from "@fortawesome/free-solid-svg-icons"
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
 import { mentoriasService, type MentorBusiness, type Mentoria } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
-import { formatDateToBR } from "@/lib/utils/date"
+import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -199,7 +200,7 @@ export default function MentoriasPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'confirmada': return 'bg-green-100 text-green-700 border-green-200'
+      case 'confirmada': return 'bg-green-200 text-green-700 border-green-200'
       case 'em_andamento': return 'bg-orange-100 text-orange-700 border-orange-200'
       case 'disponivel': return 'bg-blue-100 text-blue-700 border-blue-200'
       case 'finalizada': return 'bg-gray-100 text-gray-700 border-gray-200'
@@ -211,6 +212,7 @@ export default function MentoriasPage() {
     switch (status) {
       case 'confirmada': return faCheckCircle
       case 'em_andamento': return faPlay
+      case 'andamento': return faPlay
       case 'disponivel': return faCalendarAlt
       case 'finalizada': return faCheckCircle
       default: return faClock
@@ -221,6 +223,7 @@ export default function MentoriasPage() {
     switch (status) {
       case 'confirmada': return 'Confirmada'
       case 'em_andamento': return 'Em andamento'
+      case 'andamento': return 'Em andamento'
       case 'disponivel': return 'Disponível'
       case 'finalizada': return 'Finalizada'
       default: return 'Pendente'
@@ -312,7 +315,7 @@ export default function MentoriasPage() {
         </Card>
       </div>
 
-      {/* Businesses List */}
+      {/* Businesses List - Grid Layout */}
       <div className="space-y-6">
         {businesses.length === 0 ? (
           <Card className="border-0 shadow-lg">
@@ -325,74 +328,80 @@ export default function MentoriasPage() {
             </CardContent>
           </Card>
         ) : (
-          businesses.map((business) => (
-            <Card key={business.negocio_id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
-                        <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900">{business.negocio_nome}</h3>
-                        <Badge className="bg-stone-green-light/10 text-stone-green-dark border-0 mt-1">
-                          {business.area_atuacao}
-                        </Badge>
-                      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {businesses.map((business) => (
+              <Card key={business.negocio_id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
+                <CardContent className="p-6">
+                  {/* Header do Card */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
+                      <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
                     </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-stone-green-dark" />
-                        <span className="font-medium">{business.empreendedor_nome}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleContact(business.telefone)}
-                          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                        >
-                          <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 text-green-500" />
-                          <span className="font-medium text-gray-900 hover:text-green-600 transition-colors">{business.telefone}</span>
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900">{business.negocio_nome}</h3>
+                      <Badge className="bg-stone-green-light/10 text-stone-green-dark border-0 mt-1 text-xs">
+                        {business.area_atuacao}
+                      </Badge>
+                    </div>
+                  </div>
+                  
+                  {/* Informações do Empreendedor */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-stone-green-dark" />
+                      <span className="font-medium">{business.empreendedor_nome}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <button
+                        onClick={() => handleContact(business.telefone)}
+                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                      >
+                        <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 text-green-500" />
+                        <span className="font-medium text-gray-900 hover:text-green-600 transition-colors">{business.telefone}</span>
+                      </button>
+                    </div>
+                    {business.localizacao && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
                         <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-stone-green-dark" />
                         <span className="font-medium">{business.localizacao}</span>
                       </div>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* Mentoria Stats */}
-                    <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-                      <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-stone-green-dark" />
-                        <span className="font-medium">{business.total_mentorias} mentorias totais</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-stone-green-dark" />
-                        <span className="font-medium">{business.mentorias_finalizadas} finalizadas</span>
-                      </div>
+                  {/* Stats da Mentoria */}
+                  <div className="flex items-center justify-between text-sm text-gray-600 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-stone-green-dark" />
+                      <span className="font-medium">{business.total_mentorias} total</span>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-stone-green-dark" />
+                      <span className="font-medium">{business.mentorias_finalizadas} finalizadas</span>
+                    </div>
+                  </div>
 
-                    {/* Próxima Mentoria */}
-                    {business.proxima_mentoria ? (
-                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                          <FontAwesomeIcon icon={faCalendarAlt} className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900">
-                            Próxima mentoria: {getTipoText(business.proxima_mentoria.tipo)}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {formatDateToBR(business.proxima_mentoria.data_agendada)}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
+                  {/* Status da Próxima Mentoria */}
+                  {business.proxima_mentoria ? (
+                    <div className="space-y-3 mb-4">
+                      <div className="p-4 bg-gradient-to-r from-stone-green-light/10 to-stone-green-dark/10 rounded-lg border border-stone-green-light/30">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-lg flex items-center justify-center shadow-lg">
+                            <FontAwesomeIcon icon={faCalendarAlt} className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900 text-sm">
+                              {getTipoText(business.proxima_mentoria.tipo)}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {formatDateTimeToBR(business.proxima_mentoria.data_agendada)}
+                            </p>
+                          </div>
                           <Badge className={`text-xs border-0 ${
                             business.proxima_mentoria.status === 'confirmada' 
                               ? 'bg-green-100 text-green-700' 
-                              : 'bg-blue-100 text-blue-700'
+                              : business.proxima_mentoria.status === 'andamento'
+                              ? 'bg-orange-100 text-orange-700'
+                              : 'bg-stone-green-light/20 text-stone-green-dark'
                           }`}>
                             <FontAwesomeIcon 
                               icon={getStatusIcon(business.proxima_mentoria.status)} 
@@ -400,51 +409,137 @@ export default function MentoriasPage() {
                             />
                             {getStatusText(business.proxima_mentoria.status)}
                           </Badge>
+                        </div>
+                        
+                        {/* Detalhes da Mentoria */}
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="flex items-center gap-2">
+                            <FontAwesomeIcon icon={faClock} className="h-3 w-3 text-stone-green-dark" />
+                            <span className="text-gray-600">
+                              {business.proxima_mentoria.duracao_minutos} min
+                            </span>
+                          </div>
+                          {business.proxima_mentoria.confirmada_at && (
+                            <div className="flex items-center gap-2">
+                              <FontAwesomeIcon icon={faCheckCircle} className="h-3 w-3 text-green-500" />
+                              <span className="text-gray-600">
+                                Confirmada
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Botões - Mostra ambos se há mentorias finalizadas */}
+                      {business.mentorias_finalizadas > 0 ? (
+                        <div className="flex gap-2">
                           <Button
-                            onClick={() => window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`}
-                            variant="outline"
-                            size="sm"
-                            className="text-xs h-7 px-2 border-blue-300 text-blue-600 hover:bg-blue-50"
+                            onClick={() => (window.location.href = `/mentor/mentorias/historico/${business.negocio_id}`)}
+                            className="flex-1 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
                           >
-                            <FontAwesomeIcon icon={faArrowRight} className="h-3 w-3 mr-1" />
+                            <FontAwesomeIcon icon={faHistory} className="h-4 w-4 mr-2" />
+                            Ver Histórico
+                          </Button>
+                          <Button
+                            onClick={() => business.proxima_mentoria && (window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`)}
+                            className="flex-1 bg-none border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white shadow-lg h-10 text-sm"
+                          >
+                            <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
                             Ver Detalhes
                           </Button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-                        <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                          <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
+                      ) : (
+                        <Button
+                          onClick={() => business.proxima_mentoria && (window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`)}
+                          className="w-full bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
+                        >
+                          <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
+                          Ver Detalhes
+                        </Button>
+                      )}
+                    </div>
+                  ) : business.mentorias_finalizadas > 0 ? (
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
+                          <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 text-white" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-gray-900">Nenhuma mentoria agendada</p>
-                          <p className="text-sm text-gray-600">Agende uma mentoria para este negócio</p>
+                          <p className="font-semibold text-gray-900 text-sm">Marque sua próxima mentoria</p>
+                          <p className="text-xs text-gray-600">Continue o acompanhamento</p>
                         </div>
                       </div>
-                    )}
-                  </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => (window.location.href = `/mentor/mentorias/historico/${business.negocio_id}`)}
+                          className="flex-1 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
+                        >
+                          <FontAwesomeIcon icon={faHistory} className="h-4 w-4 mr-2" />
+                          Ver Histórico
+                        </Button>
+                        <Button
+                          onClick={() => business.proxima_mentoria && (window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`)}
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg h-10 text-sm"
+                        >
+                          <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                        <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
+                          <FontAwesomeIcon icon={faExclamationTriangle} className="h-4 w-4 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-gray-900 text-sm">Agende sua primeira data de mentoria</p>
+                          <p className="text-xs text-gray-600">Nenhuma mentoria agendada</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
-                  <div className="ml-6 flex flex-col gap-3">
+                  {/* Botões de Ação */}
+                  <div className="flex gap-2">
                     <Button
                       onClick={() => handleContact(business.telefone)}
                       variant="outline"
-                      className="border-green-500 text-green-600 hover:bg-green-500 hover:text-white h-10 px-4"
+                      className="flex-1 border-green-500 text-green-600 hover:bg-green-500 hover:text-white h-10 text-sm"
                     >
                       <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-2" />
                       Contatar
                     </Button>
                     <Button
                       onClick={() => handleScheduleSession(business)}
-                      className="bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 px-4"
+                      className="flex-1 bg-none border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
                     >
                       <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
                       {business.proxima_mentoria ? "Reagendar" : "Agendar"}
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {/* Card "Novas mentorias em breve" */}
+            <Card className="border-0 opacity-50 shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center justify-center text-center h-full min-h-[300px]">
+                  <div className="w-16 h-16 bg-gradient-to-br from-gray-400 to-gray-500 rounded-2xl flex items-center justify-center shadow-lg mb-4">
+                    <FontAwesomeIcon icon={faBuilding} className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-700 mb-2">Novas mentorias em breve</h3>
+                  <p className="text-sm text-gray-600 mb-4">Mais oportunidades de mentoria serão adicionadas em breve</p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <FontAwesomeIcon icon={faClock} className="h-3 w-3" />
+                    <span>Em desenvolvimento</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          ))
+          </div>
         )}
       </div>
 

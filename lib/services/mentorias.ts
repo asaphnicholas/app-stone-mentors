@@ -30,7 +30,10 @@ export interface MentorBusiness {
     id: string
     data_agendada: string
     tipo: 'primeira' | 'followup'
-    status: 'disponivel' | 'confirmada' | 'em_andamento' | 'finalizada'
+    status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+    duracao_minutos: number
+    created_at: string
+    confirmada_at?: string
   }
 }
 
@@ -46,7 +49,7 @@ export interface Mentoria {
   }
   data_agendada: string
   tipo: 'primeira' | 'followup'
-  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'finalizada'
+  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
   duracao_minutos: number
   confirmada_at?: string
   checkin_at?: string
@@ -61,6 +64,7 @@ export interface Mentoria {
   }
   checkout?: {
     id: string
+    nps?: number
     observacoes?: string
     proximos_passos?: string
     created_at: string
@@ -119,6 +123,7 @@ export interface DiagnosticoResponse {
 }
 
 export interface CheckoutRequest {
+  nps: number
   observacoes?: string
   proximos_passos?: string
 }
@@ -129,7 +134,52 @@ export interface CheckoutResponse {
   status: 'finalizada'
   finalizada_at: string
   checkout_id: string
+  nps: number
   message: string
+}
+
+// Interfaces para histórico de mentorias
+export interface MentoriaHistory {
+  id: string
+  data_agendada: string
+  tipo: 'primeira' | 'followup'
+  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+  duracao_minutos: number
+  created_at: string
+  confirmada_at?: string
+  checkin_at?: string
+  inicio_at?: string
+  finalizada_at?: string
+  diagnostico?: {
+    id: string
+    tempo_mercado?: string
+    faturamento_mensal?: string
+    num_funcionarios?: string
+    desafios?: string[]
+    observacoes?: string
+    created_at: string
+  }
+  checkout?: {
+    id: string
+    nps: number
+    feedback?: string
+    proximos_passos?: string
+    created_at: string
+  }
+}
+
+export interface BusinessHistoryResponse {
+  negocio_id: string
+  negocio_nome: string
+  empreendedor_nome: string
+  telefone: string
+  area_atuacao: string
+  localizacao: string
+  data_vinculacao: string
+  total_mentorias: number
+  mentorias_finalizadas: number
+  nps_medio: number
+  mentorias: MentoriaHistory[]
 }
 
 class MentoriasService {
@@ -271,6 +321,24 @@ class MentoriasService {
       return result
     } catch (error) {
       console.error('MentoriasService.getMentoriaDetails - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  // GET /api/v1/mentor/mentorias/businesses/{business_id}/history - Histórico de mentorias do negócio
+  async getBusinessHistory(businessId: string): Promise<BusinessHistoryResponse> {
+    try {
+      console.log('MentoriasService.getBusinessHistory - Business ID:', businessId)
+      
+      const result = await apiService.get<BusinessHistoryResponse>(
+        `/mentor/mentorias/businesses/${businessId}/history`,
+        true
+      )
+      console.log('MentoriasService.getBusinessHistory - Resultado:', result)
+      
+      return result
+    } catch (error) {
+      console.error('MentoriasService.getBusinessHistory - Erro:', error)
       throw this.handleError(error)
     }
   }

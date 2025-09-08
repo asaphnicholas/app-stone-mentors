@@ -26,12 +26,17 @@ import {
   faHandshake,
   faRocket,
   faFilter,
-  faBriefcase
+  faBriefcase,
+  faPhone,
+  faCalendarAlt,
+  faPlay,
+  faEdit
 } from "@fortawesome/free-solid-svg-icons"
 import { businessesService, type Business, type BusinessFilters, type AvailableMentor, type CreateBusinessRequest } from "@/lib/services/businesses"
+import { FileViewer } from "@/components/ui/file-viewer"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
-import { formatDateToBR } from "@/lib/utils/date"
+import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -117,6 +122,7 @@ export default function NegociosContent() {
   const [mentorFilter, setMentorFilter] = useState<string>("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false)
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false)
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [selectedMentor, setSelectedMentor] = useState<string>("")
   const [assignObservations, setAssignObservations] = useState("")
@@ -324,10 +330,16 @@ export default function NegociosContent() {
     }
   }
 
+  const openDetailsDialog = (business: Business) => {
+    setSelectedBusiness(business)
+    setIsDetailsDialogOpen(true)
+  }
+
   // Filter businesses based on search and filters
   const filteredBusinesses = businesses.filter((business) => {
     const matchesSearch = business.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         business.localizacao?.toLowerCase().includes(searchTerm.toLowerCase())
+                         business.localizacao?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         business.nome_empreendedor?.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = !statusFilter || statusFilter === "all" || business.status === statusFilter
     const matchesArea = !areaFilter || areaFilter === "all" || business.area_atuacao === areaFilter
@@ -597,7 +609,7 @@ export default function NegociosContent() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-emerald-50 to-green-50">
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 0">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -647,8 +659,8 @@ export default function NegociosContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="ATIVO">Ativo</SelectItem>
-                  <SelectItem value="INATIVO">Inativo</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -687,31 +699,23 @@ export default function NegociosContent() {
         </CardContent>
       </Card>
 
-      {/* Businesses without mentor */}
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-amber-50 to-orange-50">
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <FontAwesomeIcon icon={faExclamationTriangle} className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
-            Aguardando Mentor ({businessesWithoutMentor.length})
-          </CardTitle>
-              <p className="text-gray-600">Negócios que precisam ser vinculados a mentores</p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {businessesWithoutMentor.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-                <FontAwesomeIcon icon={faCheckCircle} className="h-10 w-10 text-white" />
+      {/* Businesses without mentor - Only show if there are businesses without mentor */}
+      {businessesWithoutMentor.length > 0 && (
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-amber-50 to-orange-50">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                <FontAwesomeIcon icon={faExclamationTriangle} className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Todos os negócios têm mentores!</h3>
-              <p className="text-gray-600">Nenhum negócio está aguardando mentor no momento</p>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-900">
+              Aguardando Mentor ({businessesWithoutMentor.length})
+            </CardTitle>
+                <p className="text-gray-600">Negócios que precisam ser vinculados a mentores</p>
+              </div>
             </div>
-          ) : (
+          </CardHeader>
+          <CardContent>
             <div className="space-y-4">
               {businessesWithoutMentor.map((business) => (
                 <Card key={business.id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
@@ -731,25 +735,32 @@ export default function NegociosContent() {
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
-                          {business.localizacao && (
+                          {business.nome_empreendedor && (
                             <div className="flex items-center gap-2">
-                              <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-stone-green-dark" />
-                              <span className="font-medium">{business.localizacao}</span>
+                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-stone-green-dark" />
+                              <span className="font-medium">{business.nome_empreendedor}</span>
                             </div>
                           )}
-                          {business.tamanho_empresa && (
+                          {business.telefone && (
                             <div className="flex items-center gap-2">
-                              <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-stone-green-dark" />
-                              <span className="font-medium">{business.tamanho_empresa}</span>
+                              <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-stone-green-dark" />
+                              <span className="font-medium">{business.telefone}</span>
                             </div>
                           )}
                           {business.numero_funcionarios && (
                             <div className="flex items-center gap-2">
-                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-stone-green-dark" />
+                              <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-stone-green-dark" />
                               <span className="font-medium">{business.numero_funcionarios} funcionários</span>
                             </div>
                           )}
                         </div>
+                        
+                        {business.faturamento_mensal && business.faturamento_mensal > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                            <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-stone-green-dark" />
+                            <span className="font-medium">Faturamento: {formatCurrencyDisplay(business.faturamento_mensal)}</span>
+                          </div>
+                        )}
                         
                         {business.descricao && (
                           <p className="text-gray-600 leading-relaxed">{business.descricao}</p>
@@ -770,12 +781,12 @@ export default function NegociosContent() {
                 </Card>
               ))}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Businesses with mentor */}
-      <Card className="border-0 shadow-xl bg-gradient-to-br from-emerald-50 to-green-50">
+      <Card className="border-0 shadow-lg">
         <CardHeader>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
@@ -783,8 +794,8 @@ export default function NegociosContent() {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold text-gray-900">
-            Com Mentor ({businessesWithMentor.length})
-          </CardTitle>
+                Com Mentor ({businessesWithMentor.length})
+              </CardTitle>
               <p className="text-gray-600">Negócios que já possuem mentores vinculados</p>
             </div>
           </div>
@@ -801,55 +812,128 @@ export default function NegociosContent() {
           ) : (
             <div className="space-y-4">
               {businessesWithMentor.map((business) => (
-                <Card key={business.id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
+                <Card key={business.id} className="group border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 bg-gradient-to-br from-white to-green-50 overflow-hidden">
+                  
+                  <CardContent className="relative p-6 z-10">
+                    {/* Header com status de sucesso */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
                             <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
                           </div>
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900">{business.nome}</h3>
-                            <Badge className="bg-stone-green-light/10 text-stone-green-dark border-0 mt-1">
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={faCheckCircle} className="h-2 w-2 text-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-stone-green-dark transition-colors">
+                            {business.nome}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-gradient-to-r from-stone-green-light to-stone-green-dark text-white font-medium px-2 py-1 text-xs shadow-md">
                               {business.area_atuacao}
+                            </Badge>
+                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium px-2 py-1 text-xs shadow-md">
+                              Com Mentor
                             </Badge>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
-                          {business.localizacao && (
-                            <div className="flex items-center gap-2">
-                              <FontAwesomeIcon icon={faMapMarkerAlt} className="h-4 w-4 text-stone-green-dark" />
-                              <span className="font-medium">{business.localizacao}</span>
+                      </div>
+                    </div>
+
+                    {/* Informações do empreendedor */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-3">
+                        {business.nome_empreendedor && (
+                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
                             </div>
-                          )}
-                          {business.tamanho_empresa && (
-                            <div className="flex items-center gap-2">
-                              <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-stone-green-dark" />
-                              <span className="font-medium">{business.tamanho_empresa}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {business.mentor_nome && (
-                          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-stone-green-light/10 to-stone-green-dark/10 rounded-xl border border-stone-green-light/20">
-                            <Avatar className="h-10 w-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark">
-                              <AvatarFallback className="text-white font-semibold">
-                                {business.mentor_nome.split(' ').map(n => n[0]).join('').toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
                             <div>
-                              <p className="font-semibold text-gray-900">Mentor: {business.mentor_nome}</p>
-                            {business.data_vinculacao && (
-                                <p className="text-sm text-gray-600">
-                                  Vinculado em {formatDateToBR(business.data_vinculacao)}
-                                </p>
-                              )}
+                              <p className="text-xs font-medium text-gray-600">Empreendedor</p>
+                              <p className="font-semibold text-gray-900 text-sm">{business.nome_empreendedor}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {business.telefone && (
+                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
+                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                              <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-600">Telefone</p>
+                              <p className="font-semibold text-gray-900 text-sm">{business.telefone}</p>
                             </div>
                           </div>
                         )}
                       </div>
+                      
+                      <div className="space-y-3">
+                        {business.numero_funcionarios && (
+                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
+                            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                              <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-600">Funcionários</p>
+                              <p className="font-semibold text-gray-900 text-sm">{business.numero_funcionarios}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {business.faturamento_mensal && business.faturamento_mensal > 0 && (
+                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                              <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-medium text-gray-600">Faturamento</p>
+                              <p className="font-semibold text-gray-900 text-sm">{formatCurrencyDisplay(business.faturamento_mensal)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mentor em destaque */}
+                    {business.mentor_nome && (
+                      <div className="mb-4 p-4 bg-gradient-to-r from-stone-green-light/20 to-stone-green-dark/20 rounded-xl border border-stone-green-light/30">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-12 w-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark ring-2 ring-white shadow-md">
+                            <AvatarFallback className="text-white font-semibold text-sm">
+                              {business.mentor_nome.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FontAwesomeIcon icon={faUserTie} className="h-3 w-3 text-stone-green-dark" />
+                              <p className="text-xs font-medium text-gray-600">Mentor Responsável</p>
+                            </div>
+                            <h4 className="text-lg font-bold text-gray-900">{business.mentor_nome}</h4>
+                            {business.data_vinculacao_mentor && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <FontAwesomeIcon icon={faCalendarAlt} className="h-3 w-3 text-stone-green-dark" />
+                                <p className="text-xs text-stone-green-dark font-medium">
+                                  Vinculado em {formatDateToBR(business.data_vinculacao_mentor)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ações */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+                      <Button
+                        onClick={() => openDetailsDialog(business)}
+                        className="flex-1 h-12 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg hover:shadow-xl transition-all duration-300 text-base font-semibold"
+                      >
+                        <FontAwesomeIcon icon={faBriefcase} className="h-4 w-4 mr-2" />
+                        Ver Detalhes Completos
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -923,6 +1007,15 @@ export default function NegociosContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Business Details Modal */}
+      <FileViewer
+        mode="business"
+        businessId={selectedBusiness?.id || ""}
+        businessName={selectedBusiness?.nome || ""}
+        isOpen={isDetailsDialogOpen}
+        onClose={() => setIsDetailsDialogOpen(false)}
+      />
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { authService, type User, type RegisterRequest } from "@/lib/services/auth"
+import { authService, type User, type RegisterRequest, type RegisterWithTokenRequest } from "@/lib/services/auth"
 import { useRouter } from "next/navigation"
 
 interface AuthState {
@@ -14,6 +14,7 @@ interface AuthState {
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (userData: RegisterRequest) => Promise<void>
+  registerWithToken: (userData: RegisterWithTokenRequest) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -84,6 +85,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const registerWithToken = async (userData: RegisterWithTokenRequest) => {
+    setState((prev) => ({ ...prev, isLoading: true }))
+
+    try {
+      const response = await authService.registerWithToken(userData)
+      console.log('Register with token success, response:', response)
+      
+      // Get the stored user data
+      const user = authService.getCurrentUser()
+      console.log('Stored user:', user)
+      
+      setState({
+        user,
+        isLoading: false,
+        isAuthenticated: false, // User is not authenticated yet, needs to login
+      })
+
+      console.log('Registration with token completed, user needs to login')
+      // Don't redirect to dashboard since user is not authenticated
+      // They need to login first
+    } catch (error) {
+      console.log('Register with token error:', error)
+      setState((prev) => ({ ...prev, isLoading: false }))
+      throw error
+    }
+  }
+
   const logout = async () => {
     await authService.logout()
     setState({
@@ -94,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/")
   }
 
-  return <AuthContext.Provider value={{ ...state, login, register, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ ...state, login, register, registerWithToken, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

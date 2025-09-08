@@ -57,6 +57,15 @@ export interface RegisterRequest {
   invite_token?: string | null
 }
 
+export interface RegisterWithTokenRequest {
+  nome: string
+  email: string
+  senha: string
+  telefone: string
+  competencias?: string
+  area_atuacao?: AreaAtuacao
+}
+
 export interface RegisterResponse {
   id: string
   nome: string
@@ -117,6 +126,44 @@ class AuthService {
       )
 
       // For registration, we only store user data (no tokens since user needs to login)
+      // Convert RegisterResponse to User format for storage
+      const userToStore: User = {
+        id: response.id,
+        nome: response.nome,
+        email: response.email,
+        role: response.role,
+        status: response.status === 'pendente' ? 'inativo' : response.status,
+        telefone: response.telefone,
+        competencias: response.competencias,
+        area_atuacao: response.area_atuacao,
+        protocolo_concluido: response.protocolo_concluido,
+        created_at: response.created_at,
+        last_login: response.last_login || ''
+      }
+      
+      this.storeUser(userToStore)
+
+      return response
+    } catch (error) {
+      throw this.handleAuthError(error)
+    }
+  }
+
+  // Register with token (for invited mentors)
+  async registerWithToken(userData: RegisterWithTokenRequest): Promise<RegisterResponse> {
+    try {
+      // Validate area_atuacao
+      if (!isValidAreaAtuacao(userData.area_atuacao)) {
+        throw new ApiError('Área de atuação inválida', 400)
+      }
+
+      const response = await apiService.post<RegisterResponse>(
+        '/auth/register-with-token',
+        userData,
+        false // Don't include auth token for registration
+      )
+
+      // For registration with token, we only store user data (no tokens since user needs to login)
       // Convert RegisterResponse to User format for storage
       const userToStore: User = {
         id: response.id,

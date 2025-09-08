@@ -16,7 +16,7 @@ import {
   faBookOpen,
   faCheckCircle,
   faPlay,
-  faClock,
+  faClock, 
   faBuilding,
   faUser,
   faCalendarAlt,
@@ -200,7 +200,7 @@ export default function MentorDashboard() {
                 
                 <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
                   <FontAwesomeIcon icon={faHandshake} className="h-7 w-7 text-white" />
-                </div>
+              </div>
               </div>
             </div>
 
@@ -351,7 +351,7 @@ export default function MentorDashboard() {
                       <div>
                         <p className="text-sm text-gray-600">Próxima Sessão</p>
                         <p className="font-semibold text-gray-900">{formatDateTime(dashboardData.mentoria_ativa.proxima_sessao)}</p>
-                      </div>
+                    </div>
                     </div>
                   </div>
                 </div>
@@ -383,7 +383,7 @@ export default function MentorDashboard() {
                     </Button>
                   </div>
                 </div>
-              </div>
+            </div>
             </div>
           </CardContent>
         </Card>
@@ -457,7 +457,7 @@ export default function MentorDashboard() {
                 </CardContent>
               </Card>
             </Link> */}
-          </div>
+      </div>
         </CardContent>
       </Card>
     </div>

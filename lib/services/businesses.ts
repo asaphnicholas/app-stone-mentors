@@ -27,13 +27,60 @@ export interface Business {
   desafios_principais?: string
   objetivos_mentoria?: string
   observacoes?: string
-  status: 'ATIVO' | 'INATIVO'
+  status: 'ativo' | 'inativo'
   mentor_id?: string
   mentor_nome?: string
   mentor_email?: string
-  data_vinculacao?: string
+  data_vinculacao_mentor?: string
+  data_criacao: string
+  updated_at?: string
+  nome_empreendedor?: string
+  telefone?: string
+}
+
+export interface BusinessDetails {
+  id: string
+  nome: string
+  descricao?: string
+  area_atuacao: string
+  localização?: string
+  tamanho_empresa?: string
+  nome_empreendedor: string
+  telefone: string
+  faturamento_mensal?: number
+  numero_funcionarios?: number
+  desafios_principais?: string
+  objetivos_mentoria?: string
+  observacoes?: string
+  status: 'ativo' | 'inativo'
+  data_criacao: string
+  data_atualizacao: string
+  
+  mentor_id?: string
+  mentor_nome?: string
+  mentor_email?: string
+  data_vinculacao_mentor?: string
+  
+  total_mentorias: number
+  mentorias_disponiveis: number
+  mentorias_confirmadas: number
+  mentorias_em_andamento: number
+  mentorias_finalizadas: number
+  
+  mentorias: MentoriaDetails[]
+}
+
+export interface MentoriaDetails {
+  id: string
+  data_agendada: string
+  tipo: 'primeira' | 'followup'
+  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+  duracao_minutos: number
   created_at: string
-  updated_at: string
+  confirmada_at?: string
+  checkin_at?: string
+  inicio_at?: string
+  finalizada_at?: string
 }
 
 export interface CreateBusinessRequest {
@@ -144,12 +191,12 @@ class BusinessesService {
     }
   }
 
-  async getBusinessDetails(businessId: string): Promise<Business> {
+  async getBusinessDetails(businessId: string): Promise<BusinessDetails> {
     try {
       console.log('BusinessesService.getBusinessDetails - ID:', businessId)
       
-      const result = await apiService.get<Business>(
-        `${API_ENDPOINTS.ADMIN.BUSINESSES}/${businessId}`,
+      const result = await apiService.get<BusinessDetails>(
+        `${API_ENDPOINTS.ADMIN.BUSINESSES}/${businessId}/details`,
         true
       )
       console.log('BusinessesService.getBusinessDetails - Resultado:', result)

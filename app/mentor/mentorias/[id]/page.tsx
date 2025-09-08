@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { 
   faBuilding, 
@@ -38,7 +39,7 @@ import {
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
 import { mentoriasService, type Mentoria } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
-import { formatDateToBR } from "@/lib/utils/date"
+import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -99,6 +100,7 @@ export default function MentoriaDetailsPage() {
     observacoes: ""
   })
   const [checkoutForm, setCheckoutForm] = useState({
+    nps: 0,
     observacoes: "",
     proximos_passos: ""
   })
@@ -132,6 +134,7 @@ export default function MentoriaDetailsPage() {
       // Preencher formulário de checkout se já existir
       if (mentoriaData.checkout) {
         setCheckoutForm({
+          nps: mentoriaData.checkout.nps || 0,
           observacoes: mentoriaData.checkout.observacoes || "",
           proximos_passos: mentoriaData.checkout.proximos_passos || ""
         })
@@ -242,7 +245,7 @@ export default function MentoriaDetailsPage() {
     switch (status) {
       case 'confirmada': return 'bg-green-100 text-green-700 border-green-200'
       case 'em_andamento': return 'bg-orange-100 text-orange-700 border-orange-200'
-      case 'disponivel': return 'bg-blue-100 text-blue-700 border-blue-200'
+      case 'disponivel': return 'bg-stone-green-light/20 text-stone-green-dark border-stone-green-light/30'
       case 'finalizada': return 'bg-gray-100 text-gray-700 border-gray-200'
       default: return 'bg-yellow-100 text-yellow-700 border-yellow-200'
     }
@@ -396,7 +399,7 @@ export default function MentoriaDetailsPage() {
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
                 <FontAwesomeIcon icon={faCalendarAlt} className="h-5 w-5 text-white" />
               </div>
               Status da Mentoria
@@ -421,7 +424,7 @@ export default function MentoriaDetailsPage() {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Data Agendada:</span>
-                <span className="font-semibold text-gray-900">{formatDateToBR(mentoria.data_agendada)}</span>
+                <span className="font-semibold text-gray-900">{formatDateTimeToBR(mentoria.data_agendada)}</span>
               </div>
               
               <div className="flex items-center justify-between">
@@ -454,6 +457,130 @@ export default function MentoriaDetailsPage() {
         </Card>
       </div>
 
+      {/* Progresso da Mentoria */}
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
+            </div>
+            Progresso da Mentoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            {/* Passo 1: Confirmar */}
+            <div className="flex flex-col items-center gap-2">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                mentoria.status === 'disponivel' 
+                  ? 'bg-stone-green-dark text-white' 
+                  : 'bg-green-500 text-white'
+              }`}>
+                <FontAwesomeIcon icon={faCheck} className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Confirmar</span>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                mentoria.status === 'disponivel' 
+                  ? 'bg-stone-green-light/20 text-stone-green-dark' 
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {mentoria.status === 'disponivel' ? 'Pendente' : 'Concluído'}
+              </span>
+            </div>
+
+            {/* Seta */}
+            <div className="flex-1 h-0.5 bg-gray-200 relative">
+              <div className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                mentoria.status !== 'disponivel' ? 'bg-green-500' : 'bg-gray-200'
+              }`} style={{ width: mentoria.status !== 'disponivel' ? '100%' : '0%' }}></div>
+            </div>
+
+            {/* Passo 2: Check-in */}
+            <div className="flex flex-col items-center gap-2">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                mentoria.checkin_at 
+                  ? 'bg-green-500 text-white' 
+                  : mentoria.status === 'confirmada'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-300 text-gray-500'
+              }`}>
+                <FontAwesomeIcon icon={faPlay} className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Check-in</span>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                mentoria.checkin_at 
+                  ? 'bg-green-100 text-green-700' 
+                  : mentoria.status === 'confirmada'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {mentoria.checkin_at ? 'Concluído' : mentoria.status === 'confirmada' ? 'Disponível' : 'Bloqueado'}
+              </span>
+            </div>
+
+            {/* Seta */}
+            <div className="flex-1 h-0.5 bg-gray-200 relative">
+              <div className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                mentoria.checkin_at ? 'bg-green-500' : 'bg-gray-200'
+              }`} style={{ width: mentoria.checkin_at ? '100%' : '0%' }}></div>
+            </div>
+
+            {/* Passo 3: Diagnóstico */}
+            <div className="flex flex-col items-center gap-2">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                mentoria.diagnostico 
+                  ? 'bg-green-500 text-white' 
+                  : mentoria.checkin_at
+                  ? 'bg-stone-green-dark text-white'
+                  : 'bg-gray-300 text-gray-500'
+              }`}>
+                <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Diagnóstico</span>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                mentoria.diagnostico 
+                  ? 'bg-green-100 text-green-700' 
+                  : mentoria.checkin_at
+                  ? 'bg-stone-green-light/20 text-stone-green-dark'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {mentoria.diagnostico ? 'Concluído' : mentoria.checkin_at ? 'Disponível' : 'Bloqueado'}
+              </span>
+            </div>
+
+            {/* Seta */}
+            <div className="flex-1 h-0.5 bg-gray-200 relative">
+              <div className={`absolute top-0 left-0 h-full transition-all duration-500 ${
+                mentoria.diagnostico ? 'bg-green-500' : 'bg-gray-200'
+              }`} style={{ width: mentoria.diagnostico ? '100%' : '0%' }}></div>
+            </div>
+
+            {/* Passo 4: Checkout */}
+            <div className="flex flex-col items-center gap-2">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                mentoria.finalizada_at 
+                  ? 'bg-green-500 text-white' 
+                  : mentoria.checkin_at
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-gray-300 text-gray-500'
+              }`}>
+                <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Checkout</span>
+              <span className={`text-xs px-2 py-1 rounded-full ${
+                mentoria.finalizada_at 
+                  ? 'bg-green-100 text-green-700' 
+                  : mentoria.checkin_at
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-gray-100 text-gray-500'
+              }`}>
+                {mentoria.finalizada_at ? 'Concluído' : mentoria.checkin_at ? 'Disponível' : 'Bloqueado'}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Ações da Mentoria */}
       <Card className="border-0 shadow-lg">
         <CardHeader>
@@ -470,7 +597,7 @@ export default function MentoriaDetailsPage() {
             {mentoria.status === 'disponivel' && (
               <Button
                 onClick={handleConfirmMentoria}
-                className="h-16 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg"
+                className="h-16 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg"
               >
                 <div className="flex flex-col items-center gap-2">
                   <FontAwesomeIcon icon={faCheck} className="h-5 w-5" />
@@ -492,33 +619,31 @@ export default function MentoriaDetailsPage() {
               </Button>
             )}
 
-            {/* Diagnóstico */}
-            {(mentoria.status === 'confirmada' || mentoria.status === 'em_andamento') && (
+            {/* Diagnóstico - Só disponível após checkin ou quando status é andamento */}
+            {(mentoria.status === 'em_andamento' && mentoria.checkin_at) || (mentoria.status as string) === 'andamento' ? (
               <Button
                 onClick={() => setIsDiagnosticDialogOpen(true)}
-                variant="outline"
-                className="h-16 border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
+                className="h-16 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg"
               >
                 <div className="flex flex-col items-center gap-2">
                   <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5" />
                   <span className="text-sm font-medium">Diagnóstico</span>
                 </div>
               </Button>
-            )}
+            ) : null}
 
-            {/* Checkout */}
-            {(mentoria.status === 'confirmada' || mentoria.status === 'em_andamento') && (
+            {/* Checkout - Só disponível após checkin ou quando status é andamento */}
+            {(mentoria.status === 'em_andamento' && mentoria.checkin_at) || (mentoria.status as string) === 'andamento' ? (
               <Button
                 onClick={() => setIsCheckoutDialogOpen(true)}
-                variant="outline"
-                className="h-16 border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+                className="h-16 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg"
               >
                 <div className="flex flex-col items-center gap-2">
                   <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
                   <span className="text-sm font-medium">Checkout</span>
                 </div>
               </Button>
-            )}
+            ) : null}
           </div>
         </CardContent>
       </Card>
@@ -713,6 +838,39 @@ export default function MentoriaDetailsPage() {
           </DialogHeader>
           
           <div className="space-y-6">
+            {/* NPS Score */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-gray-700">
+                Avaliação NPS (Net Promoter Score)
+              </Label>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">0</span>
+                  <div className="flex-1 mx-4">
+                    <Slider
+                      value={[checkoutForm.nps]}
+                      onValueChange={(value) => setCheckoutForm({ ...checkoutForm, nps: value[0] })}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600">10</span>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-stone-green-dark">
+                    {checkoutForm.nps}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {checkoutForm.nps >= 9 ? "Promotor" : 
+                     checkoutForm.nps >= 7 ? "Neutro" : 
+                     checkoutForm.nps > 0 ? "Detrator" : "Não avaliado"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-3">
               <Label htmlFor="checkout_observacoes" className="text-sm font-medium text-gray-700">Observações Finais</Label>
               <Textarea
@@ -726,13 +884,28 @@ export default function MentoriaDetailsPage() {
             
             <div className="space-y-3">
               <Label htmlFor="proximos_passos" className="text-sm font-medium text-gray-700">Próximos Passos</Label>
-              <Textarea
-                id="proximos_passos"
-                value={checkoutForm.proximos_passos}
-                onChange={(e) => setCheckoutForm({ ...checkoutForm, proximos_passos: e.target.value })}
-                placeholder="Defina os próximos passos para o empreendedor..."
-                className="min-h-[100px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
-              />
+              <Select 
+                value={checkoutForm.proximos_passos} 
+                onValueChange={(value) => setCheckoutForm({ ...checkoutForm, proximos_passos: value })}
+              >
+                <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
+                  <SelectValue placeholder="Selecione os próximos passos..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NOVA_MENTORIA">
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 text-green-600" />
+                      <span>Agendar Nova Mentoria</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="FINALIZAR">
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-red-600" />
+                      <span>Finalizar Processo</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
@@ -746,7 +919,8 @@ export default function MentoriaDetailsPage() {
             </Button>
             <Button
               onClick={handleCheckoutMentoria}
-              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
+              disabled={checkoutForm.nps === 0 || !checkoutForm.proximos_passos}
+              className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
               Finalizar Mentoria

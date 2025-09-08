@@ -18,9 +18,26 @@ import {
   faVolumeUp,
   faVolumeMute,
   faExpand,
-  faCompress
+  faCompress,
+  faBuilding,
+  faUser,
+  faPhone,
+  faUsers,
+  faChartLine,
+  faCalendarAlt,
+  faMapMarkerAlt,
+  faBriefcase,
+  faHandshake,
+  faRocket,
+  faExclamationTriangle,
+  faCheckCircle,
+  faClock,
+  faEdit,
+  faPlay as faPlayIcon
 } from "@fortawesome/free-solid-svg-icons"
 import { materialsService } from "@/lib/services/materials"
+import { businessesService, type BusinessDetails, type MentoriaDetails } from "@/lib/services/businesses"
+import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 
 interface FileInfo {
   material_id: string
@@ -34,15 +51,28 @@ interface FileInfo {
 }
 
 interface FileViewerProps {
-  materialId: string
-  materialTitle: string
-  materialType: string
+  materialId?: string
+  materialTitle?: string
+  materialType?: string
+  businessId?: string
+  businessName?: string
   isOpen: boolean
   onClose: () => void
+  mode?: 'file' | 'business'
 }
 
-export function FileViewer({ materialId, materialTitle, materialType, isOpen, onClose }: FileViewerProps) {
+export function FileViewer({ 
+  materialId, 
+  materialTitle, 
+  materialType, 
+  businessId,
+  businessName,
+  isOpen, 
+  onClose,
+  mode = 'file'
+}: FileViewerProps) {
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
+  const [businessDetails, setBusinessDetails] = useState<BusinessDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -54,16 +84,20 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
   })
 
   useEffect(() => {
-    if (isOpen && materialId) {
-      loadFileInfo()
+    if (isOpen) {
+      if (mode === 'file' && materialId) {
+        loadFileInfo()
+      } else if (mode === 'business' && businessId) {
+        loadBusinessDetails()
+      }
     }
-  }, [isOpen, materialId])
+  }, [isOpen, materialId, businessId, mode])
 
   const loadFileInfo = async () => {
     try {
       setIsLoading(true)
       setError(null)
-      const info = await materialsService.getFileInfo(materialId)
+      const info = await materialsService.getFileInfo(materialId!)
       setFileInfo(info)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erro ao carregar arquivo')
@@ -72,9 +106,22 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
     }
   }
 
+  const loadBusinessDetails = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const details = await businessesService.getBusinessDetails(businessId!)
+      setBusinessDetails(details)
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Erro ao carregar detalhes do negócio')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleDownload = async () => {
     try {
-      await materialsService.downloadFile(materialId)
+      await materialsService.downloadFile(materialId!)
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Erro ao baixar arquivo')
     }
@@ -129,6 +176,54 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
         return 'Apresentação'
       default:
         return 'Arquivo'
+    }
+  }
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'disponivel':
+        return 'Disponível'
+      case 'confirmada':
+        return 'Confirmada'
+      case 'em_andamento':
+      case 'andamento':
+        return 'Em Andamento'
+      case 'finalizada':
+        return 'Finalizada'
+      default:
+        return status
+    }
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'disponivel':
+        return faClock
+      case 'confirmada':
+        return faCheckCircle
+      case 'em_andamento':
+      case 'andamento':
+        return faPlayIcon
+      case 'finalizada':
+        return faCheckCircle
+      default:
+        return faClock
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'disponivel':
+        return 'bg-yellow-100 text-yellow-800'
+      case 'confirmada':
+        return 'bg-blue-100 text-blue-800'
+      case 'em_andamento':
+      case 'andamento':
+        return 'bg-green-100 text-green-800'
+      case 'finalizada':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
     }
   }
 
@@ -218,7 +313,246 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
     }
   }
 
+  const renderBusinessContent = () => {
+    if (!businessDetails) return null
+
+    return (
+      <div className="w-full h-full overflow-y-auto p-6 space-y-6">
+        {/* Informações do Negócio */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faBuilding} className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Informações do Negócio</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Nome</p>
+              <p className="font-semibold text-gray-900">{businessDetails.nome}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Área de Atuação</p>
+              <p className="font-semibold text-gray-900">{businessDetails.area_atuacao}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Localização</p>
+              <p className="font-semibold text-gray-900">{businessDetails.localização || 'Não informado'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Tamanho da Empresa</p>
+              <p className="font-semibold text-gray-900">{businessDetails.tamanho_empresa || 'Não informado'}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Status</p>
+              <Badge className={`${businessDetails.status === 'ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {businessDetails.status === 'ativo' ? 'Ativo' : 'Inativo'}
+              </Badge>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Data de Criação</p>
+              <p className="font-semibold text-gray-900">{formatDateToBR(businessDetails.data_criacao)}</p>
+            </div>
+          </div>
+          
+          {businessDetails.descricao && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600">Descrição</p>
+              <p className="text-gray-900 leading-relaxed">{businessDetails.descricao}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Informações do Empreendedor */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Empreendedor</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Nome</p>
+              <p className="font-semibold text-gray-900">{businessDetails.nome_empreendedor}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Telefone</p>
+              <p className="font-semibold text-gray-900">{businessDetails.telefone}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Informações Financeiras */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Informações Financeiras</h3>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-600">Faturamento Mensal</p>
+              <p className="font-semibold text-gray-900">
+                {businessDetails.faturamento_mensal 
+                  ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(businessDetails.faturamento_mensal)
+                  : 'Não informado'
+                }
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Número de Funcionários</p>
+              <p className="font-semibold text-gray-900">
+                {businessDetails.numero_funcionarios || 'Não informado'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Mentor Vinculado */}
+        {businessDetails.mentor_id && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faHandshake} className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Mentor Vinculado</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Nome</p>
+                <p className="font-semibold text-gray-900">{businessDetails.mentor_nome}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-semibold text-gray-900">{businessDetails.mentor_email}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Data de Vinculação</p>
+                <p className="font-semibold text-gray-900">
+                  {businessDetails.data_vinculacao_mentor ? formatDateToBR(businessDetails.data_vinculacao_mentor) : 'Não informado'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Estatísticas de Mentorias */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+              <FontAwesomeIcon icon={faRocket} className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Estatísticas de Mentorias</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{businessDetails.total_mentorias}</p>
+              <p className="text-sm text-gray-600">Total</p>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <p className="text-2xl font-bold text-blue-600">{businessDetails.mentorias_disponiveis}</p>
+              <p className="text-sm text-gray-600">Disponíveis</p>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <p className="text-2xl font-bold text-green-600">{businessDetails.mentorias_confirmadas}</p>
+              <p className="text-sm text-gray-600">Confirmadas</p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <p className="text-2xl font-bold text-purple-600">{businessDetails.mentorias_finalizadas}</p>
+              <p className="text-sm text-gray-600">Finalizadas</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Histórico de Mentorias */}
+        {businessDetails.mentorias && businessDetails.mentorias.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faCalendarAlt} className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Histórico de Mentorias</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {businessDetails.mentorias.map((mentoria) => (
+                <div key={mentoria.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-lg flex items-center justify-center">
+                      <FontAwesomeIcon icon={getStatusIcon(mentoria.status)} className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {mentoria.tipo === 'primeira' ? 'Primeira Mentoria' : 'Follow-up'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatDateTimeToBR(mentoria.data_agendada)} • {mentoria.duracao_minutos} min
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className={getStatusColor(mentoria.status)}>
+                    {getStatusText(mentoria.status)}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Desafios e Objetivos */}
+        {(businessDetails.desafios_principais || businessDetails.objetivos_mentoria) && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Desafios e Objetivos</h3>
+            </div>
+            
+            {businessDetails.desafios_principais && (
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Desafios Principais</p>
+                <p className="text-gray-900 leading-relaxed">{businessDetails.desafios_principais}</p>
+              </div>
+            )}
+            
+            {businessDetails.objetivos_mentoria && (
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Objetivos da Mentoria</p>
+                <p className="text-gray-900 leading-relaxed">{businessDetails.objetivos_mentoria}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Observações */}
+        {businessDetails.observacoes && (
+          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
+                <FontAwesomeIcon icon={faEdit} className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Observações</h3>
+            </div>
+            
+            <p className="text-gray-900 leading-relaxed">{businessDetails.observacoes}</p>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (!isOpen) return null
+
+  const title = mode === 'file' ? materialTitle : businessName
+  const icon = mode === 'file' ? getFileIcon(materialType || '') : faBuilding
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -234,19 +568,19 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-stone-green-light/20 rounded-lg flex items-center justify-center">
                 <FontAwesomeIcon 
-                  icon={getFileIcon(materialType)} 
+                  icon={icon} 
                   className="h-4 w-4 text-stone-green-dark" 
                 />
               </div>
               <div>
                 <DialogTitle className="text-lg font-bold text-gray-900 truncate max-w-[300px] sm:max-w-[500px]">
-                  {materialTitle}
+                  {title}
                 </DialogTitle>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline" className="text-xs">
-                    {getFileTypeLabel(materialType)}
+                    {mode === 'file' ? getFileTypeLabel(materialType || '') : 'Detalhes do Negócio'}
                   </Badge>
-                  {fileInfo && (
+                  {mode === 'file' && fileInfo && (
                     <>
                       <span className="text-xs text-gray-500">•</span>
                       <span className="text-xs text-gray-500">{fileInfo.tamanho_formatado}</span>
@@ -259,49 +593,32 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
             </div>
             
             <div className="flex items-center gap-1">
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleFullscreen}
-                className="hidden sm:flex px-2 py-1 h-8"
-                title={isFullscreen ? "Sair do modo tela cheia" : "Modo tela cheia"}
-              >
-                <FontAwesomeIcon 
-                  icon={isFullscreen ? faCompress : faExpand} 
-                  className="h-3 w-3" 
-                />
-              </Button> */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownload}
-                disabled={!fileInfo?.can_access}
-                className="px-2 py-1 h-8 text-xs"
-                title="Baixar arquivo"
-              >
-                <FontAwesomeIcon icon={faDownload} className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Baixar</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenExternal}
-                disabled={!fileInfo?.can_access}
-                className="px-2 py-1 h-8 text-xs"
-                title="Abrir em nova aba"
-              >
-                <FontAwesomeIcon icon={faExternalLinkAlt} className="h-3 w-3 mr-1" />
-                <span className="hidden sm:inline">Abrir</span>
-              </Button>
-              {/* <Button
-                variant="outline"
-                size="sm"
-                onClick={onClose}
-                className="px-2 py-1 h-8"
-                title="Fechar"
-              >
-                <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
-              </Button> */}
+              {mode === 'file' && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={!fileInfo?.can_access}
+                    className="px-2 py-1 h-8 text-xs"
+                    title="Baixar arquivo"
+                  >
+                    <FontAwesomeIcon icon={faDownload} className="h-3 w-3 mr-1" />
+                    <span className="hidden sm:inline">Baixar</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleOpenExternal}
+                    disabled={!fileInfo?.can_access}
+                    className="px-2 py-1 h-8 text-xs"
+                    title="Abrir em nova aba"
+                  >
+                    <FontAwesomeIcon icon={faExternalLinkAlt} className="h-3 w-3 mr-1" />
+                    <span className="hidden sm:inline">Abrir</span>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -313,7 +630,9 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
             }`}>
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-stone-green-dark mx-auto mb-4"></div>
-                <p className="text-gray-600">Carregando arquivo...</p>
+                <p className="text-gray-600">
+                  {mode === 'file' ? 'Carregando arquivo...' : 'Carregando detalhes...'}
+                </p>
               </div>
             </div>
           ) : error ? (
@@ -321,30 +640,40 @@ export function FileViewer({ materialId, materialTitle, materialType, isOpen, on
               isFullscreen ? 'h-[calc(98vh-120px)]' : 'h-[calc(85vh-120px)]'
             }`}>
               <div className="text-center">
-                <FontAwesomeIcon icon={getFileIcon(materialType)} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <FontAwesomeIcon icon={icon} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-red-600 mb-4">{error}</p>
-                <Button onClick={loadFileInfo} variant="outline">
+                <Button onClick={mode === 'file' ? loadFileInfo : loadBusinessDetails} variant="outline">
                   Tentar Novamente
                 </Button>
               </div>
             </div>
-          ) : fileInfo && fileInfo.can_access ? (
+          ) : mode === 'file' && fileInfo && fileInfo.can_access ? (
             <div className={`w-full ${
               isFullscreen ? 'h-[calc(98vh-120px)]' : 'h-[calc(85vh-120px)]'
             }`}>
               {renderFileContent()}
+            </div>
+          ) : mode === 'business' && businessDetails ? (
+            <div className={`w-full ${
+              isFullscreen ? 'h-[calc(98vh-120px)]' : 'h-[calc(85vh-120px)]'
+            }`}>
+              {renderBusinessContent()}
             </div>
           ) : (
             <div className={`w-full flex items-center justify-center ${
               isFullscreen ? 'h-[calc(98vh-120px)]' : 'h-[calc(85vh-120px)]'
             }`}>
               <div className="text-center">
-                <FontAwesomeIcon icon={getFileIcon(materialType)} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 mb-4">Acesso ao arquivo não disponível</p>
-                <Button onClick={handleOpenExternal} variant="outline">
-                  <FontAwesomeIcon icon={faExternalLinkAlt} className="h-4 w-4 mr-2" />
-                  Tentar Abrir em Nova Aba
-                </Button>
+                <FontAwesomeIcon icon={icon} className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600 mb-4">
+                  {mode === 'file' ? 'Acesso ao arquivo não disponível' : 'Detalhes não disponíveis'}
+                </p>
+                {mode === 'file' && (
+                  <Button onClick={handleOpenExternal} variant="outline">
+                    <FontAwesomeIcon icon={faExternalLinkAlt} className="h-4 w-4 mr-2" />
+                    Tentar Abrir em Nova Aba
+                  </Button>
+                )}
               </div>
             </div>
           )}

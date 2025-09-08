@@ -64,10 +64,10 @@ export function MentorLayout({ children }: MentorLayoutProps) {
               "flex items-center gap-3 transition-all duration-300",
               sidebarCollapsed ? "gap-0" : "gap-3"
             )}>
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <div className="w-12 h-12  flex items-center justify-center  overflow-hidden">
                 <Image
-                  src="/logo-stone.png"
-                  alt="Stone Mentors Logo"
+                  src="/favicon.png"
+                  alt="impulso Stone Logo"
                   width={48}
                   height={48}
                   className="object-cover w-full h-full"
@@ -75,7 +75,7 @@ export function MentorLayout({ children }: MentorLayoutProps) {
               </div>
               {!sidebarCollapsed && (
                 <div className="text-white">
-                  <h1 className="font-bold text-xl">Stone Mentors</h1>
+                  <h1 className="font-bold text-xl">Impulso Stone</h1>
                   <p className="text-xs text-white/80">Plataforma de Mentoria</p>
                 </div>
               )}
