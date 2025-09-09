@@ -100,6 +100,9 @@ export interface Mentoria {
   }
   checkout?: {
     id: string
+    nota_mentoria?: number
+    nota_mentor?: number
+    nota_programa?: number
     nps?: number
     observacoes?: string
     proximos_passos?: string
@@ -121,6 +124,20 @@ export interface ScheduleMentoriaResponse {
   tipo: 'primeira' | 'followup'
   status: 'disponivel'
   duracao_minutos: number
+  message: string
+}
+
+export interface RescheduleMentoriaRequest {
+  data_agendada: string
+  duracao_minutos?: number
+}
+
+export interface RescheduleMentoriaResponse {
+  mentoria_id: string
+  negocio_nome: string
+  data_agendada: string
+  duracao_minutos: number
+  status: 'disponivel' | 'confirmada'
   message: string
 }
 
@@ -256,9 +273,12 @@ export interface DiagnosticoDetails {
 }
 
 export interface CheckoutRequest {
-  nps: number
+  nota_mentoria: number
+  nota_mentor: number
+  nota_programa: number
   observacoes?: string
   proximos_passos?: string
+  nps?: number // Campo legado para compatibilidade
 }
 
 export interface CheckoutResponse {
@@ -267,7 +287,17 @@ export interface CheckoutResponse {
   status: 'finalizada'
   finalizada_at: string
   checkout_id: string
-  nps: number
+  
+  nota_mentoria: number
+  nota_mentor: number
+  nota_programa: number
+  
+  nps?: number
+  nps_medio?: number
+  satisfacao_nivel?: string
+  avaliacao_mentor?: string
+  avaliacao_programa?: string
+  
   message: string
 }
 
@@ -285,17 +315,58 @@ export interface MentoriaHistory {
   finalizada_at?: string
   diagnostico?: {
     id: string
+    created_at: string
+    
+    // Campos Originais (compatibilidade)
     tempo_mercado?: string
     faturamento_mensal?: string
     num_funcionarios?: string
     desafios?: string[]
     observacoes?: string
-    created_at: string
+    
+    // Novos Campos - Identificação
+    nome_completo?: string
+    email?: string
+    telefone_whatsapp?: string
+    status_negocio?: string
+    tempo_funcionamento?: string
+    setor_atuacao?: string
+    
+    // Avaliação de Maturidade (1-5)
+    organizacao_financeira?: number
+    divulgacao_marketing?: number
+    estrategia_comercial?: number
+    relacionamento_cliente?: number
+    ferramentas_digitais?: number
+    planejamento_gestao?: number
+    conhecimento_legal?: number
+    
+    // Dor Principal
+    dor_principal?: string
+    
+    // Teste Psicométrico
+    perfil_risco?: string
+    questao_logica?: string
+    questao_memoria?: string
+    
+    // Personalidade (1-4)
+    personalidade_agir_primeiro?: number
+    personalidade_solucoes_problemas?: number
+    personalidade_pressentimento?: number
+    personalidade_prazo?: number
+    personalidade_fracasso_opcao?: number
+    personalidade_decisao_correta?: number
+    personalidade_oportunidades_riscos?: number
+    personalidade_sucesso?: number
   }
   checkout?: {
     id: string
-    nps: number
+    nota_mentoria?: number
+    nota_mentor?: number
+    nota_programa?: number
+    nps?: number
     feedback?: string
+    observacoes?: string
     proximos_passos?: string
     created_at: string
   }
@@ -509,6 +580,25 @@ class MentoriasService {
       return result
     } catch (error) {
       console.error('MentoriasService.scheduleNextMentoria - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  // PUT /api/v1/mentor/mentorias/{id}/reschedule - Reagenda mentoria
+  async rescheduleMentoria(mentoriaId: string, data: RescheduleMentoriaRequest): Promise<RescheduleMentoriaResponse> {
+    try {
+      console.log('MentoriasService.rescheduleMentoria - ID:', mentoriaId, 'Data:', data)
+      
+      const result = await apiService.put<RescheduleMentoriaResponse>(
+        `/mentor/mentorias/${mentoriaId}/reschedule`,
+        data,
+        true
+      )
+      console.log('MentoriasService.rescheduleMentoria - Resultado:', result)
+      
+      return result
+    } catch (error) {
+      console.error('MentoriasService.rescheduleMentoria - Erro:', error)
       throw this.handleError(error)
     }
   }

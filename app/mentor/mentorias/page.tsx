@@ -157,6 +157,21 @@ export default function MentoriasPage() {
 
   const handleScheduleSession = (business: MentorBusiness) => {
     setSelectedBusiness(business)
+    
+    // Se já tem mentoria agendada, preencher o formulário com os dados existentes
+    if (business.proxima_mentoria) {
+      setScheduleForm({
+        data_agendada: business.proxima_mentoria.data_agendada,
+        duracao_minutos: business.proxima_mentoria.duracao_minutos
+      })
+    } else {
+      // Limpar formulário para novo agendamento
+      setScheduleForm({
+        data_agendada: "",
+        duracao_minutos: 60
+      })
+    }
+    
     setIsScheduleDialogOpen(true)
   }
 
@@ -164,17 +179,32 @@ export default function MentoriasPage() {
     if (!selectedBusiness) return
 
     try {
-      await mentoriasService.scheduleMentoria({
-        negocio_id: selectedBusiness.negocio_id,
-        data_agendada: scheduleForm.data_agendada,
-        duracao_minutos: scheduleForm.duracao_minutos
-      })
+      // Se já tem mentoria agendada, usar API de reagendamento
+      if (selectedBusiness.proxima_mentoria) {
+        await mentoriasService.rescheduleMentoria(selectedBusiness.proxima_mentoria.id, {
+          data_agendada: scheduleForm.data_agendada,
+          duracao_minutos: scheduleForm.duracao_minutos
+        })
 
-      addToast({
-        type: "success",
-        title: "Mentoria agendada!",
-        message: `Mentoria agendada para "${selectedBusiness.negocio_nome}" com sucesso.`,
-      })
+        addToast({
+          type: "success",
+          title: "Mentoria reagendada!",
+          message: `Mentoria reagendada para "${selectedBusiness.negocio_nome}" com sucesso.`,
+        })
+      } else {
+        // Novo agendamento
+        await mentoriasService.scheduleMentoria({
+          negocio_id: selectedBusiness.negocio_id,
+          data_agendada: scheduleForm.data_agendada,
+          duracao_minutos: scheduleForm.duracao_minutos
+        })
+
+        addToast({
+          type: "success",
+          title: "Mentoria agendada!",
+          message: `Mentoria agendada para "${selectedBusiness.negocio_nome}" com sucesso.`,
+        })
+      }
 
       setIsScheduleDialogOpen(false)
       setScheduleForm({ data_agendada: "", duracao_minutos: 60 })
@@ -183,7 +213,7 @@ export default function MentoriasPage() {
     } catch (error) {
       addToast({
         type: "error",
-        title: "Erro ao agendar mentoria",
+        title: selectedBusiness.proxima_mentoria ? "Erro ao reagendar mentoria" : "Erro ao agendar mentoria",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
     }
@@ -478,13 +508,13 @@ export default function MentoriasPage() {
                           <FontAwesomeIcon icon={faHistory} className="h-4 w-4 mr-2" />
                           Ver Histórico
                         </Button>
-                        <Button
+                        {/* <Button
                           onClick={() => business.proxima_mentoria && (window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`)}
                           className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg h-10 text-sm"
                         >
                           <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
                           Ver Detalhes
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   ) : (
@@ -516,7 +546,7 @@ export default function MentoriasPage() {
                       className="flex-1 bg-none border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
                     >
                       <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
-                      {business.proxima_mentoria ? "Reagendar" : "Agendar"}
+                      {business.proxima_mentoria ? "Editar" : "Agendar"}
                     </Button>
                   </div>
                 </CardContent>
@@ -547,9 +577,14 @@ export default function MentoriasPage() {
       <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
         <DialogContent className="max-w-lg bg-white">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Agendar Mentoria</DialogTitle>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              {selectedBusiness?.proxima_mentoria ? "Editar Mentoria" : "Agendar Mentoria"}
+            </DialogTitle>
             <DialogDescription className="text-gray-600">
-              Agende uma nova mentoria para "{selectedBusiness?.negocio_nome}"
+              {selectedBusiness?.proxima_mentoria 
+                ? `Edite a mentoria agendada para "${selectedBusiness?.negocio_nome}"`
+                : `Agende uma nova mentoria para "${selectedBusiness?.negocio_nome}"`
+              }
             </DialogDescription>
           </DialogHeader>
           
@@ -598,7 +633,7 @@ export default function MentoriasPage() {
               className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white"
             >
               <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
-              Agendar Mentoria
+              {selectedBusiness?.proxima_mentoria ? "Salvar Alterações" : "Agendar Mentoria"}
             </Button>
           </div>
         </DialogContent>

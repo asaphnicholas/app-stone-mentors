@@ -35,6 +35,7 @@ import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
 import { mentoriasService, type BusinessHistoryResponse, type MentoriaHistory } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
+import DiagnosticoSection from "./DiagnosticoSection"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -346,9 +347,9 @@ export default function BusinessHistoryPage() {
             <Card key={mentoria.id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-white to-gray-50 overflow-hidden">
               <div className="relative">
                 {/* Timeline indicator */}
-                {index < historyData.mentorias.length - 1 && (
+                {/* {index < historyData.mentorias.length - 1 && (
                   <div className="absolute left-6 top-16 w-0.5 h-12 bg-gradient-to-b from-stone-green-light to-stone-green-dark z-10"></div>
-                )}
+                )} */}
                 
                 <CardContent className="p-6">
                   {/* Header da Mentoria */}
@@ -382,48 +383,7 @@ export default function BusinessHistoryPage() {
                   </div>
 
                   {/* Diagnóstico */}
-                  {mentoria.diagnostico && (
-                    <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm">
-                      <h4 className="font-bold text-blue-900 mb-3 flex items-center gap-2 text-base">
-                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-                          <FontAwesomeIcon icon={faClipboardList} className="h-3 w-3 text-white" />
-                        </div>
-                        Diagnóstico Inicial
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-                        {mentoria.diagnostico.tempo_mercado && (
-                          <div className="p-2 bg-white/60 rounded-lg">
-                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Tempo no mercado</span>
-                            <p className="font-bold text-gray-900 text-sm">{mentoria.diagnostico.tempo_mercado}</p>
-                          </div>
-                        )}
-                        {mentoria.diagnostico.faturamento_mensal && (
-                          <div className="p-2 bg-white/60 rounded-lg">
-                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Faturamento</span>
-                            <p className="font-bold text-gray-900 text-sm">{mentoria.diagnostico.faturamento_mensal}</p>
-                          </div>
-                        )}
-                        {mentoria.diagnostico.num_funcionarios && (
-                          <div className="p-2 bg-white/60 rounded-lg">
-                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Funcionários</span>
-                            <p className="font-bold text-gray-900 text-sm">{mentoria.diagnostico.num_funcionarios}</p>
-                          </div>
-                        )}
-                      </div>
-                      {mentoria.diagnostico.desafios && mentoria.diagnostico.desafios.length > 0 && (
-                        <div className="mb-3 p-2 bg-white/60 rounded-lg">
-                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Principais Desafios</span>
-                          <p className="font-bold text-gray-900 text-sm">{mentoria.diagnostico.desafios.join(', ')}</p>
-                        </div>
-                      )}
-                      {mentoria.diagnostico.observacoes && (
-                        <div className="p-2 bg-white/60 rounded-lg">
-                          <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</span>
-                          <p className="text-gray-900 leading-relaxed text-sm">{mentoria.diagnostico.observacoes}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <DiagnosticoSection diagnostico={mentoria.diagnostico} />
 
                   {/* Checkout */}
                   {mentoria.checkout && (
@@ -434,37 +394,88 @@ export default function BusinessHistoryPage() {
                         </div>
                         Avaliação Final
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                        <div className="p-3 bg-white/60 rounded-lg text-center">
-                          <div className="flex items-center justify-center gap-2 mb-2">
-                            <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-yellow-500" />
-                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">NPS Score</span>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        {mentoria.checkout.nota_mentoria && (
+                          <div className="p-3 bg-white/60 rounded-lg text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-yellow-500" />
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Mentoria</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nota_mentoria)}`}>
+                                {mentoria.checkout.nota_mentoria}
+                              </span>
+                              <Badge className={`${getNPSColor(mentoria.checkout.nota_mentoria).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nota_mentoria)} border-0 text-xs`}>
+                                {getNPSLabel(mentoria.checkout.nota_mentoria)}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nps)}`}>
-                              {mentoria.checkout.nps}
-                            </span>
-                            <Badge className={`${getNPSColor(mentoria.checkout.nps).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nps)} border-0 text-xs`}>
-                              {getNPSLabel(mentoria.checkout.nps)}
-                            </Badge>
+                        )}
+                        {mentoria.checkout.nota_mentor && (
+                          <div className="p-3 bg-white/60 rounded-lg text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-blue-500" />
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Mentor</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nota_mentor)}`}>
+                                {mentoria.checkout.nota_mentor}
+                              </span>
+                              <Badge className={`${getNPSColor(mentoria.checkout.nota_mentor).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nota_mentor)} border-0 text-xs`}>
+                                {getNPSLabel(mentoria.checkout.nota_mentor)}
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
+                        )}
+                        {mentoria.checkout.nota_programa && (
+                          <div className="p-3 bg-white/60 rounded-lg text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <FontAwesomeIcon icon={faBuilding} className="h-4 w-4 text-green-500" />
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Programa</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nota_programa)}`}>
+                                {mentoria.checkout.nota_programa}
+                              </span>
+                              <Badge className={`${getNPSColor(mentoria.checkout.nota_programa).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nota_programa)} border-0 text-xs`}>
+                                {getNPSLabel(mentoria.checkout.nota_programa)}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        {/* NPS Score (compatibilidade) */}
+                        {mentoria.checkout.nps && !mentoria.checkout.nota_mentoria && (
+                          <div className="p-3 bg-white/60 rounded-lg text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <FontAwesomeIcon icon={faStar} className="h-4 w-4 text-yellow-500" />
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">NPS Score</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nps)}`}>
+                                {mentoria.checkout.nps}
+                              </span>
+                              <Badge className={`${getNPSColor(mentoria.checkout.nps).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nps)} border-0 text-xs`}>
+                                {getNPSLabel(mentoria.checkout.nps)}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
                         {mentoria.checkout.proximos_passos && (
                           <div className="p-3 bg-white/60 rounded-lg">
                             <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Próximos Passos</span>
                             <p className="font-bold text-gray-900 text-sm">
-                              {mentoria.checkout.proximos_passos === 'NOVA_MENTORIA' ? 'Nova Mentoria Agendada' : 'Processo Finalizado'}
+                              {mentoria.checkout.proximos_passos === 'nova_mentoria' ? 'Nova Mentoria Agendada' : 'Processo Finalizado'}
                             </p>
                           </div>
                         )}
                       </div>
-                      {mentoria.checkout.feedback && (
+                      {(mentoria.checkout.feedback || mentoria.checkout.observacoes) && (
                         <div className="p-3 bg-white/60 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <FontAwesomeIcon icon={faComments} className="h-3 w-3 text-green-600" />
-                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Feedback</span>
+                            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</span>
                           </div>
-                          <p className="text-gray-900 leading-relaxed text-sm">{mentoria.checkout.feedback}</p>
+                          <p className="text-gray-900 leading-relaxed text-sm">{mentoria.checkout.observacoes || mentoria.checkout.feedback}</p>
                         </div>
                       )}
                     </div>

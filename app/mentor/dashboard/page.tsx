@@ -192,7 +192,7 @@ export default function MentorDashboard() {
               
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-white/90 mb-2">Mentorias Realizadas</h3>
+                  <h3 className="text-sm font-medium text-white/90 mb-2">Negócios Conectados</h3>
                   <div className="text-3xl font-bold text-white mb-1">
                     {dashboardData.mentorias_realizadas.total_mentorias}
                   </div>
