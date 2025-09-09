@@ -379,7 +379,7 @@ export default function MentorDashboard() {
                       Agendar Sessão
                     </Button>
                     <Button variant="outline" className="border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white">
-                      Ver Relatórios
+                      Ver Detalhes
                     </Button>
                   </div>
                 </div>

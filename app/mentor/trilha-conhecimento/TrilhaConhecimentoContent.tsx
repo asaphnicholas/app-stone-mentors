@@ -514,15 +514,44 @@ export default function TrilhaConhecimentoContent() {
                   {/* Actions */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     {isCompleted ? (
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2 text-emerald-600">
-                          <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5" />
-                          <span className="font-semibold">Concluído</span>
-                          {progresso?.avaliacao && (
-                            <div className="flex items-center gap-1 ml-2">
-                              <FontAwesomeIcon icon={faStar} className="h-4 w-4" />
-                              <span className="font-medium">{progresso?.avaliacao}/5</span>
-                            </div>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-2 text-emerald-600">
+                            <FontAwesomeIcon icon={faCheckCircle} className="h-5 w-5" />
+                            <span className="font-semibold">Concluído</span>
+                            {progresso?.avaliacao && (
+                              <div className="flex items-center gap-1 ml-2">
+                                <FontAwesomeIcon icon={faStar} className="h-4 w-4" />
+                                <span className="font-medium">{progresso?.avaliacao}/5</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewMaterial(materialProgress)}
+                            className="border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white h-10 px-4"
+                          >
+                            <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
+                            Ver
+                          </Button>
+                          {material.url_arquivo && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                if (material.url_arquivo) {
+                                  window.open(material.url_arquivo, '_blank')
+                                }
+                              }}
+                              className="border-emerald-500 text-emerald-600 hover:bg-emerald-500 hover:text-white h-10 px-4"
+                            >
+                              <FontAwesomeIcon icon={faExternalLinkAlt} className="h-4 w-4 mr-2" />
+                              Abrir
+                            </Button>
                           )}
                         </div>
                       </div>

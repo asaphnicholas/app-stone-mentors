@@ -195,6 +195,26 @@
   .shadow-glow-lg {
     box-shadow: 0 0 40px rgba(13, 173, 96, 0.2);
   }
+
+  /* Slider verde personalizado */
+  .slider-green [data-slot="slider-range"] {
+    background: linear-gradient(90deg, #05593D 0%, #0DAD60 100%) !important;
+  }
+
+  .slider-green [data-slot="slider-thumb"] {
+    background-color: #05593D !important;
+    border: 2px solid white !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .slider-green [data-slot="slider-thumb"]:hover {
+    background-color: #0DAD60 !important;
+    transform: scale(1.05) !important;
+  }
+
+  .slider-green [data-slot="slider-track"] {
+    background-color: #E5E7EB !important;
+  }
 }
 
 @layer utilities {

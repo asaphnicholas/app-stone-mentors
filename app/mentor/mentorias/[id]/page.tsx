@@ -40,6 +40,7 @@ import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
 import { mentoriasService, type Mentoria } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
+import { DiagnosticoModal } from "@/components/ui/diagnostico-modal"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -90,15 +91,10 @@ export default function MentoriaDetailsPage() {
   // Modal states
   const [isDiagnosticDialogOpen, setIsDiagnosticDialogOpen] = useState(false)
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false)
+  const [isDiagnosticoDetailsOpen, setIsDiagnosticoDetailsOpen] = useState(false)
+  const [diagnosticoDetails, setDiagnosticoDetails] = useState<any>(null)
   
   // Form states
-  const [diagnosticForm, setDiagnosticForm] = useState({
-    tempo_mercado: "",
-    faturamento_mensal: "",
-    num_funcionarios: "",
-    desafios: [] as string[],
-    observacoes: ""
-  })
   const [checkoutForm, setCheckoutForm] = useState({
     nps: 0,
     observacoes: "",
@@ -120,16 +116,6 @@ export default function MentoriaDetailsPage() {
       const mentoriaData = await mentoriasService.getMentoriaDetails(mentoriaId)
       setMentoria(mentoriaData)
       
-      // Preencher formulário de diagnóstico se já existir
-      if (mentoriaData.diagnostico) {
-        setDiagnosticForm({
-          tempo_mercado: mentoriaData.diagnostico.tempo_mercado || "",
-          faturamento_mensal: mentoriaData.diagnostico.faturamento_mensal || "",
-          num_funcionarios: mentoriaData.diagnostico.num_funcionarios || "",
-          desafios: mentoriaData.diagnostico.desafios || [],
-          observacoes: mentoriaData.diagnostico.observacoes || ""
-        })
-      }
       
       // Preencher formulário de checkout se já existir
       if (mentoriaData.checkout) {
@@ -195,28 +181,6 @@ export default function MentoriaDetailsPage() {
     }
   }
 
-  const handleUpdateDiagnostico = async () => {
-    if (!mentoria) return
-
-    try {
-      await mentoriasService.updateDiagnostico(mentoria.mentoria_id, diagnosticForm)
-      
-      addToast({
-        type: "success",
-        title: "Diagnóstico atualizado!",
-        message: "Diagnóstico da mentoria foi atualizado com sucesso.",
-      })
-      
-      setIsDiagnosticDialogOpen(false)
-      loadMentoriaDetails()
-    } catch (error) {
-      addToast({
-        type: "error",
-        title: "Erro ao atualizar diagnóstico",
-        message: error instanceof Error ? error.message : "Erro interno do servidor",
-      })
-    }
-  }
 
   const handleCheckoutMentoria = async () => {
     if (!mentoria) return
@@ -236,6 +200,22 @@ export default function MentoriaDetailsPage() {
       addToast({
         type: "error",
         title: "Erro ao finalizar mentoria",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    }
+  }
+
+  const handleViewDiagnosticoDetails = async () => {
+    if (!mentoria?.diagnostico?.id) return
+
+    try {
+      const details = await mentoriasService.getDiagnosticoById(mentoria.diagnostico.id)
+      setDiagnosticoDetails(details)
+      setIsDiagnosticoDetailsOpen(true)
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao carregar diagnóstico",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
     }
@@ -650,13 +630,227 @@ export default function MentoriaDetailsPage() {
 
       {/* Diagnóstico */}
       {mentoria.diagnostico && (
+        <div className="space-y-6">
+          {/* Identificação do Empreendedor */}
         <Card className="border-0 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5 text-white" />
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-white" />
               </div>
-              Diagnóstico
+                Identificação do Empreendedor
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mentoria.diagnostico.nome_completo && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Nome Completo:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.nome_completo}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.email && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">E-mail:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.email}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.telefone_whatsapp && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Telefone WhatsApp:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.telefone_whatsapp}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.status_negocio && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Status do Negócio:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.status_negocio}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.tempo_funcionamento && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Tempo de Funcionamento:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.tempo_funcionamento}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.setor_atuacao && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Setor de Atuação:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.setor_atuacao}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Avaliação de Maturidade */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
+                </div>
+                Avaliação de Maturidade
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { key: 'organizacao_financeira', label: 'Organização Financeira e Controle de Despesas' },
+                  { key: 'divulgacao_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
+                  { key: 'estrategia_comercial', label: 'Estratégia Comercial e Vendas' },
+                  { key: 'relacionamento_cliente', label: 'Relacionamento e Atendimento ao Cliente' },
+                  { key: 'ferramentas_digitais', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
+                  { key: 'planejamento_gestao', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
+                  { key: 'conhecimento_legal', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
+                ].map((item) => {
+                  const value = mentoria.diagnostico?.[item.key as keyof typeof mentoria.diagnostico] as number
+                  if (!value) return null
+                  
+                  return (
+                    <div key={item.key} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                        <span className="text-sm font-bold text-stone-green-dark">{value}/5</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-stone-green-dark to-stone-green-light h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(value / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Dor Principal */}
+          {mentoria.diagnostico.dor_principal && (
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
+                  </div>
+                  Dor Principal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-900 bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                  {mentoria.diagnostico.dor_principal}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Teste Psicométrico */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faGraduationCap} className="h-5 w-5 text-white" />
+                </div>
+                Teste Psicométrico
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {mentoria.diagnostico.perfil_risco && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Perfil de Risco:</p>
+                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 mt-1">
+                      {mentoria.diagnostico.perfil_risco}
+                    </Badge>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.questao_logica && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Questão Lógica:</p>
+                    <p className="font-semibold text-gray-900 mt-1">{mentoria.diagnostico.questao_logica}</p>
+                  </div>
+                )}
+                
+                {mentoria.diagnostico.questao_memoria && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Questão de Memória:</p>
+                    <p className="font-semibold text-gray-900 mt-1">{mentoria.diagnostico.questao_memoria}</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Perfil de Personalidade */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faStar} className="h-5 w-5 text-white" />
+                </div>
+                Perfil de Personalidade
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { key: 'personalidade_agir_primeiro', label: 'Prefiro agir primeiro e me preocupar depois' },
+                  { key: 'personalidade_solucoes_problemas', label: 'Gosto de pensar em várias soluções para um problema' },
+                  { key: 'personalidade_pressentimento', label: 'Sigo primeiro meu pressentimento' },
+                  { key: 'personalidade_prazo', label: 'Faço as coisas antes do prazo' },
+                  { key: 'personalidade_fracasso_opcao', label: 'Fracasso não é uma opção para mim' },
+                  { key: 'personalidade_decisao_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
+                  { key: 'personalidade_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
+                  { key: 'personalidade_sucesso', label: 'Sempre acreditei que teria sucesso' }
+                ].map((item) => {
+                  const value = mentoria.diagnostico?.[item.key as keyof typeof mentoria.diagnostico] as number
+                  if (!value) return null
+                  
+                  return (
+                    <div key={item.key} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                        <span className="text-sm font-bold text-stone-green-dark">{value}/4</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-pink-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${(value / 4) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informações Complementares */}
+          <Card className="border-0 shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <FontAwesomeIcon icon={faEdit} className="h-5 w-5 text-white" />
+                  </div>
+                  Informações Complementares
+                </div>
+                <Button
+                  onClick={handleViewDiagnosticoDetails}
+                  variant="outline"
+                  size="sm"
+                  className="border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
+                >
+                  <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 mr-2" />
+                  Ver Diagnóstico Completo
+                </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -671,7 +865,7 @@ export default function MentoriaDetailsPage() {
               {mentoria.diagnostico.faturamento_mensal && (
                 <div>
                   <p className="text-sm font-medium text-gray-600">Faturamento Mensal:</p>
-                  <p className="font-semibold text-gray-900">{mentoria.diagnostico.faturamento_mensal}</p>
+                    <p className="font-semibold text-gray-900">R$ {mentoria.diagnostico.faturamento_mensal}</p>
                 </div>
               )}
               
@@ -704,6 +898,7 @@ export default function MentoriaDetailsPage() {
             )}
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Checkout */}
@@ -736,96 +931,16 @@ export default function MentoriaDetailsPage() {
       )}
 
       {/* Modal de Diagnóstico */}
-      <Dialog open={isDiagnosticDialogOpen} onOpenChange={setIsDiagnosticDialogOpen}>
-        <DialogContent className="max-w-2xl bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Diagnóstico da Mentoria</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Preencha o diagnóstico para a mentoria de "{mentoria.negocio.nome}"
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <Label htmlFor="tempo_mercado" className="text-sm font-medium text-gray-700">Tempo no Mercado</Label>
-                <Select value={diagnosticForm.tempo_mercado} onValueChange={(value) => setDiagnosticForm({ ...diagnosticForm, tempo_mercado: value })}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
-                    <SelectValue placeholder="Selecione o tempo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Menos de 1 ano">Menos de 1 ano</SelectItem>
-                    <SelectItem value="1-2 anos">1-2 anos</SelectItem>
-                    <SelectItem value="3-5 anos">3-5 anos</SelectItem>
-                    <SelectItem value="6-10 anos">6-10 anos</SelectItem>
-                    <SelectItem value="Mais de 10 anos">Mais de 10 anos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-3">
-                <Label htmlFor="faturamento_mensal" className="text-sm font-medium text-gray-700">Faturamento Mensal</Label>
-                <Select value={diagnosticForm.faturamento_mensal} onValueChange={(value) => setDiagnosticForm({ ...diagnosticForm, faturamento_mensal: value })}>
-                  <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
-                    <SelectValue placeholder="Selecione o faturamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Até R$ 5.000">Até R$ 5.000</SelectItem>
-                    <SelectItem value="R$ 5.000 - R$ 10.000">R$ 5.000 - R$ 10.000</SelectItem>
-                    <SelectItem value="R$ 10.000 - R$ 50.000">R$ 10.000 - R$ 50.000</SelectItem>
-                    <SelectItem value="R$ 50.000 - R$ 100.000">R$ 50.000 - R$ 100.000</SelectItem>
-                    <SelectItem value="Acima de R$ 100.000">Acima de R$ 100.000</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="num_funcionarios" className="text-sm font-medium text-gray-700">Número de Funcionários</Label>
-              <Select value={diagnosticForm.num_funcionarios} onValueChange={(value) => setDiagnosticForm({ ...diagnosticForm, num_funcionarios: value })}>
-                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
-                  <SelectValue placeholder="Selecione o número" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Apenas o empreendedor">Apenas o empreendedor</SelectItem>
-                  <SelectItem value="2-5 funcionários">2-5 funcionários</SelectItem>
-                  <SelectItem value="6-10 funcionários">6-10 funcionários</SelectItem>
-                  <SelectItem value="11-20 funcionários">11-20 funcionários</SelectItem>
-                  <SelectItem value="Mais de 20 funcionários">Mais de 20 funcionários</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">Observações</Label>
-              <Textarea
-                id="observacoes"
-                value={diagnosticForm.observacoes}
-                onChange={(e) => setDiagnosticForm({ ...diagnosticForm, observacoes: e.target.value })}
-                placeholder="Descreva suas observações sobre a mentoria..."
-                className="min-h-[100px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button
-              variant="outline"
-              onClick={() => setIsDiagnosticDialogOpen(false)}
-              className="px-6 py-2"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpdateDiagnostico}
-              className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white"
-            >
-              <FontAwesomeIcon icon={faCheck} className="h-4 w-4 mr-2" />
-              Salvar Diagnóstico
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DiagnosticoModal
+        mentoriaId={mentoria.mentoria_id}
+        negocioNome={mentoria.negocio.nome}
+        isOpen={isDiagnosticDialogOpen}
+        onClose={() => setIsDiagnosticDialogOpen(false)}
+        onSuccess={() => {
+          loadMentoriaDetails()
+          setIsDiagnosticDialogOpen(false)
+        }}
+      />
 
       {/* Modal de Checkout */}
       <Dialog open={isCheckoutDialogOpen} onOpenChange={setIsCheckoutDialogOpen}>
@@ -853,7 +968,7 @@ export default function MentoriaDetailsPage() {
                       max={10}
                       min={0}
                       step={1}
-                      className="w-full"
+                      className="w-full slider-green"
                     />
                   </div>
                   <span className="text-sm text-gray-600">10</span>
@@ -925,6 +1040,317 @@ export default function MentoriaDetailsPage() {
               <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
               Finalizar Mentoria
             </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes do Diagnóstico */}
+      <Dialog open={isDiagnosticoDetailsOpen} onOpenChange={setIsDiagnosticoDetailsOpen}>
+        <DialogContent className="max-w-[95vw] w-[95vw] max-h-[90vh] lg:max-w-7xl xl:max-w-[90vw] p-0 bg-white flex flex-col">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
+                  <FontAwesomeIcon icon={faClipboardList} className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold text-gray-900">
+                    Diagnóstico Completo
+                  </DialogTitle>
+                  <div className="flex items-center gap-3 mt-2">
+                    <Badge className="bg-stone-green-light/20 text-stone-green-dark border-0 px-3 py-1">
+                      {diagnosticoDetails?.negocio?.nome || 'Carregando...'}
+                    </Badge>
+                    <span className="text-sm text-gray-500">•</span>
+                    <span className="text-sm text-gray-500">
+                      {diagnosticoDetails?.created_at ? formatDateTimeToBR(diagnosticoDetails.created_at) : 'Carregando...'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto min-h-0 p-6">
+            {diagnosticoDetails ? (
+              <div className="max-w-4xl mx-auto space-y-6">
+                {/* Identificação do Empreendedor */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-white" />
+                      </div>
+                      Identificação do Empreendedor
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {diagnosticoDetails.nome_completo && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Nome Completo:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.nome_completo}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.email && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">E-mail:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.email}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.telefone_whatsapp && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Telefone WhatsApp:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.telefone_whatsapp}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.status_negocio && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Status do Negócio:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.status_negocio}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.tempo_funcionamento && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Tempo de Funcionamento:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.tempo_funcionamento}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.setor_atuacao && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Setor de Atuação:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.setor_atuacao}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Avaliação de Maturidade */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
+                      </div>
+                      Avaliação de Maturidade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { key: 'organizacao_financeira', label: 'Organização Financeira e Controle de Despesas' },
+                        { key: 'divulgacao_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
+                        { key: 'estrategia_comercial', label: 'Estratégia Comercial e Vendas' },
+                        { key: 'relacionamento_cliente', label: 'Relacionamento e Atendimento ao Cliente' },
+                        { key: 'ferramentas_digitais', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
+                        { key: 'planejamento_gestao', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
+                        { key: 'conhecimento_legal', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
+                      ].map((item) => {
+                        const value = diagnosticoDetails[item.key]
+                        if (!value) return null
+                        
+                        return (
+                          <div key={item.key} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                              <span className="text-sm font-bold text-stone-green-dark">{value}/5</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-stone-green-dark to-stone-green-light h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(value / 5) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Dor Principal */}
+                {diagnosticoDetails.dor_principal && (
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
+                        </div>
+                        Dor Principal
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-900 bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                        {diagnosticoDetails.dor_principal}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Teste Psicométrico */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <FontAwesomeIcon icon={faGraduationCap} className="h-5 w-5 text-white" />
+                      </div>
+                      Teste Psicométrico
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {diagnosticoDetails.perfil_risco && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Perfil de Risco:</p>
+                          <Badge className="bg-purple-100 text-purple-700 border-purple-200 mt-1">
+                            {diagnosticoDetails.perfil_risco}
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.questao_logica && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Questão Lógica:</p>
+                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.questao_logica}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.questao_memoria && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Questão de Memória:</p>
+                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.questao_memoria}</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Perfil de Personalidade */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <FontAwesomeIcon icon={faStar} className="h-5 w-5 text-white" />
+                      </div>
+                      Perfil de Personalidade
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { key: 'personalidade_agir_primeiro', label: 'Prefiro agir primeiro e me preocupar depois' },
+                        { key: 'personalidade_solucoes_problemas', label: 'Gosto de pensar em várias soluções para um problema' },
+                        { key: 'personalidade_pressentimento', label: 'Sigo primeiro meu pressentimento' },
+                        { key: 'personalidade_prazo', label: 'Faço as coisas antes do prazo' },
+                        { key: 'personalidade_fracasso_opcao', label: 'Fracasso não é uma opção para mim' },
+                        { key: 'personalidade_decisao_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
+                        { key: 'personalidade_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
+                        { key: 'personalidade_sucesso', label: 'Sempre acreditei que teria sucesso' }
+                      ].map((item) => {
+                        const value = diagnosticoDetails[item.key]
+                        if (!value) return null
+                        
+                        return (
+                          <div key={item.key} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                              <span className="text-sm font-bold text-stone-green-dark">{value}/4</span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-pink-500 to-pink-600 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${(value / 4) * 100}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Informações Complementares */}
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <FontAwesomeIcon icon={faEdit} className="h-5 w-5 text-white" />
+                      </div>
+                      Informações Complementares
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {diagnosticoDetails.tempo_mercado && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Tempo no Mercado:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.tempo_mercado}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.faturamento_mensal && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Faturamento Mensal:</p>
+                          <p className="font-semibold text-gray-900">R$ {diagnosticoDetails.faturamento_mensal}</p>
+                        </div>
+                      )}
+                      
+                      {diagnosticoDetails.num_funcionarios && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-600">Número de Funcionários:</p>
+                          <p className="font-semibold text-gray-900">{diagnosticoDetails.num_funcionarios}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {diagnosticoDetails.desafios && diagnosticoDetails.desafios.length > 0 && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-2">Desafios Identificados:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {diagnosticoDetails.desafios.map((desafio: string, index: number) => (
+                            <Badge key={index} className="bg-orange-100 text-orange-700 border-orange-200">
+                              {desafio}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {diagnosticoDetails.observacoes && (
+                      <div>
+                        <p className="text-sm font-medium text-gray-600 mb-2">Observações:</p>
+                        <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{diagnosticoDetails.observacoes}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full min-h-[300px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-16 w-16 border-4 border-stone-green-light border-t-transparent mx-auto mb-4"></div>
+                  <p className="text-gray-600 text-lg">Carregando diagnóstico...</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="p-6 pt-4 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                onClick={() => setIsDiagnosticoDetailsOpen(false)}
+                className="px-6 py-3 h-12 border-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Fechar
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

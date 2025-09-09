@@ -56,6 +56,42 @@ export interface Mentoria {
   finalizada_at?: string
   diagnostico?: {
     id: string
+    // Campos de Identificação
+    nome_completo?: string
+    email?: string
+    telefone_whatsapp?: string
+    status_negocio?: string
+    tempo_funcionamento?: string
+    setor_atuacao?: string
+    
+    // Avaliação de Maturidade (1-5)
+    organizacao_financeira?: number
+    divulgacao_marketing?: number
+    estrategia_comercial?: number
+    relacionamento_cliente?: number
+    ferramentas_digitais?: number
+    planejamento_gestao?: number
+    conhecimento_legal?: number
+    
+    // Dor Principal
+    dor_principal?: string
+    
+    // Teste Psicométrico
+    perfil_risco?: string
+    questao_logica?: string
+    questao_memoria?: string
+    
+    // Personalidade (1-4)
+    personalidade_agir_primeiro?: number
+    personalidade_solucoes_problemas?: number
+    personalidade_pressentimento?: number
+    personalidade_prazo?: number
+    personalidade_fracasso_opcao?: number
+    personalidade_decisao_correta?: number
+    personalidade_oportunidades_riscos?: number
+    personalidade_sucesso?: number
+    
+    // Campos Originais (compatibilidade)
     tempo_mercado?: string
     faturamento_mensal?: string
     num_funcionarios?: string
@@ -109,6 +145,42 @@ export interface CheckinMentoriaResponse {
 }
 
 export interface DiagnosticoRequest {
+  // Campos de Identificação
+  nome_completo: string
+  email: string
+  telefone_whatsapp: string
+  status_negocio: string
+  tempo_funcionamento: string
+  setor_atuacao: string
+  
+  // Avaliação de Maturidade (1-5)
+  organizacao_financeira: number
+  divulgacao_marketing: number
+  estrategia_comercial: number
+  relacionamento_cliente: number
+  ferramentas_digitais: number
+  planejamento_gestao: number
+  conhecimento_legal: number
+  
+  // Dor Principal
+  dor_principal: string
+  
+  // Teste Psicométrico
+  perfil_risco: string
+  questao_logica: string
+  questao_memoria: string
+  
+  // Personalidade (1-4)
+  personalidade_agir_primeiro: number
+  personalidade_solucoes_problemas: number
+  personalidade_pressentimento: number
+  personalidade_prazo: number
+  personalidade_fracasso_opcao: number
+  personalidade_decisao_correta: number
+  personalidade_oportunidades_riscos: number
+  personalidade_sucesso: number
+  
+  // Campos Originais (compatibilidade)
   tempo_mercado?: string
   faturamento_mensal?: string
   num_funcionarios?: string
@@ -120,6 +192,67 @@ export interface DiagnosticoResponse {
   diagnostico_id: string
   mentoria_id: string
   message: string
+}
+
+export interface DiagnosticoDetails {
+  diagnostico_id: string
+  mentoria_id: string
+  created_at: string
+  
+  mentoria: {
+    id: string
+    data_agendada: string
+    tipo: string
+    status: string
+    duracao_minutos: number
+    checkin_at: string
+  }
+  
+  negocio: {
+    id: string
+    nome: string
+    empreendedor_nome: string
+    telefone: string
+    area_atuacao: string
+    localizacao: string
+  }
+  
+  // Todos os campos do diagnóstico
+  tempo_mercado?: string
+  faturamento_mensal?: string
+  num_funcionarios?: string
+  desafios?: string[]
+  observacoes?: string
+  
+  nome_completo?: string
+  email?: string
+  telefone_whatsapp?: string
+  status_negocio?: string
+  tempo_funcionamento?: string
+  setor_atuacao?: string
+  
+  organizacao_financeira?: number
+  divulgacao_marketing?: number
+  estrategia_comercial?: number
+  relacionamento_cliente?: number
+  ferramentas_digitais?: number
+  planejamento_gestao?: number
+  conhecimento_legal?: number
+  
+  dor_principal?: string
+  
+  perfil_risco?: string
+  questao_logica?: string
+  questao_memoria?: string
+  
+  personalidade_agir_primeiro?: number
+  personalidade_solucoes_problemas?: number
+  personalidade_pressentimento?: number
+  personalidade_prazo?: number
+  personalidade_fracasso_opcao?: number
+  personalidade_decisao_correta?: number
+  personalidade_oportunidades_riscos?: number
+  personalidade_sucesso?: number
 }
 
 export interface CheckoutRequest {
@@ -303,6 +436,24 @@ class MentoriasService {
       return result
     } catch (error) {
       console.error('MentoriasService.checkoutMentoria - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  // GET /api/v1/mentor/mentorias/diagnosticos/{id} - Busca diagnóstico por ID
+  async getDiagnosticoById(diagnosticoId: string): Promise<DiagnosticoDetails> {
+    try {
+      console.log('MentoriasService.getDiagnosticoById - ID:', diagnosticoId)
+      
+      const result = await apiService.get<DiagnosticoDetails>(
+        `/mentor/mentorias/diagnosticos/${diagnosticoId}`,
+        true
+      )
+      console.log('MentoriasService.getDiagnosticoById - Resultado:', result)
+      
+      return result
+    } catch (error) {
+      console.error('MentoriasService.getDiagnosticoById - Erro:', error)
       throw this.handleError(error)
     }
   }
