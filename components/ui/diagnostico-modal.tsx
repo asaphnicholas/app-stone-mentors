@@ -415,7 +415,7 @@ export function DiagnosticoModal({
           
           <div className="space-y-2">
             <Label htmlFor="questao_logica" className="text-sm font-medium text-gray-700">
-              Questão Lógica (Sequência Numérica) *
+              Qual número completa a sequência 2, 4, 8, 16,…? *
             </Label>
             <Input
               id="questao_logica"

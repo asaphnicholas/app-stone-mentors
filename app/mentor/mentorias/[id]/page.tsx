@@ -981,80 +981,15 @@ export default function MentoriaDetailsPage() {
                   <div className="text-xl font-bold text-stone-green-dark">
                     {checkoutForm.nota_mentoria}
                   </div>
-                  <div className="text-xs text-gray-600">
+                  {/* <div className="text-xs text-gray-600">
                     {checkoutForm.nota_mentoria >= 9 ? "Promotor" : 
                      checkoutForm.nota_mentoria >= 7 ? "Neutro" : 
                      checkoutForm.nota_mentoria > 0 ? "Detrator" : "Não avaliado"}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
 
-            {/* Avaliação do Mentor */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Como foi o mentor?
-              </Label>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">0</span>
-                  <div className="flex-1 mx-4">
-                    <Slider
-                      value={[checkoutForm.nota_mentor]}
-                      onValueChange={(value) => setCheckoutForm({ ...checkoutForm, nota_mentor: value[0] })}
-                      max={10}
-                      min={0}
-                      step={1}
-                      className="w-full slider-green"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">10</span>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-stone-green-dark">
-                    {checkoutForm.nota_mentor}
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {checkoutForm.nota_mentor >= 9 ? "Promotor" : 
-                     checkoutForm.nota_mentor >= 7 ? "Neutro" : 
-                     checkoutForm.nota_mentor > 0 ? "Detrator" : "Não avaliado"}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Avaliação do Programa */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Como foi o programa Impulso Stone?
-              </Label>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">0</span>
-                  <div className="flex-1 mx-4">
-                    <Slider
-                      value={[checkoutForm.nota_programa]}
-                      onValueChange={(value) => setCheckoutForm({ ...checkoutForm, nota_programa: value[0] })}
-                      max={10}
-                      min={0}
-                      step={1}
-                      className="w-full slider-green"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-600">10</span>
-                </div>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-stone-green-dark">
-                    {checkoutForm.nota_programa}
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {checkoutForm.nota_programa >= 9 ? "Promotor" : 
-                     checkoutForm.nota_programa >= 7 ? "Neutro" : 
-                     checkoutForm.nota_programa > 0 ? "Detrator" : "Não avaliado"}
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <div className="space-y-3">
               <Label htmlFor="checkout_observacoes" className="text-sm font-medium text-gray-700">Observações Finais</Label>
@@ -1104,7 +1039,7 @@ export default function MentoriaDetailsPage() {
             </Button>
             <Button
               onClick={handleCheckoutMentoria}
-              disabled={checkoutForm.nota_mentoria === 0 || checkoutForm.nota_mentor === 0 || checkoutForm.nota_programa === 0 || !checkoutForm.proximos_passos}
+              disabled={checkoutForm.nota_mentoria === 0 || !checkoutForm.proximos_passos}
               className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
