@@ -162,7 +162,7 @@ export interface CheckinMentoriaResponse {
 }
 
 export interface DiagnosticoRequest {
-  // Campos de Identificação
+  // ===== 1. IDENTIFICAÇÃO =====
   nome_completo: string
   email: string
   telefone_whatsapp: string
@@ -170,39 +170,35 @@ export interface DiagnosticoRequest {
   tempo_funcionamento: string
   setor_atuacao: string
   
-  // Avaliação de Maturidade (1-5)
-  organizacao_financeira: number
+  // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (1-5) =====
+  controle_financeiro: number
   divulgacao_marketing: number
-  estrategia_comercial: number
-  relacionamento_cliente: number
-  ferramentas_digitais: number
-  planejamento_gestao: number
-  conhecimento_legal: number
+  atrair_clientes_vender: number
+  atender_clientes: number
+  ferramentas_gestao: number
+  organizacao_negocio: number
+  obrigacoes_legais_juridicas: number
   
-  // Dor Principal
+  // ===== 3. DOR PRINCIPAL DO MOMENTO =====
   dor_principal: string
+  falta_caixa_financiamento: string
+  dificuldade_funcionarios: string
+  clientes_reclamando: string
+  relacionamento_fornecedores: string
   
-  // Teste Psicométrico
-  perfil_risco: string
-  questao_logica: string
-  questao_memoria: string
+  // ===== 4. PSICOMÉTRICO =====
+  perfil_investimento: string
+  motivo_desistencia: string
   
-  // Personalidade (1-4)
-  personalidade_agir_primeiro: number
-  personalidade_solucoes_problemas: number
-  personalidade_pressentimento: number
-  personalidade_prazo: number
-  personalidade_fracasso_opcao: number
-  personalidade_decisao_correta: number
-  personalidade_oportunidades_riscos: number
-  personalidade_sucesso: number
-  
-  // Campos Originais (compatibilidade)
-  tempo_mercado?: string
-  faturamento_mensal?: string
-  num_funcionarios?: string
-  desafios?: string[]
-  observacoes?: string
+  // ===== 5. TESTE DE PERSONALIDADE (1-4) =====
+  agir_primeiro_consequencias_depois: number
+  pensar_varias_solucoes: number
+  seguir_primeiro_pressentimento: number
+  fazer_coisas_antes_prazo: number
+  fracasso_nao_opcao: number
+  decisao_negocio_correta: number
+  focar_oportunidades_riscos: number
+  acreditar_sucesso: number
 }
 
 export interface DiagnosticoResponse {

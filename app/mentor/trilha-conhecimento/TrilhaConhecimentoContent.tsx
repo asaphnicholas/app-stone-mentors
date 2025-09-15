@@ -538,7 +538,7 @@ export default function TrilhaConhecimentoContent() {
                             <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
                             Ver
                           </Button>
-                          {material.url_arquivo && (
+                          {/* {material.url_arquivo && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -552,7 +552,7 @@ export default function TrilhaConhecimentoContent() {
                               <FontAwesomeIcon icon={faExternalLinkAlt} className="h-4 w-4 mr-2" />
                               Abrir
                             </Button>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     ) : isLocked ? (
@@ -582,7 +582,7 @@ export default function TrilhaConhecimentoContent() {
                           <FontAwesomeIcon icon={faEye} className="h-4 w-4 mr-2" />
                           Visualizar
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -594,7 +594,7 @@ export default function TrilhaConhecimentoContent() {
                         >
                           <FontAwesomeIcon icon={faExternalLinkAlt} className="h-4 w-4 mr-2" />
                           Abrir
-                        </Button>
+                        </Button> */}
                       </div>
                     )}
 

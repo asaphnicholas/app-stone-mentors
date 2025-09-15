@@ -27,11 +27,11 @@ import {
   faSave,
   faEdit
 } from "@fortawesome/free-solid-svg-icons"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/toast"
 import { mentoriasService } from "@/lib/services/mentorias"
 
 interface DiagnosticoData {
-  // Campos de Identificação
+  // ===== 1. IDENTIFICAÇÃO =====
   nome_completo: string
   email: string
   telefone_whatsapp: string
@@ -39,39 +39,35 @@ interface DiagnosticoData {
   tempo_funcionamento: string
   setor_atuacao: string
   
-  // Avaliação de Maturidade (1-5)
-  organizacao_financeira: number
+  // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (1-5) =====
+  controle_financeiro: number
   divulgacao_marketing: number
-  estrategia_comercial: number
-  relacionamento_cliente: number
-  ferramentas_digitais: number
-  planejamento_gestao: number
-  conhecimento_legal: number
+  atrair_clientes_vender: number
+  atender_clientes: number
+  ferramentas_gestao: number
+  organizacao_negocio: number
+  obrigacoes_legais_juridicas: number
   
-  // Dor Principal
+  // ===== 3. DOR PRINCIPAL DO MOMENTO =====
   dor_principal: string
+  falta_caixa_financiamento: string
+  dificuldade_funcionarios: string
+  clientes_reclamando: string
+  relacionamento_fornecedores: string
   
-  // Teste Psicométrico
-  perfil_risco: string
-  questao_logica: string
-  questao_memoria: string
+  // ===== 4. PSICOMÉTRICO =====
+  perfil_investimento: string
+  motivo_desistencia: string
   
-  // Personalidade (1-4)
-  personalidade_agir_primeiro: number
-  personalidade_solucoes_problemas: number
-  personalidade_pressentimento: number
-  personalidade_prazo: number
-  personalidade_fracasso_opcao: number
-  personalidade_decisao_correta: number
-  personalidade_oportunidades_riscos: number
-  personalidade_sucesso: number
-  
-  // Campos Originais (compatibilidade)
-  tempo_mercado: string
-  faturamento_mensal: string
-  num_funcionarios: string
-  desafios: string[]
-  observacoes: string
+  // ===== 5. TESTE DE PERSONALIDADE (1-4) =====
+  agir_primeiro_consequencias_depois: number
+  pensar_varias_solucoes: number
+  seguir_primeiro_pressentimento: number
+  fazer_coisas_antes_prazo: number
+  fracasso_nao_opcao: number
+  decisao_negocio_correta: number
+  focar_oportunidades_riscos: number
+  acreditar_sucesso: number
 }
 
 interface DiagnosticoModalProps {
@@ -90,7 +86,7 @@ export function DiagnosticoModal({
   onSuccess 
 }: DiagnosticoModalProps) {
   const [formData, setFormData] = useState<DiagnosticoData>({
-    // Campos de Identificação
+    // ===== 1. IDENTIFICAÇÃO =====
     nome_completo: '',
     email: '',
     telefone_whatsapp: '',
@@ -98,47 +94,52 @@ export function DiagnosticoModal({
     tempo_funcionamento: '',
     setor_atuacao: '',
     
-    // Avaliação de Maturidade (1-5)
-    organizacao_financeira: 1,
+    // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (1-5) =====
+    controle_financeiro: 1,
     divulgacao_marketing: 1,
-    estrategia_comercial: 1,
-    relacionamento_cliente: 1,
-    ferramentas_digitais: 1,
-    planejamento_gestao: 1,
-    conhecimento_legal: 1,
+    atrair_clientes_vender: 1,
+    atender_clientes: 1,
+    ferramentas_gestao: 1,
+    organizacao_negocio: 1,
+    obrigacoes_legais_juridicas: 1,
     
-    // Dor Principal
+    // ===== 3. DOR PRINCIPAL DO MOMENTO =====
     dor_principal: '',
+    falta_caixa_financiamento: '',
+    dificuldade_funcionarios: '',
+    clientes_reclamando: '',
+    relacionamento_fornecedores: '',
     
-    // Teste Psicométrico
-    perfil_risco: '',
-    questao_logica: '',
-    questao_memoria: '',
+    // ===== 4. PSICOMÉTRICO =====
+    perfil_investimento: '',
+    motivo_desistencia: '',
     
-    // Personalidade (1-4)
-    personalidade_agir_primeiro: 1,
-    personalidade_solucoes_problemas: 1,
-    personalidade_pressentimento: 1,
-    personalidade_prazo: 1,
-    personalidade_fracasso_opcao: 1,
-    personalidade_decisao_correta: 1,
-    personalidade_oportunidades_riscos: 1,
-    personalidade_sucesso: 1,
-    
-    // Campos Originais
-    tempo_mercado: '',
-    faturamento_mensal: '',
-    num_funcionarios: '',
-    desafios: [],
-    observacoes: ''
+    // ===== 5. TESTE DE PERSONALIDADE (1-4) =====
+    agir_primeiro_consequencias_depois: 1,
+    pensar_varias_solucoes: 1,
+    seguir_primeiro_pressentimento: 1,
+    fazer_coisas_antes_prazo: 1,
+    fracasso_nao_opcao: 1,
+    decisao_negocio_correta: 1,
+    focar_oportunidades_riscos: 1,
+    acreditar_sucesso: 1
   })
   
   const [isLoading, setIsLoading] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
-  const [desafioInput, setDesafioInput] = useState('')
-  const { toast } = useToast()
+  const { addToast } = useToast()
 
-  const totalSteps = 6
+  const totalSteps = 5
+
+  // Função para aplicar máscara de telefone brasileiro
+  const formatPhoneNumber = (value: string) => {
+    const numbers = value.replace(/\D/g, '')
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3')
+    } else {
+      return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3')
+    }
+  }
 
   const handleInputChange = (field: keyof DiagnosticoData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -148,41 +149,25 @@ export function DiagnosticoModal({
     setFormData(prev => ({ ...prev, [field]: value[0] }))
   }
 
-  const addDesafio = () => {
-    if (desafioInput.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        desafios: [...prev.desafios, desafioInput.trim()]
-      }))
-      setDesafioInput('')
-    }
-  }
-
-  const removeDesafio = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      desafios: prev.desafios.filter((_, i) => i !== index)
-    }))
-  }
-
   const handleSubmit = async () => {
     try {
       setIsLoading(true)
       
       await mentoriasService.updateDiagnostico(mentoriaId, formData)
       
-      toast({
+      addToast({
+        type: "success",
         title: "Diagnóstico salvo com sucesso!",
-        description: "O diagnóstico foi registrado para esta mentoria.",
+        message: "O diagnóstico foi registrado para esta mentoria.",
       })
       
       onSuccess()
       onClose()
     } catch (error) {
-      toast({
+      addToast({
+        type: "error",
         title: "Erro ao salvar diagnóstico",
-        description: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
-        variant: "destructive"
+        message: error instanceof Error ? error.message : "Ocorreu um erro inesperado.",
       })
     } finally {
       setIsLoading(false)
@@ -205,10 +190,9 @@ export function DiagnosticoModal({
     switch (step) {
       case 1: return "Identificação do Empreendedor"
       case 2: return "Avaliação de Maturidade"
-      case 3: return "Dor Principal"
+      case 3: return "Dor Principal do Momento"
       case 4: return "Teste Psicométrico"
       case 5: return "Perfil de Personalidade"
-      case 6: return "Informações Complementares"
       default: return ""
     }
   }
@@ -258,7 +242,7 @@ export function DiagnosticoModal({
             <Input
               id="telefone_whatsapp"
               value={formData.telefone_whatsapp}
-              onChange={(e) => handleInputChange('telefone_whatsapp', e.target.value)}
+              onChange={(e) => handleInputChange('telefone_whatsapp', formatPhoneNumber(e.target.value))}
               placeholder="(11) 99999-9999"
               className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
             />
@@ -283,26 +267,41 @@ export function DiagnosticoModal({
             <Label htmlFor="tempo_funcionamento" className="text-sm font-medium text-gray-700">
               Tempo de Funcionamento *
             </Label>
-            <Input
-              id="tempo_funcionamento"
-              value={formData.tempo_funcionamento}
-              onChange={(e) => handleInputChange('tempo_funcionamento', e.target.value)}
-              placeholder="Ex: 2 anos, 6 meses, etc."
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-            />
+            <Select value={formData.tempo_funcionamento} onValueChange={(value) => handleInputChange('tempo_funcionamento', value)}>
+              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+                <SelectValue placeholder="Selecione o tempo de funcionamento" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Menos de 6 meses">Menos de 6 meses</SelectItem>
+                <SelectItem value="De 6 meses a 1 ano">De 6 meses a 1 ano</SelectItem>
+                <SelectItem value="De 1 a 3 anos">De 1 a 3 anos</SelectItem>
+                <SelectItem value="De 3 a 5 anos">De 3 a 5 anos</SelectItem>
+                <SelectItem value="Mais de 5 anos">Mais de 5 anos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="setor_atuacao" className="text-sm font-medium text-gray-700">
               Setor de Atuação *
             </Label>
-            <Input
-              id="setor_atuacao"
-              value={formData.setor_atuacao}
-              onChange={(e) => handleInputChange('setor_atuacao', e.target.value)}
-              placeholder="Ex: Tecnologia, Varejo, Serviços"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-            />
+            <Select value={formData.setor_atuacao} onValueChange={(value) => handleInputChange('setor_atuacao', value)}>
+              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+                <SelectValue placeholder="Selecione o setor de atuação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Tecnologia e Comunicação">Tecnologia e Comunicação</SelectItem>
+                <SelectItem value="Varejo e Comércio">Varejo e Comércio</SelectItem>
+                <SelectItem value="Serviços">Serviços</SelectItem>
+                <SelectItem value="Indústria e Manufatura">Indústria e Manufatura</SelectItem>
+                <SelectItem value="Saúde e Bem-estar">Saúde e Bem-estar</SelectItem>
+                <SelectItem value="Educação">Educação</SelectItem>
+                <SelectItem value="Alimentação e Bebidas">Alimentação e Bebidas</SelectItem>
+                <SelectItem value="Construção e Imóveis">Construção e Imóveis</SelectItem>
+                <SelectItem value="Transporte e Logística">Transporte e Logística</SelectItem>
+                <SelectItem value="Outros">Outros</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -325,13 +324,13 @@ export function DiagnosticoModal({
         
         <div className="space-y-6">
           {[
-            { key: 'organizacao_financeira', label: 'Organização Financeira e Controle de Despesas' },
-            { key: 'divulgacao_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
-            { key: 'estrategia_comercial', label: 'Estratégia Comercial e Vendas' },
-            { key: 'relacionamento_cliente', label: 'Relacionamento e Atendimento ao Cliente' },
-            { key: 'ferramentas_digitais', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
-            { key: 'planejamento_gestao', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
-            { key: 'conhecimento_legal', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
+            { key: 'controle_financeiro', label: 'Controle Financeiro e Despesas' },
+            { key: 'divulgacao_marketing', label: 'Divulgação do Negócio' },
+            { key: 'atrair_clientes_vender', label: 'Atrair Clientes e Vender' },
+            { key: 'atender_clientes', label: 'Atendimento aos Clientes' },
+            { key: 'ferramentas_gestao', label: 'Uso de Ferramentas de Gestão' },
+            { key: 'organizacao_negocio', label: 'Organização do Negócio' },
+            { key: 'obrigacoes_legais_juridicas', label: 'Conhecimento Legal/Jurídico' }
           ].map((item) => (
             <div key={item.key} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -368,20 +367,78 @@ export function DiagnosticoModal({
           <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
             <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">Dor Principal</h3>
+          <h3 className="text-lg font-bold text-gray-900">Dor Principal do Momento</h3>
         </div>
         
-        <div className="space-y-2">
-          <Label htmlFor="dor_principal" className="text-sm font-medium text-gray-700">
-            Dor Principal do Momento *
-          </Label>
-          <Textarea
-            id="dor_principal"
-            value={formData.dor_principal}
-            onChange={(e) => handleInputChange('dor_principal', e.target.value)}
-            placeholder="Descreva qual é a principal dificuldade ou desafio que o empreendedor está enfrentando no momento..."
-            className="min-h-[120px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-          />
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="dor_principal" className="text-sm font-medium text-gray-700">
+              Dor Principal do Momento
+            </Label>
+            <Select value={formData.dor_principal} onValueChange={(value) => handleInputChange('dor_principal', value)}>
+              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+                <SelectValue placeholder="Selecione a dor principal" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Divulgação">Divulgação</SelectItem>
+                <SelectItem value="Vendas">Vendas</SelectItem>
+                <SelectItem value="Organização">Organização</SelectItem>
+                <SelectItem value="Finanças">Finanças</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="falta_caixa_financiamento" className="text-sm font-medium text-gray-700">
+              Falta de Caixa / Financiamento
+            </Label>
+            <Textarea
+              id="falta_caixa_financiamento"
+              value={formData.falta_caixa_financiamento}
+              onChange={(e) => handleInputChange('falta_caixa_financiamento', e.target.value)}
+              placeholder="Descreva as dificuldades financeiras ou de financiamento..."
+              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dificuldade_funcionarios" className="text-sm font-medium text-gray-700">
+              Dificuldade com Funcionários
+            </Label>
+            <Textarea
+              id="dificuldade_funcionarios"
+              value={formData.dificuldade_funcionarios}
+              onChange={(e) => handleInputChange('dificuldade_funcionarios', e.target.value)}
+              placeholder="Descreva as dificuldades relacionadas aos funcionários..."
+              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="clientes_reclamando" className="text-sm font-medium text-gray-700">
+              Clientes Reclamando
+            </Label>
+            <Textarea
+              id="clientes_reclamando"
+              value={formData.clientes_reclamando}
+              onChange={(e) => handleInputChange('clientes_reclamando', e.target.value)}
+              placeholder="Descreva as reclamações dos clientes..."
+              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="relacionamento_fornecedores" className="text-sm font-medium text-gray-700">
+              Relacionamento com Fornecedores
+            </Label>
+            <Textarea
+              id="relacionamento_fornecedores"
+              value={formData.relacionamento_fornecedores}
+              onChange={(e) => handleInputChange('relacionamento_fornecedores', e.target.value)}
+              placeholder="Descreva as dificuldades com fornecedores..."
+              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -399,43 +456,30 @@ export function DiagnosticoModal({
         
         <div className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="perfil_risco" className="text-sm font-medium text-gray-700">
-              Perfil de Risco *
+            <Label htmlFor="perfil_investimento" className="text-sm font-medium text-gray-700">
+              Perfil de Investimento
             </Label>
-            <Select value={formData.perfil_risco} onValueChange={(value) => handleInputChange('perfil_risco', value)}>
+            <Select value={formData.perfil_investimento} onValueChange={(value) => handleInputChange('perfil_investimento', value)}>
               <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
-                <SelectValue placeholder="Selecione o perfil de risco" />
+                <SelectValue placeholder="Selecione o perfil de investimento" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Investimento arriscado">Investimento arriscado</SelectItem>
-                <SelectItem value="Investimento seguro">Investimento seguro</SelectItem>
+                <SelectItem value="Arriscado">Arriscado</SelectItem>
+                <SelectItem value="Seguro">Seguro</SelectItem>
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="questao_logica" className="text-sm font-medium text-gray-700">
-              Qual número completa a sequência 2, 4, 8, 16,…? *
+            <Label htmlFor="motivo_desistencia" className="text-sm font-medium text-gray-700">
+              Motivo de Desistência
             </Label>
-            <Input
-              id="questao_logica"
-              value={formData.questao_logica}
-              onChange={(e) => handleInputChange('questao_logica', e.target.value)}
-              placeholder="Ex: 2, 4, 6, 8, ?"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="questao_memoria" className="text-sm font-medium text-gray-700">
-              Questão de Memória (Evento) *
-            </Label>
-            <Input
-              id="questao_memoria"
-              value={formData.questao_memoria}
-              onChange={(e) => handleInputChange('questao_memoria', e.target.value)}
-              placeholder="Descreva um evento específico mencionado"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+            <Textarea
+              id="motivo_desistencia"
+              value={formData.motivo_desistencia}
+              onChange={(e) => handleInputChange('motivo_desistencia', e.target.value)}
+              placeholder="Descreva os motivos que poderiam levar à desistência do negócio..."
+              className="min-h-[120px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
             />
           </div>
         </div>
@@ -459,14 +503,14 @@ export function DiagnosticoModal({
         
         <div className="space-y-6">
           {[
-            { key: 'personalidade_agir_primeiro', label: 'Prefiro agir primeiro e me preocupar depois' },
-            { key: 'personalidade_solucoes_problemas', label: 'Gosto de pensar em várias soluções para um problema' },
-            { key: 'personalidade_pressentimento', label: 'Sigo primeiro meu pressentimento' },
-            { key: 'personalidade_prazo', label: 'Faço as coisas antes do prazo' },
-            { key: 'personalidade_fracasso_opcao', label: 'Fracasso não é uma opção para mim' },
-            { key: 'personalidade_decisao_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
-            { key: 'personalidade_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
-            { key: 'personalidade_sucesso', label: 'Sempre acreditei que teria sucesso' }
+            { key: 'agir_primeiro_consequencias_depois', label: 'Prefiro agir primeiro e me preocupar com as consequências depois' },
+            { key: 'pensar_varias_solucoes', label: 'Gosto de pensar em várias soluções para um problema' },
+            { key: 'seguir_primeiro_pressentimento', label: 'Sigo primeiro meu pressentimento' },
+            { key: 'fazer_coisas_antes_prazo', label: 'Faço as coisas antes do prazo' },
+            { key: 'fracasso_nao_opcao', label: 'Fracasso não é uma opção para mim' },
+            { key: 'decisao_negocio_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
+            { key: 'focar_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
+            { key: 'acreditar_sucesso', label: 'Sempre acreditei que teria sucesso' }
           ].map((item) => (
             <div key={item.key} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -496,107 +540,6 @@ export function DiagnosticoModal({
     </div>
   )
 
-  const renderStep6 = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center">
-            <FontAwesomeIcon icon={faEdit} className="h-5 w-5 text-white" />
-          </div>
-          <h3 className="text-lg font-bold text-gray-900">Informações Complementares</h3>
-        </div>
-        
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="tempo_mercado" className="text-sm font-medium text-gray-700">
-                Tempo no Mercado
-              </Label>
-              <Input
-                id="tempo_mercado"
-                value={formData.tempo_mercado}
-                onChange={(e) => handleInputChange('tempo_mercado', e.target.value)}
-                placeholder="Ex: 2 anos"
-                className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="faturamento_mensal" className="text-sm font-medium text-gray-700">
-                Faturamento Mensal
-              </Label>
-              <Input
-                id="faturamento_mensal"
-                value={formData.faturamento_mensal}
-                onChange={(e) => handleInputChange('faturamento_mensal', e.target.value)}
-                placeholder="Ex: R$ 10.000"
-                className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="num_funcionarios" className="text-sm font-medium text-gray-700">
-                Número de Funcionários
-              </Label>
-              <Input
-                id="num_funcionarios"
-                value={formData.num_funcionarios}
-                onChange={(e) => handleInputChange('num_funcionarios', e.target.value)}
-                placeholder="Ex: 5 funcionários"
-                className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Desafios Identificados
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                value={desafioInput}
-                onChange={(e) => setDesafioInput(e.target.value)}
-                placeholder="Digite um desafio e pressione Enter"
-                className="flex-1 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDesafio())}
-              />
-              <Button onClick={addDesafio} variant="outline" size="sm">
-                Adicionar
-              </Button>
-            </div>
-            {formData.desafios.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.desafios.map((desafio, index) => (
-                  <div key={index} className="flex items-center gap-1 bg-stone-green-light/20 text-stone-green-dark px-2 py-1 rounded-md text-sm">
-                    <span>{desafio}</span>
-                    <button
-                      onClick={() => removeDesafio(index)}
-                      className="text-stone-green-dark hover:text-stone-green-dark/70"
-                    >
-                      <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">
-              Observações da Mentoria
-            </Label>
-            <Textarea
-              id="observacoes"
-              value={formData.observacoes}
-              onChange={(e) => handleInputChange('observacoes', e.target.value)}
-              placeholder="Observações gerais sobre a mentoria e o empreendedor..."
-              className="min-h-[120px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -605,7 +548,6 @@ export function DiagnosticoModal({
       case 3: return renderStep3()
       case 4: return renderStep4()
       case 5: return renderStep5()
-      case 6: return renderStep6()
       default: return null
     }
   }
@@ -666,7 +608,6 @@ export function DiagnosticoModal({
               <span>Dor</span>
               <span>Teste</span>
               <span>Personalidade</span>
-              <span>Complementares</span>
             </div>
           </div>
         </DialogHeader>

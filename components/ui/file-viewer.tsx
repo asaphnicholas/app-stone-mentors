@@ -595,7 +595,7 @@ export function FileViewer({
             <div className="flex items-center gap-1">
               {mode === 'file' && (
                 <>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={handleDownload}
@@ -605,8 +605,8 @@ export function FileViewer({
                   >
                     <FontAwesomeIcon icon={faDownload} className="h-3 w-3 mr-1" />
                     <span className="hidden sm:inline">Baixar</span>
-                  </Button>
-                  <Button
+                  </Button> */}
+                  {/* <Button
                     variant="outline"
                     size="sm"
                     onClick={handleOpenExternal}
@@ -616,7 +616,7 @@ export function FileViewer({
                   >
                     <FontAwesomeIcon icon={faExternalLinkAlt} className="h-3 w-3 mr-1" />
                     <span className="hidden sm:inline">Abrir</span>
-                  </Button>
+                  </Button> */}
                 </>
               )}
             </div>

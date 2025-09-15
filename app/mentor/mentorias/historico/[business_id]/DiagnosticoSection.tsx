@@ -15,14 +15,7 @@ interface DiagnosticoCompleto {
   id: string
   created_at: string
   
-  // Campos Originais (compatibilidade)
-  tempo_mercado?: string
-  faturamento_mensal?: string
-  num_funcionarios?: string
-  desafios?: string[]
-  observacoes?: string
-  
-  // Novos Campos - Identificação
+  // ===== 1. IDENTIFICAÇÃO =====
   nome_completo?: string
   email?: string
   telefone_whatsapp?: string
@@ -30,32 +23,35 @@ interface DiagnosticoCompleto {
   tempo_funcionamento?: string
   setor_atuacao?: string
   
-  // Avaliação de Maturidade (1-5)
-  organizacao_financeira?: number
+  // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (1-5) =====
+  controle_financeiro?: number
   divulgacao_marketing?: number
-  estrategia_comercial?: number
-  relacionamento_cliente?: number
-  ferramentas_digitais?: number
-  planejamento_gestao?: number
-  conhecimento_legal?: number
+  atrair_clientes_vender?: number
+  atender_clientes?: number
+  ferramentas_gestao?: number
+  organizacao_negocio?: number
+  obrigacoes_legais_juridicas?: number
   
-  // Dor Principal
+  // ===== 3. DOR PRINCIPAL DO MOMENTO =====
   dor_principal?: string
+  falta_caixa_financiamento?: string
+  dificuldade_funcionarios?: string
+  clientes_reclamando?: string
+  relacionamento_fornecedores?: string
   
-  // Teste Psicométrico
-  perfil_risco?: string
-  questao_logica?: string
-  questao_memoria?: string
+  // ===== 4. PSICOMÉTRICO =====
+  perfil_investimento?: string
+  motivo_desistencia?: string
   
-  // Personalidade (1-4)
-  personalidade_agir_primeiro?: number
-  personalidade_solucoes_problemas?: number
-  personalidade_pressentimento?: number
-  personalidade_prazo?: number
-  personalidade_fracasso_opcao?: number
-  personalidade_decisao_correta?: number
-  personalidade_oportunidades_riscos?: number
-  personalidade_sucesso?: number
+  // ===== 5. TESTE DE PERSONALIDADE (1-4) =====
+  agir_primeiro_consequencias_depois?: number
+  pensar_varias_solucoes?: number
+  seguir_primeiro_pressentimento?: number
+  fazer_coisas_antes_prazo?: number
+  fracasso_nao_opcao?: number
+  decisao_negocio_correta?: number
+  focar_oportunidades_riscos?: number
+  acreditar_sucesso?: number
 }
 
 interface DiagnosticoSectionProps {
@@ -118,7 +114,7 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
       )}
 
       {/* Avaliação de Maturidade */}
-      {(diagnostico.organizacao_financeira || diagnostico.divulgacao_marketing || diagnostico.estrategia_comercial || diagnostico.relacionamento_cliente || diagnostico.ferramentas_digitais || diagnostico.planejamento_gestao || diagnostico.conhecimento_legal) && (
+      {(diagnostico.controle_financeiro || diagnostico.divulgacao_marketing || diagnostico.atrair_clientes_vender || diagnostico.atender_clientes || diagnostico.ferramentas_gestao || diagnostico.organizacao_negocio || diagnostico.obrigacoes_legais_juridicas) && (
         <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 shadow-sm">
           <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2 text-base">
             <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
@@ -127,66 +123,66 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
             Avaliação de Maturidade (1-5)
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {diagnostico.organizacao_financeira && (
+            {diagnostico.controle_financeiro && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Organização Financeira</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Controle Financeiro</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.organizacao_financeira * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.organizacao_financeira}/5</span>
+                  <Progress value={diagnostico.controle_financeiro * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.controle_financeiro}/5</span>
                 </div>
               </div>
             )}
             {diagnostico.divulgacao_marketing && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Divulgação/Marketing</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Divulgação do Negócio</span>
                 <div className="flex items-center gap-2">
                   <Progress value={diagnostico.divulgacao_marketing * 20} className="flex-1 h-2" />
                   <span className="font-bold text-gray-900 text-sm">{diagnostico.divulgacao_marketing}/5</span>
                 </div>
               </div>
             )}
-            {diagnostico.estrategia_comercial && (
+            {diagnostico.atrair_clientes_vender && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Estratégia Comercial</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Atrair Clientes e Vender</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.estrategia_comercial * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.estrategia_comercial}/5</span>
+                  <Progress value={diagnostico.atrair_clientes_vender * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atrair_clientes_vender}/5</span>
                 </div>
               </div>
             )}
-            {diagnostico.relacionamento_cliente && (
+            {diagnostico.atender_clientes && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Relacionamento Cliente</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Atendimento aos Clientes</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.relacionamento_cliente * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.relacionamento_cliente}/5</span>
+                  <Progress value={diagnostico.atender_clientes * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atender_clientes}/5</span>
                 </div>
               </div>
             )}
-            {diagnostico.ferramentas_digitais && (
+            {diagnostico.ferramentas_gestao && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Ferramentas Digitais</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Ferramentas de Gestão</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.ferramentas_digitais * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.ferramentas_digitais}/5</span>
+                  <Progress value={diagnostico.ferramentas_gestao * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.ferramentas_gestao}/5</span>
                 </div>
               </div>
             )}
-            {diagnostico.planejamento_gestao && (
+            {diagnostico.organizacao_negocio && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Planejamento/Gestão</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Organização do Negócio</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.planejamento_gestao * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.planejamento_gestao}/5</span>
+                  <Progress value={diagnostico.organizacao_negocio * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.organizacao_negocio}/5</span>
                 </div>
               </div>
             )}
-            {diagnostico.conhecimento_legal && (
+            {diagnostico.obrigacoes_legais_juridicas && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Conhecimento Legal</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Conhecimento Legal/Jurídico</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.conhecimento_legal * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.conhecimento_legal}/5</span>
+                  <Progress value={diagnostico.obrigacoes_legais_juridicas * 20} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.obrigacoes_legais_juridicas}/5</span>
                 </div>
               </div>
             )}
@@ -194,23 +190,52 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
         </div>
       )}
 
-      {/* Dor Principal */}
-      {diagnostico.dor_principal && (
-        <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 rounded-xl border border-red-200 shadow-sm">
-          <h4 className="font-bold text-red-900 mb-3 flex items-center gap-2 text-base">
-            <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+      {/* Dor Principal do Momento */}
+      {(diagnostico.dor_principal || diagnostico.falta_caixa_financiamento || diagnostico.dificuldade_funcionarios || diagnostico.clientes_reclamando || diagnostico.relacionamento_fornecedores) && (
+        <div className="p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-xl border border-orange-200 shadow-sm">
+          <h4 className="font-bold text-orange-900 mb-3 flex items-center gap-2 text-base">
+            <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
               <FontAwesomeIcon icon={faExclamationTriangle} className="h-3 w-3 text-white" />
             </div>
-            Dor Principal
+            Dor Principal do Momento
           </h4>
-          <div className="p-3 bg-white/60 rounded-lg">
-            <p className="text-gray-900 leading-relaxed text-sm">{diagnostico.dor_principal}</p>
+          <div className="space-y-3">
+            {diagnostico.dor_principal && (
+              <div className="p-3 bg-white/60 rounded-lg">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Dor Principal</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.dor_principal}</p>
+              </div>
+            )}
+            {diagnostico.falta_caixa_financiamento && (
+              <div className="p-3 bg-white/60 rounded-lg">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Falta de Caixa / Financiamento</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.falta_caixa_financiamento}</p>
+              </div>
+            )}
+            {diagnostico.dificuldade_funcionarios && (
+              <div className="p-3 bg-white/60 rounded-lg">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Dificuldade com Funcionários</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.dificuldade_funcionarios}</p>
+              </div>
+            )}
+            {diagnostico.clientes_reclamando && (
+              <div className="p-3 bg-white/60 rounded-lg">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Clientes Reclamando</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.clientes_reclamando}</p>
+              </div>
+            )}
+            {diagnostico.relacionamento_fornecedores && (
+              <div className="p-3 bg-white/60 rounded-lg">
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Relacionamento com Fornecedores</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.relacionamento_fornecedores}</p>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Teste Psicométrico */}
-      {(diagnostico.perfil_risco || diagnostico.questao_logica || diagnostico.questao_memoria) && (
+      {(diagnostico.perfil_investimento || diagnostico.motivo_desistencia) && (
         <div className="p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-sm">
           <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-base">
             <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
@@ -219,22 +244,16 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
             Teste Psicométrico
           </h4>
           <div className="space-y-3">
-            {diagnostico.perfil_risco && (
+            {diagnostico.perfil_investimento && (
               <div className="p-3 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Perfil de Risco</span>
-                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.perfil_risco}</p>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Perfil de Investimento</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.perfil_investimento}</p>
               </div>
             )}
-            {diagnostico.questao_logica && (
+            {diagnostico.motivo_desistencia && (
               <div className="p-3 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Questão Lógica</span>
-                <p className="font-bold text-gray-900 text-sm mt-1">{diagnostico.questao_logica}</p>
-              </div>
-            )}
-            {diagnostico.questao_memoria && (
-              <div className="p-3 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Questão de Memória</span>
-                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.questao_memoria}</p>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Motivo de Desistência</span>
+                <p className="text-gray-900 leading-relaxed text-sm mt-1">{diagnostico.motivo_desistencia}</p>
               </div>
             )}
           </div>
@@ -242,84 +261,84 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
       )}
 
       {/* Personalidade */}
-      {(diagnostico.personalidade_agir_primeiro || diagnostico.personalidade_solucoes_problemas || diagnostico.personalidade_pressentimento || diagnostico.personalidade_prazo || diagnostico.personalidade_fracasso_opcao || diagnostico.personalidade_decisao_correta || diagnostico.personalidade_oportunidades_riscos || diagnostico.personalidade_sucesso) && (
-        <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border border-yellow-200 shadow-sm">
-          <h4 className="font-bold text-yellow-900 mb-3 flex items-center gap-2 text-base">
-            <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+      {(diagnostico.agir_primeiro_consequencias_depois || diagnostico.pensar_varias_solucoes || diagnostico.seguir_primeiro_pressentimento || diagnostico.fazer_coisas_antes_prazo || diagnostico.fracasso_nao_opcao || diagnostico.decisao_negocio_correta || diagnostico.focar_oportunidades_riscos || diagnostico.acreditar_sucesso) && (
+        <div className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border border-pink-200 shadow-sm">
+          <h4 className="font-bold text-pink-900 mb-3 flex items-center gap-2 text-base">
+            <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
               <FontAwesomeIcon icon={faUser} className="h-3 w-3 text-white" />
             </div>
             Perfil de Personalidade (1-4)
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {diagnostico.personalidade_agir_primeiro && (
+            {diagnostico.agir_primeiro_consequencias_depois && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Agir Primeiro</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Agir Primeiro, Consequências Depois</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_agir_primeiro * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_agir_primeiro}/4</span>
+                  <Progress value={diagnostico.agir_primeiro_consequencias_depois * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.agir_primeiro_consequencias_depois}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_solucoes_problemas && (
+            {diagnostico.pensar_varias_solucoes && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Soluções/Problemas</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Pensar Várias Soluções</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_solucoes_problemas * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_solucoes_problemas}/4</span>
+                  <Progress value={diagnostico.pensar_varias_solucoes * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.pensar_varias_solucoes}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_pressentimento && (
+            {diagnostico.seguir_primeiro_pressentimento && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Pressentimento</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Seguir Primeiro Pressentimento</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_pressentimento * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_pressentimento}/4</span>
+                  <Progress value={diagnostico.seguir_primeiro_pressentimento * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.seguir_primeiro_pressentimento}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_prazo && (
+            {diagnostico.fazer_coisas_antes_prazo && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Prazo</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Fazer Coisas Antes do Prazo</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_prazo * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_prazo}/4</span>
+                  <Progress value={diagnostico.fazer_coisas_antes_prazo * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.fazer_coisas_antes_prazo}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_fracasso_opcao && (
+            {diagnostico.fracasso_nao_opcao && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Fracasso é Opção</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Fracasso Não é Opção</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_fracasso_opcao * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_fracasso_opcao}/4</span>
+                  <Progress value={diagnostico.fracasso_nao_opcao * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.fracasso_nao_opcao}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_decisao_correta && (
+            {diagnostico.decisao_negocio_correta && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Decisão Correta</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Decisões de Negócio Corretas</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_decisao_correta * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_decisao_correta}/4</span>
+                  <Progress value={diagnostico.decisao_negocio_correta * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.decisao_negocio_correta}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_oportunidades_riscos && (
+            {diagnostico.focar_oportunidades_riscos && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Oportunidades/Riscos</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Focar Oportunidades vs Riscos</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_oportunidades_riscos * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_oportunidades_riscos}/4</span>
+                  <Progress value={diagnostico.focar_oportunidades_riscos * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.focar_oportunidades_riscos}/4</span>
                 </div>
               </div>
             )}
-            {diagnostico.personalidade_sucesso && (
+            {diagnostico.acreditar_sucesso && (
               <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Sucesso</span>
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Acreditar no Sucesso</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.personalidade_sucesso * 25} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.personalidade_sucesso}/4</span>
+                  <Progress value={diagnostico.acreditar_sucesso * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.acreditar_sucesso}/4</span>
                 </div>
               </div>
             )}
@@ -327,49 +346,6 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
         </div>
       )}
 
-      {/* Campos Originais (Compatibilidade) */}
-      {(diagnostico.tempo_mercado || diagnostico.faturamento_mensal || diagnostico.num_funcionarios || diagnostico.desafios || diagnostico.observacoes) && (
-        <div className="p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200 shadow-sm">
-          <h4 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-base">
-            <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-slate-500 rounded-lg flex items-center justify-center">
-              <FontAwesomeIcon icon={faClipboardList} className="h-3 w-3 text-white" />
-            </div>
-            Informações Adicionais
-          </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-            {diagnostico.tempo_mercado && (
-              <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Tempo no mercado</span>
-                <p className="font-bold text-gray-900 text-sm">{diagnostico.tempo_mercado}</p>
-              </div>
-            )}
-            {diagnostico.faturamento_mensal && (
-              <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Faturamento</span>
-                <p className="font-bold text-gray-900 text-sm">{diagnostico.faturamento_mensal}</p>
-              </div>
-            )}
-            {diagnostico.num_funcionarios && (
-              <div className="p-2 bg-white/60 rounded-lg">
-                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Funcionários</span>
-                <p className="font-bold text-gray-900 text-sm">{diagnostico.num_funcionarios}</p>
-              </div>
-            )}
-          </div>
-          {diagnostico.desafios && diagnostico.desafios.length > 0 && (
-            <div className="mb-3 p-2 bg-white/60 rounded-lg">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Principais Desafios</span>
-              <p className="font-bold text-gray-900 text-sm">{diagnostico.desafios.join(', ')}</p>
-            </div>
-          )}
-          {diagnostico.observacoes && (
-            <div className="p-2 bg-white/60 rounded-lg">
-              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Observações</span>
-              <p className="text-gray-900 leading-relaxed text-sm">{diagnostico.observacoes}</p>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }
