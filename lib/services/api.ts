@@ -61,7 +61,17 @@ class ApiService {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
+      let errorData: any = {}
+      
+      try {
+        errorData = await response.json()
+      } catch {
+        // Se não conseguir fazer parse do JSON, usar dados básicos
+        errorData = {
+          message: `Erro ${response.status}: ${response.statusText}`,
+          detail: response.statusText
+        }
+      }
       
       // Handle authentication errors
       if (response.status === 401) {
@@ -74,8 +84,45 @@ class ApiService {
         }
       }
       
+      // Extrair mensagem de erro mais específica
+      let errorMessage = errorData.message || errorData.detail || errorData.error
+      
+      // Se for um array de erros (como do FastAPI), pegar o primeiro
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage[0]?.msg || errorMessage[0] || 'Erro desconhecido'
+      }
+      
+      // Se não tiver mensagem específica, usar mensagem padrão baseada no status
+      if (!errorMessage) {
+        switch (response.status) {
+          case 400:
+            errorMessage = 'Dados inválidos fornecidos'
+            break
+          case 401:
+            errorMessage = 'Não autorizado. Faça login novamente'
+            break
+          case 403:
+            errorMessage = 'Acesso negado'
+            break
+          case 404:
+            errorMessage = 'Recurso não encontrado'
+            break
+          case 409:
+            errorMessage = 'Conflito: recurso já existe'
+            break
+          case 422:
+            errorMessage = 'Dados inválidos'
+            break
+          case 500:
+            errorMessage = 'Erro interno do servidor'
+            break
+          default:
+            errorMessage = `Erro ${response.status}: ${response.statusText}`
+        }
+      }
+      
       throw {
-        message: errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+        message: errorMessage,
         status: response.status,
         details: errorData
       } as ApiError

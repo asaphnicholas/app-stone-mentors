@@ -88,6 +88,11 @@ export default function MentoriaDetailsPage() {
   const [mentoria, setMentoria] = useState<Mentoria | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   
+  // Loading states for actions
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [isCheckingIn, setIsCheckingIn] = useState(false)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
+  
   // Modal states
   const [isDiagnosticDialogOpen, setIsDiagnosticDialogOpen] = useState(false)
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false)
@@ -145,6 +150,7 @@ export default function MentoriaDetailsPage() {
     if (!mentoria) return
 
     try {
+      setIsConfirming(true)
       await mentoriasService.confirmMentoria(mentoria.mentoria_id)
       
       addToast({
@@ -160,6 +166,8 @@ export default function MentoriaDetailsPage() {
         title: "Erro ao confirmar mentoria",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -167,6 +175,7 @@ export default function MentoriaDetailsPage() {
     if (!mentoria) return
 
     try {
+      setIsCheckingIn(true)
       await mentoriasService.checkinMentoria(mentoria.mentoria_id)
       
       addToast({
@@ -182,6 +191,8 @@ export default function MentoriaDetailsPage() {
         title: "Erro ao fazer check-in",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
+    } finally {
+      setIsCheckingIn(false)
     }
   }
 
@@ -190,6 +201,7 @@ export default function MentoriaDetailsPage() {
     if (!mentoria) return
 
     try {
+      setIsCheckingOut(true)
       await mentoriasService.checkoutMentoria(mentoria.mentoria_id, checkoutForm)
       
       addToast({
@@ -206,6 +218,8 @@ export default function MentoriaDetailsPage() {
         title: "Erro ao finalizar mentoria",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
+    } finally {
+      setIsCheckingOut(false)
     }
   }
 
@@ -581,11 +595,18 @@ export default function MentoriaDetailsPage() {
             {mentoria.status === 'disponivel' && (
               <Button
                 onClick={handleConfirmMentoria}
-                className="h-16 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg"
+                disabled={isConfirming}
+                className="h-16 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex flex-col items-center gap-2">
-                  <FontAwesomeIcon icon={faCheck} className="h-5 w-5" />
-                  <span className="text-sm font-medium">Confirmar</span>
+                  {isConfirming ? (
+                    <FontAwesomeIcon icon={faSpinner} className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <FontAwesomeIcon icon={faCheck} className="h-5 w-5" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isConfirming ? 'Confirmando...' : 'Confirmar'}
+                  </span>
                 </div>
               </Button>
             )}
@@ -594,11 +615,18 @@ export default function MentoriaDetailsPage() {
             {mentoria.status === 'confirmada' && (
               <Button
                 onClick={handleCheckinMentoria}
-                className="h-16 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg"
+                disabled={isCheckingIn}
+                className="h-16 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex flex-col items-center gap-2">
-                  <FontAwesomeIcon icon={faPlay} className="h-5 w-5" />
-                  <span className="text-sm font-medium">Check-in</span>
+                  {isCheckingIn ? (
+                    <FontAwesomeIcon icon={faSpinner} className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <FontAwesomeIcon icon={faPlay} className="h-5 w-5" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isCheckingIn ? 'Fazendo check-in...' : 'Check-in'}
+                  </span>
                 </div>
               </Button>
             )}
@@ -1039,11 +1067,15 @@ export default function MentoriaDetailsPage() {
             </Button>
             <Button
               onClick={handleCheckoutMentoria}
-              disabled={checkoutForm.nota_mentoria === 0 || !checkoutForm.proximos_passos}
+              disabled={checkoutForm.nota_mentoria === 0 || !checkoutForm.proximos_passos || isCheckingOut}
               className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
-              Finalizar Mentoria
+              {isCheckingOut ? (
+                <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
+              )}
+              {isCheckingOut ? 'Finalizando...' : 'Finalizar Mentoria'}
             </Button>
           </div>
         </DialogContent>

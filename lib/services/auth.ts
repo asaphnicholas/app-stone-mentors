@@ -66,6 +66,15 @@ export interface RegisterWithTokenRequest {
   area_atuacao?: AreaAtuacao
 }
 
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  nova_senha: string
+}
+
 export interface RegisterResponse {
   id: string
   nome: string
@@ -152,8 +161,8 @@ class AuthService {
   // Register with token (for invited mentors)
   async registerWithToken(userData: RegisterWithTokenRequest): Promise<RegisterResponse> {
     try {
-      // Validate area_atuacao
-      if (!isValidAreaAtuacao(userData.area_atuacao)) {
+      // Validate area_atuacao if provided
+      if (userData.area_atuacao && !isValidAreaAtuacao(userData.area_atuacao)) {
         throw new ApiError('Área de atuação inválida', 400)
       }
 
@@ -260,6 +269,32 @@ class AuthService {
   // Check if user is mentor
   isMentor(): boolean {
     return this.getUserRole() === 'mentor'
+  }
+
+  // Forgot password
+  async forgotPassword(email: string): Promise<void> {
+    try {
+      await apiService.post(
+        '/auth/forgot-password',
+        { email },
+        false // Don't include auth token for forgot password
+      )
+    } catch (error) {
+      throw this.handleAuthError(error)
+    }
+  }
+
+  // Reset password
+  async resetPassword(token: string, nova_senha: string): Promise<void> {
+    try {
+      await apiService.post(
+        '/auth/reset-password',
+        { token, nova_senha },
+        false // Don't include auth token for reset password
+      )
+    } catch (error) {
+      throw this.handleAuthError(error)
+    }
   }
 
   // Get redirect path based on role

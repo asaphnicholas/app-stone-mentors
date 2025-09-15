@@ -106,6 +106,11 @@ export default function MentoriasPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("ativas")
   
+  // Loading states for actions
+  const [isScheduling, setIsScheduling] = useState(false)
+  const [isSubmittingDiagnostic, setIsSubmittingDiagnostic] = useState(false)
+  const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false)
+  
   // Modal states
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false)
   const [isDiagnosticDialogOpen, setIsDiagnosticDialogOpen] = useState(false)
@@ -179,6 +184,8 @@ export default function MentoriasPage() {
     if (!selectedBusiness) return
 
     try {
+      setIsScheduling(true)
+      
       // Se já tem mentoria agendada, usar API de reagendamento
       if (selectedBusiness.proxima_mentoria) {
         await mentoriasService.rescheduleMentoria(selectedBusiness.proxima_mentoria.id, {
@@ -216,6 +223,8 @@ export default function MentoriasPage() {
         title: selectedBusiness.proxima_mentoria ? "Erro ao reagendar mentoria" : "Erro ao agendar mentoria",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
+    } finally {
+      setIsScheduling(false)
     }
   }
 
@@ -629,11 +638,18 @@ export default function MentoriasPage() {
             </Button>
             <Button
               onClick={handleScheduleMentoria}
-              disabled={!scheduleForm.data_agendada}
-              className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white"
+              disabled={!scheduleForm.data_agendada || isScheduling}
+              className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
-              {selectedBusiness?.proxima_mentoria ? "Salvar Alterações" : "Agendar Mentoria"}
+              {isScheduling ? (
+                <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
+              )}
+              {isScheduling 
+                ? (selectedBusiness?.proxima_mentoria ? "Salvando..." : "Agendando...") 
+                : (selectedBusiness?.proxima_mentoria ? "Salvar Alterações" : "Agendar Mentoria")
+              }
             </Button>
           </div>
         </DialogContent>
