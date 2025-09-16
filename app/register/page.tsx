@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, Check } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { type RegisterRequest } from "@/lib/services/auth"
 import { useToast } from "@/components/ui/toast"
@@ -26,6 +26,7 @@ export default function RegisterPage() {
     telefone: "",
     competencias: "",
     area_atuacao: "",
+    termo_aceite: false,
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -142,6 +143,15 @@ export default function RegisterPage() {
       return false
     }
 
+    if (!formData.termo_aceite) {
+      addToast({
+        type: "error",
+        title: "Termo de aceite obrigatório",
+        message: "Você deve aceitar o termo de aceite para continuar",
+      })
+      return false
+    }
+
     return true
   }
 
@@ -159,6 +169,7 @@ export default function RegisterPage() {
         competencias: formData.competencias,
         area_atuacao: formData.area_atuacao as any, // Type assertion for area_atuacao
         invite_token: inviteToken,
+        termo_aceite: formData.termo_aceite,
       }
       
       await register(registerData)
@@ -426,6 +437,35 @@ export default function RegisterPage() {
                 >
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
+              </div>
+            </div>
+
+            {/* Termo de Aceite */}
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex items-center h-5">
+                  <input
+                    id="termo_aceite"
+                    type="checkbox"
+                    checked={formData.termo_aceite}
+                    onChange={(e) => setFormData(prev => ({ ...prev, termo_aceite: e.target.checked }))}
+                    className="w-4 h-4 text-stone-green-dark bg-gray-100 border-gray-300 rounded focus:ring-stone-green-dark focus:ring-2"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="termo_aceite" className="text-sm text-gray-700 cursor-pointer">
+                    Eu li e aceito o{" "}
+                    <Link
+                      href="/termo-aceite"
+                      target="_blank"
+                      className="text-stone-green-dark hover:text-stone-green-light font-medium underline"
+                    >
+                      Termo de Aceite
+                    </Link>{" "}
+                    da plataforma Stone Mentors
+                  </label>
+                </div>
               </div>
             </div>
 

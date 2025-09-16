@@ -55,6 +55,7 @@ export interface RegisterRequest {
   competencias: string
   area_atuacao: AreaAtuacao
   invite_token?: string | null
+  termo_aceite: boolean
 }
 
 export interface RegisterWithTokenRequest {
@@ -64,6 +65,7 @@ export interface RegisterWithTokenRequest {
   telefone: string
   competencias?: string
   area_atuacao?: AreaAtuacao
+  termo_aceite: boolean
 }
 
 export interface ForgotPasswordRequest {
