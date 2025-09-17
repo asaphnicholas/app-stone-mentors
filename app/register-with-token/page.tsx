@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, CheckCircle, AlertCircle, Check } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
+import { AREAS_FORMACAO } from "@/lib/constants/areas-formacao"
 import { useAuth } from "@/contexts/auth-context"
 import { type RegisterWithTokenRequest as AuthRegisterWithTokenRequest } from "@/lib/services/auth"
 
@@ -27,6 +28,7 @@ export default function RegisterWithTokenPage() {
     telefone: "",
     competencias: "",
     area_atuacao: "",
+    area_formacao: "",
     termo_aceite: false,
   })
   const [showPassword, setShowPassword] = useState(false)
@@ -172,6 +174,7 @@ export default function RegisterWithTokenPage() {
         telefone: formData.telefone,
         competencias: formData.competencias || undefined,
         area_atuacao: formData.area_atuacao as any || undefined, // Type assertion for area_atuacao
+        area_formacao: formData.area_formacao as any || undefined, // Type assertion for area_formacao
         termo_aceite: formData.termo_aceite,
       }
       
@@ -285,7 +288,7 @@ export default function RegisterWithTokenPage() {
           <div className="text-center space-y-2">
             <div className="mx-auto w-20 h-20 items-center justify-center">
               <Image
-                src="/lofo-impulso-sembg.png"
+                src="/logo.png"
                 alt="Stone Mentors Logo"
                 width={48}
                 height={48}
@@ -384,6 +387,25 @@ export default function RegisterWithTokenPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {AREAS_ATUACAO.map((area) => (
+                    <SelectItem key={area.value} value={area.value}>
+                      {area.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Área de formação */}
+            <div className="space-y-2">
+              <Label htmlFor="area_formacao" className="text-sm font-medium text-gray-700">
+                Área de formação
+              </Label>
+              <Select value={formData.area_formacao} onValueChange={(value) => handleInputChange("area_formacao", value)}>
+                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200 rounded-xl">
+                  <SelectValue placeholder="Selecione sua formação" />
+                </SelectTrigger>
+                <SelectContent>
+                  {AREAS_FORMACAO.map((area) => (
                     <SelectItem key={area.value} value={area.value}>
                       {area.label}
                     </SelectItem>

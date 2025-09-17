@@ -1,6 +1,7 @@
 import { apiService } from './api'
 import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config/env'
 import { isValidAreaAtuacao, type AreaAtuacao } from '@/lib/constants/areas-atuacao'
+import { isValidAreaFormacao, type AreaFormacao } from '@/lib/constants/areas-formacao'
 
 // Error class
 class ApiError extends Error {
@@ -54,6 +55,7 @@ export interface RegisterRequest {
   telefone: string
   competencias: string
   area_atuacao: AreaAtuacao
+  area_formacao: AreaFormacao
   invite_token?: string | null
   termo_aceite: boolean
 }
@@ -65,6 +67,7 @@ export interface RegisterWithTokenRequest {
   telefone: string
   competencias?: string
   area_atuacao?: AreaAtuacao
+  area_formacao?: AreaFormacao
   termo_aceite: boolean
 }
 
@@ -123,6 +126,11 @@ class AuthService {
         throw new ApiError('Área de atuação inválida', 400)
       }
 
+      // Validate area_formacao
+      if (!isValidAreaFormacao(userData.area_formacao)) {
+        throw new ApiError('Área de formação inválida', 400)
+      }
+
       // Prepare registration data with role as mentor
       const registrationData = {
         ...userData,
@@ -166,6 +174,11 @@ class AuthService {
       // Validate area_atuacao if provided
       if (userData.area_atuacao && !isValidAreaAtuacao(userData.area_atuacao)) {
         throw new ApiError('Área de atuação inválida', 400)
+      }
+
+      // Validate area_formacao if provided
+      if (userData.area_formacao && !isValidAreaFormacao(userData.area_formacao)) {
+        throw new ApiError('Área de formação inválida', 400)
       }
 
       const response = await apiService.post<RegisterResponse>(

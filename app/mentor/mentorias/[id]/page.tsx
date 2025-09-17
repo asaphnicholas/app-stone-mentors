@@ -111,6 +111,24 @@ export default function MentoriaDetailsPage() {
   const { addToast } = useToast()
   const isHydrated = useHydration()
 
+  // Helper para verificar se o diagnóstico tem dados preenchidos
+  const hasDiagnosticoData = (diagnostico: any) => {
+    if (!diagnostico) return false
+    
+    // Verifica se pelo menos um dos campos essenciais está preenchido
+    const essentialFields = [
+      'nome_completo', 'email', 'telefone_whatsapp', 'status_negocio',
+      'tempo_funcionamento', 'setor_atuacao', 'dor_principal',
+      'controle_financeiro', 'divulgação_marketing', 'atrair_clientes_vender'
+    ]
+    
+    return essentialFields.some(field => 
+      diagnostico[field] !== null && 
+      diagnostico[field] !== undefined && 
+      diagnostico[field] !== ''
+    )
+  }
+
   useEffect(() => {
     if (isHydrated && mentoriaId) {
       loadMentoriaDetails()
@@ -661,277 +679,73 @@ export default function MentoriaDetailsPage() {
       </Card>
 
       {/* Diagnóstico */}
-      {mentoria.diagnostico && (
-        <div className="space-y-6">
-          {/* Identificação do Empreendedor */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-white" />
-              </div>
-                Identificação do Empreendedor
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {mentoria.diagnostico.nome_completo && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Nome Completo:</p>
-                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.nome_completo}</p>
-                  </div>
-                )}
-                
-                {mentoria.diagnostico.email && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">E-mail:</p>
-                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.email}</p>
-                  </div>
-                )}
-                
-                {mentoria.diagnostico.telefone_whatsapp && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Telefone WhatsApp:</p>
-                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.telefone_whatsapp}</p>
-                  </div>
-                )}
-                
-                {mentoria.diagnostico.status_negocio && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Status do Negócio:</p>
-                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.status_negocio}</p>
-                  </div>
-                )}
-                
-                {mentoria.diagnostico.tempo_funcionamento && (
+      <Card className="border-0 shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-500 rounded-xl flex items-center justify-center shadow-lg">
+              <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5 text-white" />
+            </div>
+            Diagnóstico da Mentoria
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hasDiagnosticoData(mentoria.diagnostico) ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {mentoria.diagnostico?.tempo_funcionamento && (
                   <div>
                     <p className="text-sm font-medium text-gray-600">Tempo de Funcionamento:</p>
                     <p className="font-semibold text-gray-900">{mentoria.diagnostico.tempo_funcionamento}</p>
                   </div>
                 )}
-                
-                {mentoria.diagnostico.setor_atuacao && (
+                {mentoria.diagnostico?.setor_atuacao && (
                   <div>
                     <p className="text-sm font-medium text-gray-600">Setor de Atuação:</p>
                     <p className="font-semibold text-gray-900">{mentoria.diagnostico.setor_atuacao}</p>
                   </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Avaliação de Maturidade */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-white" />
-                </div>
-                Avaliação de Maturidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { key: 'organizacao_financeira', label: 'Organização Financeira e Controle de Despesas' },
-                  { key: 'divulgacao_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
-                  { key: 'estrategia_comercial', label: 'Estratégia Comercial e Vendas' },
-                  { key: 'relacionamento_cliente', label: 'Relacionamento e Atendimento ao Cliente' },
-                  { key: 'ferramentas_digitais', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
-                  { key: 'planejamento_gestao', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
-                  { key: 'conhecimento_legal', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
-                ].map((item) => {
-                  const value = mentoria.diagnostico?.[item.key as keyof typeof mentoria.diagnostico] as number
-                  if (!value) return null
-                  
-                  return (
-                    <div key={item.key} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                        <span className="text-sm font-bold text-stone-green-dark">{value}/5</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-stone-green-dark to-stone-green-light h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(value / 5) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Dor Principal */}
-          {mentoria.diagnostico.dor_principal && (
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
-                  </div>
-                  Dor Principal
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-900 bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
-                  {mentoria.diagnostico.dor_principal}
-                </p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Teste Psicométrico */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <FontAwesomeIcon icon={faGraduationCap} className="h-5 w-5 text-white" />
-                </div>
-                Teste Psicométrico
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {mentoria.diagnostico.perfil_risco && (
+                {mentoria.diagnostico?.nome_completo && (
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Perfil de Risco:</p>
-                    <Badge className="bg-purple-100 text-purple-700 border-purple-200 mt-1">
-                      {mentoria.diagnostico.perfil_risco}
-                    </Badge>
+                    <p className="text-sm font-medium text-gray-600">Nome Completo:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.nome_completo}</p>
                   </div>
                 )}
-                
-                {mentoria.diagnostico.questao_logica && (
+                {mentoria.diagnostico?.email && (
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Questão Lógica:</p>
-                    <p className="font-semibold text-gray-900 mt-1">{mentoria.diagnostico.questao_logica}</p>
-                  </div>
-                )}
-                
-                {mentoria.diagnostico.questao_memoria && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">Questão de Memória:</p>
-                    <p className="font-semibold text-gray-900 mt-1">{mentoria.diagnostico.questao_memoria}</p>
+                    <p className="text-sm font-medium text-gray-600">E-mail:</p>
+                    <p className="font-semibold text-gray-900">{mentoria.diagnostico.email}</p>
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Perfil de Personalidade */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <FontAwesomeIcon icon={faStar} className="h-5 w-5 text-white" />
+              
+              {mentoria.diagnostico?.dor_principal && (
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Dor Principal:</p>
+                  <p className="text-gray-900 mt-1 bg-orange-50 p-3 rounded-lg border-l-4 border-orange-500">{mentoria.diagnostico.dor_principal}</p>
                 </div>
-                Perfil de Personalidade
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[
-                  { key: 'personalidade_agir_primeiro', label: 'Prefiro agir primeiro e me preocupar depois' },
-                  { key: 'personalidade_solucoes_problemas', label: 'Gosto de pensar em várias soluções para um problema' },
-                  { key: 'personalidade_pressentimento', label: 'Sigo primeiro meu pressentimento' },
-                  { key: 'personalidade_prazo', label: 'Faço as coisas antes do prazo' },
-                  { key: 'personalidade_fracasso_opcao', label: 'Fracasso não é uma opção para mim' },
-                  { key: 'personalidade_decisao_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
-                  { key: 'personalidade_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
-                  { key: 'personalidade_sucesso', label: 'Sempre acreditei que teria sucesso' }
-                ].map((item) => {
-                  const value = mentoria.diagnostico?.[item.key as keyof typeof mentoria.diagnostico] as number
-                  if (!value) return null
-                  
-                  return (
-                    <div key={item.key} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                        <span className="text-sm font-bold text-stone-green-dark">{value}/4</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-gradient-to-r from-pink-500 to-pink-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${(value / 4) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Informações Complementares */}
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <FontAwesomeIcon icon={faEdit} className="h-5 w-5 text-white" />
-                  </div>
-                  Informações Complementares
-                </div>
+              )}
+              
+              <div className="pt-4 border-t border-gray-200">
                 <Button
-                  onClick={handleViewDiagnosticoDetails}
-                  variant="outline"
-                  size="sm"
-                  className="border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
+                  onClick={() => setIsDiagnosticoDetailsOpen(true)}
+                  className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white"
                 >
                   <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 mr-2" />
                   Ver Diagnóstico Completo
                 </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mentoria.diagnostico.tempo_mercado && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Tempo no Mercado:</p>
-                  <p className="font-semibold text-gray-900">{mentoria.diagnostico.tempo_mercado}</p>
-                </div>
-              )}
-              
-              {mentoria.diagnostico.faturamento_mensal && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Faturamento Mensal:</p>
-                    <p className="font-semibold text-gray-900">R$ {mentoria.diagnostico.faturamento_mensal}</p>
-                </div>
-              )}
-              
-              {mentoria.diagnostico.num_funcionarios && (
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Número de Funcionários:</p>
-                  <p className="font-semibold text-gray-900">{mentoria.diagnostico.num_funcionarios}</p>
-                </div>
-              )}
+              </div>
             </div>
-            
-            {mentoria.diagnostico.desafios && mentoria.diagnostico.desafios.length > 0 && (
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-2">Desafios Identificados:</p>
-                <div className="flex flex-wrap gap-2">
-                  {mentoria.diagnostico.desafios.map((desafio, index) => (
-                    <Badge key={index} className="bg-orange-100 text-orange-700 border-orange-200">
-                      {desafio}
-                    </Badge>
-                  ))}
-                </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FontAwesomeIcon icon={faClipboardList} className="h-8 w-8 text-gray-400" />
               </div>
-            )}
-            
-            {mentoria.diagnostico.observacoes && (
-              <div>
-                <p className="text-sm font-medium text-gray-600 mb-2">Observações:</p>
-                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{mentoria.diagnostico.observacoes}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        </div>
-      )}
+              <p className="text-gray-500 text-lg">Diagnóstico ainda não foi realizado</p>
+              <p className="text-gray-400 text-sm mt-1">O diagnóstico será preenchido durante a mentoria</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Checkout */}
       {mentoria.checkout && (

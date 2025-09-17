@@ -2,48 +2,64 @@
 // CREATE TYPE area_atuacao AS ENUM (...)
 export const AREAS_ATUACAO = [
   { 
-    value: "TECNOLOGIA", 
-    label: "Tecnologia" 
+    value: "RELACIONAMENTO_CLIENTE", 
+    label: "Relacionamento com Cliente" 
   },
   { 
-    value: "VAREJO", 
-    label: "Varejo" 
+    value: "COMERCIAL_POLOS", 
+    label: "Comercial - Polos" 
   },
   { 
-    value: "SERVICOS", 
-    label: "Serviços" 
+    value: "CANAL_FRANQUIAS", 
+    label: "Canal - Franquias" 
   },
   { 
-    value: "INDUSTRIA", 
-    label: "Indústria" 
+    value: "CANAL_TON_REX", 
+    label: "Canal - Ton Rex" 
   },
   { 
-    value: "SAUDE", 
-    label: "Saúde" 
+    value: "GENTE_GESTAO", 
+    label: "Gente & Gestão" 
   },
   { 
-    value: "EDUCACAO", 
-    label: "Educação" 
+    value: "TECNOLOGIA_ENGENHARIA", 
+    label: "Tecnologia & Engenharia" 
+  },
+  { 
+    value: "TESOURARIA", 
+    label: "Tesouraria" 
+  },
+  { 
+    value: "MARKETING_ESTRATEGIA", 
+    label: "Marketing & Estratégia" 
+  },
+  { 
+    value: "JURIDICO_COMPLIANCE", 
+    label: "Jurídico & Compliance" 
   },
   { 
     value: "FINANCEIRO", 
     label: "Financeiro" 
   },
   { 
-    value: "AGRONEGOCIO", 
-    label: "Agronegócio" 
+    value: "CREDITO", 
+    label: "Crédito" 
   },
   { 
-    value: "COMERCIAL_VENDAS", 
-    label: "Comercial & Vendas" 
+    value: "BANKING", 
+    label: "Banking" 
   },
   { 
-    value: "COMUNICACAO_MARKETING", 
-    label: "Comunicação & Marketing" 
+    value: "SOFTWARE", 
+    label: "Software" 
   },
   { 
-    value: "OUTROS", 
-    label: "Outros" 
+    value: "REGULATORIO", 
+    label: "Regulatório" 
+  },
+  { 
+    value: "RISCOS", 
+    label: "Riscos" 
   },
 ] as const
 

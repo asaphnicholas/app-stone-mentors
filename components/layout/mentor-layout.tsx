@@ -290,10 +290,10 @@ export function MentorLayout({ children }: MentorLayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="relative p-2">
+            {/* <Button variant="ghost" size="sm" className="relative p-2">
               <FontAwesomeIcon icon={faBell} className="h-5 w-5 text-gray-600" />
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-            </Button>
+            </Button> */}
             <div className="h-8 w-px bg-gray-200"></div>
             <div className="flex items-center gap-3">
               <div className="text-right">

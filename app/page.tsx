@@ -104,7 +104,7 @@ export default function LoginPage() {
           <div className="text-center space-y-2">
             <div className="mx-auto w-20 h-20 items-center justify-center  ">
               <Image
-                src="/lofo-impulso-sembg.png"
+                src="/logo.png"
                 alt="Stone Mentors Logo"
                 width={48}
                 height={48}

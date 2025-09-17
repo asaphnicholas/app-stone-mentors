@@ -414,7 +414,7 @@ export default function ConvidarMentor() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(`${window.location.origin}/register?token=${invite.token}`)}
+                          onClick={() => copyToClipboard(`${window.location.origin}/register-with-token?token=${invite.token}`)}
                           className="h-8"
                         >
                           <FontAwesomeIcon icon={faCopy} className="h-3 w-3 mr-1" />
