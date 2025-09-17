@@ -120,15 +120,15 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
             <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
               <FontAwesomeIcon icon={faChartLine} className="h-3 w-3 text-white" />
             </div>
-            Avaliação de Maturidade (1-5)
+            Avaliação de Maturidade (0-4)
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {diagnostico.controle_financeiro && (
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Controle Financeiro</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.controle_financeiro * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.controle_financeiro}/5</span>
+                  <Progress value={diagnostico.controle_financeiro * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.controle_financeiro}/4</span>
                 </div>
               </div>
             )}
@@ -136,8 +136,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Divulgação do Negócio</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.divulgacao_marketing * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.divulgacao_marketing}/5</span>
+                  <Progress value={diagnostico.divulgacao_marketing * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.divulgacao_marketing}/4</span>
                 </div>
               </div>
             )}
@@ -145,8 +145,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Atrair Clientes e Vender</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.atrair_clientes_vender * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atrair_clientes_vender}/5</span>
+                  <Progress value={diagnostico.atrair_clientes_vender * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atrair_clientes_vender}/4</span>
                 </div>
               </div>
             )}
@@ -154,8 +154,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Atendimento aos Clientes</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.atender_clientes * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atender_clientes}/5</span>
+                  <Progress value={diagnostico.atender_clientes * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.atender_clientes}/4</span>
                 </div>
               </div>
             )}
@@ -163,8 +163,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Ferramentas de Gestão</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.ferramentas_gestao * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.ferramentas_gestao}/5</span>
+                  <Progress value={diagnostico.ferramentas_gestao * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.ferramentas_gestao}/4</span>
                 </div>
               </div>
             )}
@@ -172,8 +172,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Organização do Negócio</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.organizacao_negocio * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.organizacao_negocio}/5</span>
+                  <Progress value={diagnostico.organizacao_negocio * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.organizacao_negocio}/4</span>
                 </div>
               </div>
             )}
@@ -181,8 +181,8 @@ export default function DiagnosticoSection({ diagnostico }: DiagnosticoSectionPr
               <div className="p-2 bg-white/60 rounded-lg">
                 <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">Conhecimento Legal/Jurídico</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={diagnostico.obrigacoes_legais_juridicas * 20} className="flex-1 h-2" />
-                  <span className="font-bold text-gray-900 text-sm">{diagnostico.obrigacoes_legais_juridicas}/5</span>
+                  <Progress value={diagnostico.obrigacoes_legais_juridicas * 25} className="flex-1 h-2" />
+                  <span className="font-bold text-gray-900 text-sm">{diagnostico.obrigacoes_legais_juridicas}/4</span>
                 </div>
               </div>
             )}

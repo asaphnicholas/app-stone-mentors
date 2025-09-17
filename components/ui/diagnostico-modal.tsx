@@ -94,14 +94,14 @@ export function DiagnosticoModal({
     tempo_funcionamento: '',
     setor_atuacao: '',
     
-    // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (1-5) =====
-    controle_financeiro: 1,
-    divulgacao_marketing: 1,
-    atrair_clientes_vender: 1,
-    atender_clientes: 1,
-    ferramentas_gestao: 1,
-    organizacao_negocio: 1,
-    obrigacoes_legais_juridicas: 1,
+    // ===== 2. MATURIDADE NAS ÁREAS DO NEGÓCIO (0-4) =====
+    controle_financeiro: 0,
+    divulgacao_marketing: 0,
+    atrair_clientes_vender: 0,
+    atender_clientes: 0,
+    ferramentas_gestao: 0,
+    organizacao_negocio: 0,
+    obrigacoes_legais_juridicas: 0,
     
     // ===== 3. DOR PRINCIPAL DO MOMENTO =====
     dor_principal: '',
@@ -114,15 +114,15 @@ export function DiagnosticoModal({
     perfil_investimento: '',
     motivo_desistencia: '',
     
-    // ===== 5. TESTE DE PERSONALIDADE (1-4) =====
-    agir_primeiro_consequencias_depois: 1,
-    pensar_varias_solucoes: 1,
-    seguir_primeiro_pressentimento: 1,
-    fazer_coisas_antes_prazo: 1,
-    fracasso_nao_opcao: 1,
-    decisao_negocio_correta: 1,
-    focar_oportunidades_riscos: 1,
-    acreditar_sucesso: 1
+    // ===== 5. TESTE DE PERSONALIDADE (0-4) =====
+    agir_primeiro_consequencias_depois: 0,
+    pensar_varias_solucoes: 0,
+    seguir_primeiro_pressentimento: 0,
+    fazer_coisas_antes_prazo: 0,
+    fracasso_nao_opcao: 0,
+    decisao_negocio_correta: 0,
+    focar_oportunidades_riscos: 0,
+    acreditar_sucesso: 0
   })
   
   const [isLoading, setIsLoading] = useState(false)
@@ -319,7 +319,7 @@ export function DiagnosticoModal({
         </div>
         
         <p className="text-sm text-gray-600 mb-6">
-          Avalie cada aspecto de 1 (muito baixo) a 5 (muito alto):
+          Avalie cada aspecto de 0 (muito baixo) a 4 (muito alto):
         </p>
         
         <div className="space-y-6">
@@ -344,14 +344,14 @@ export function DiagnosticoModal({
               <Slider
                 value={[formData[item.key as keyof DiagnosticoData] as number]}
                 onValueChange={(value) => handleSliderChange(item.key as keyof DiagnosticoData, value)}
-                max={5}
-                min={1}
+                max={4}
+                min={0}
                 step={1}
                 className="w-full slider-green"
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>1 - Muito baixo</span>
-                <span>5 - Muito alto</span>
+                <span>0 - Muito baixo</span>
+                <span>4 - Muito alto</span>
               </div>
             </div>
           ))}
@@ -525,12 +525,12 @@ export function DiagnosticoModal({
                 value={[formData[item.key as keyof DiagnosticoData] as number]}
                 onValueChange={(value) => handleSliderChange(item.key as keyof DiagnosticoData, value)}
                 max={4}
-                min={1}
+                min={0}
                 step={1}
                 className="w-full slider-green"
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>1 - Discordo totalmente</span>
+                <span>0 - Discordo totalmente</span>
                 <span>4 - Concordo totalmente</span>
               </div>
             </div>

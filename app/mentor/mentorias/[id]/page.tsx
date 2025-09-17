@@ -1010,12 +1010,12 @@ export default function MentoriaDetailsPage() {
                           <div key={item.key} className="space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium text-gray-700">{item.label}</span>
-                              <span className="text-sm font-bold text-stone-green-dark">{value}/5</span>
+                              <span className="text-sm font-bold text-stone-green-dark">{value}/4</span>
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-2">
                               <div 
                                 className="bg-gradient-to-r from-stone-green-dark to-stone-green-light h-2 rounded-full transition-all duration-300"
-                                style={{ width: `${(value / 5) * 100}%` }}
+                                style={{ width: `${(value / 4) * 100}%` }}
                               ></div>
                             </div>
                           </div>
