@@ -1,49 +1,109 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
+import { env } from '@/lib/config/env'
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
-
-export async function GET(
+export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization')
-    
-    if (!authHeader) {
-      return NextResponse.json(
-        { message: 'Token de autorização é obrigatório' },
-        { status: 401 }
-      )
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
+    if (!token) {
+      // Tentar pegar do header Authorization como fallback
+      const authHeader = request.headers.get('Authorization')
+      const headerToken = authHeader?.replace('Bearer ', '')
+      
+      if (!headerToken) {
+        return NextResponse.json(
+          { error: 'Token de autenticação não encontrado' },
+          { status: 401 }
+        )
+      }
     }
 
-    const businessId = params.id
+    const body = await request.json()
+    
+    // Usar o token apropriado (cookie ou header)
+    const authToken = token || request.headers.get('Authorization')?.replace('Bearer ', '')
 
-    // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/admin/businesses/${businessId}`, {
-      method: 'GET',
+    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${params.id}`, {
+      method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': authHeader,
+        'Authorization': `Bearer ${authToken}`,
       },
+      body: JSON.stringify(body),
     })
 
-    const data = await response.json()
-
     if (!response.ok) {
+      const errorData = await response.text()
+      console.error('Backend error:', errorData)
       return NextResponse.json(
-        { message: data.message || 'Erro ao buscar negócio' },
+        { error: 'Erro ao atualizar negócio' },
         { status: response.status }
       )
     }
 
-    // Return the response from backend
-    return NextResponse.json(data, { status: 200 })
-
+    const data = await response.json()
+    return NextResponse.json(data)
   } catch (error) {
-    console.error('Admin business details proxy error:', error)
+    console.error('Proxy error:', error)
     return NextResponse.json(
-      { message: 'Erro interno do servidor' },
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')?.value
+
+    if (!token) {
+      // Tentar pegar do header Authorization como fallback
+      const authHeader = request.headers.get('Authorization')
+      const headerToken = authHeader?.replace('Bearer ', '')
+      
+      if (!headerToken) {
+        return NextResponse.json(
+          { error: 'Token de autenticação não encontrado' },
+          { status: 401 }
+        )
+      }
+    }
+
+    // Usar o token apropriado (cookie ou header)
+    const authToken = token || request.headers.get('Authorization')?.replace('Bearer ', '')
+
+    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${params.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const errorData = await response.text()
+      console.error('Backend error:', errorData)
+      return NextResponse.json(
+        { error: 'Erro ao deletar negócio' },
+        { status: response.status }
+      )
+    }
+
+    const data = await response.json()
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Proxy error:', error)
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
       { status: 500 }
     )
   }

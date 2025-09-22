@@ -242,6 +242,55 @@ class BusinessesService {
       throw this.handleError(error)
     }
   }
+
+  async updateBusiness(businessId: string, data: Business): Promise<Business> {
+    try {
+      console.log('BusinessesService.updateBusiness - Business ID:', businessId, 'Data:', data)
+      
+      const result = await apiService.put<Business>(
+        `${API_ENDPOINTS.ADMIN.BUSINESSES}/${businessId}`,
+        data,
+        true
+      )
+      console.log('BusinessesService.updateBusiness - Resultado:', result)
+      
+      return result
+    } catch (error) {
+      console.error('BusinessesService.updateBusiness - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  async deleteBusiness(businessId: string): Promise<void> {
+    try {
+      console.log('BusinessesService.deleteBusiness - Business ID:', businessId)
+      
+      await apiService.delete(
+        `${API_ENDPOINTS.ADMIN.BUSINESSES}/${businessId}`,
+        true
+      )
+      console.log('BusinessesService.deleteBusiness - Negócio deletado com sucesso')
+    } catch (error) {
+      console.error('BusinessesService.deleteBusiness - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  async unassignMentor(businessId: string, motivo: string): Promise<void> {
+    try {
+      console.log('BusinessesService.unassignMentor - Business ID:', businessId, 'Motivo:', motivo)
+      
+      const params = new URLSearchParams({ motivo })
+      await apiService.delete(
+        `${API_ENDPOINTS.ADMIN.BUSINESSES}/${businessId}/unassign-mentor?${params.toString()}`,
+        true
+      )
+      console.log('BusinessesService.unassignMentor - Mentor desvinculado com sucesso')
+    } catch (error) {
+      console.error('BusinessesService.unassignMentor - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
 }
 
 export const businessesService = new BusinessesService()

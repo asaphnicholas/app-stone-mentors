@@ -30,13 +30,18 @@ import {
   faPhone,
   faCalendarAlt,
   faPlay,
-  faEdit
+  faEdit,
+  faUserCheck,
+  faTrashAlt,
+  faUnlink
 } from "@fortawesome/free-solid-svg-icons"
 import { businessesService, type Business, type BusinessFilters, type AvailableMentor, type CreateBusinessRequest } from "@/lib/services/businesses"
 import { FileViewer } from "@/components/ui/file-viewer"
+import { EditBusinessForm } from "@/components/ui/edit-business-form"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
+import ClientOnly from "@/components/ClientOnly"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -126,7 +131,20 @@ export default function NegociosContent() {
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [selectedMentor, setSelectedMentor] = useState<string>("")
   const [assignObservations, setAssignObservations] = useState("")
+  const [mentorSearchTerm, setMentorSearchTerm] = useState("")
   
+  // Estados para modal de edição
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [selectedBusinessForEdit, setSelectedBusinessForEdit] = useState<Business | null>(null)
+  const [editFormData, setEditFormData] = useState<Business | null>(null)
+  
+  // Filtered mentors based on search term
+  const filteredMentors = availableMentors.filter(mentor =>
+    mentor.nome.toLowerCase().includes(mentorSearchTerm.toLowerCase()) ||
+    mentor.email.toLowerCase().includes(mentorSearchTerm.toLowerCase()) ||
+    mentor.area_atuacao.toLowerCase().includes(mentorSearchTerm.toLowerCase())
+  )
+
   // Form state for creating business
   const [formData, setFormData] = useState<CreateBusinessRequest>({
     nome: "",
@@ -281,6 +299,7 @@ export default function NegociosContent() {
       setSelectedBusiness(null)
       setSelectedMentor("")
       setAssignObservations("")
+      setMentorSearchTerm("")
       loadData()
     } catch (error: any) {
       let errorTitle = "Erro ao vincular mentor"
@@ -333,6 +352,75 @@ export default function NegociosContent() {
   const openDetailsDialog = (business: Business) => {
     setSelectedBusiness(business)
     setIsDetailsDialogOpen(true)
+  }
+
+  const openEditDialog = (business: Business) => {
+    setSelectedBusinessForEdit(business)
+    setEditFormData({ ...business })
+    setIsEditDialogOpen(true)
+  }
+
+  const closeEditDialog = () => {
+    setSelectedBusinessForEdit(null)
+    setEditFormData(null)
+    setIsEditDialogOpen(false)
+  }
+
+  const handleUpdateBusiness = async (updatedBusiness: Business) => {
+    try {
+      await businessesService.updateBusiness(updatedBusiness.id, updatedBusiness)
+      addToast({
+        type: "success",
+        title: "Negócio atualizado",
+        message: "As informações do negócio foram atualizadas com sucesso.",
+      })
+      loadData()
+      closeEditDialog()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao atualizar negócio",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    }
+  }
+
+  const handleDeleteBusiness = async (businessId: string) => {
+    try {
+      await businessesService.deleteBusiness(businessId)
+      addToast({
+        type: "success",
+        title: "Negócio deletado",
+        message: "O negócio foi deletado permanentemente.",
+      })
+      loadData()
+      closeEditDialog()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao deletar negócio",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    }
+  }
+
+  const handleUnassignMentor = async (businessId: string, motivo: string) => {
+    try {
+      await businessesService.unassignMentor(businessId, motivo)
+      addToast({
+        type: "success",
+        title: "Mentor desvinculado",
+        message: "O mentor foi desvinculado do negócio com sucesso.",
+      })
+      loadData()
+      closeEditDialog()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao desvincular mentor",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    }
   }
 
   // Filter businesses based on search and filters
@@ -926,13 +1014,21 @@ export default function NegociosContent() {
                     )}
 
                     {/* Ações */}
-                    <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
                       <Button
                         onClick={() => openDetailsDialog(business)}
                         className="flex-1 h-12 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg hover:shadow-xl transition-all duration-300 text-base font-semibold"
                       >
                         <FontAwesomeIcon icon={faBriefcase} className="h-4 w-4 mr-2" />
-                        Ver Detalhes Completos
+                        Ver Detalhes
+                      </Button>
+                      <Button
+                        onClick={() => openEditDialog(business)}
+                        variant="outline"
+                        className="flex-1 h-12 border-2 border-stone-600 text-stone-600 hover:bg-stone-600 hover:text-white transition-all duration-300 text-base font-semibold"
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="h-4 w-4 mr-2" />
+                        Editar Negócio
                       </Button>
                     </div>
                   </CardContent>
@@ -944,69 +1040,174 @@ export default function NegociosContent() {
       </Card>
 
       {/* Assign Mentor Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="max-w-lg bg-white">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-900">Vincular Mentor</DialogTitle>
-            <DialogDescription className="text-gray-600">
-              Selecione um mentor para o negócio "{selectedBusiness?.nome}".
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <Label htmlFor="mentor" className="text-sm font-medium text-gray-700">Mentor</Label>
-              <Select value={selectedMentor} onValueChange={setSelectedMentor}>
-                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
-                  <SelectValue placeholder="Selecione um mentor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableMentors.map((mentor) => (
-                    <SelectItem key={mentor.id} value={mentor.id}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{mentor.nome}</span>
-                        <span className="text-sm text-gray-500">
-                          {mentor.area_atuacao} • {mentor.email}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      <ClientOnly>
+        <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] lg:max-w-4xl p-0 bg-white">
+          <DialogHeader className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-stone-600/20 rounded-lg flex items-center justify-center">
+                <FontAwesomeIcon icon={faHandshake} className="h-4 w-4 text-stone-700" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-gray-900">
+                  Vincular Mentor
+                </DialogTitle>
+                <DialogDescription className="text-sm text-gray-600 mt-1">
+                  Selecione um mentor qualificado para o negócio "{selectedBusiness?.nome}"
+                </DialogDescription>
+              </div>
             </div>
-            
-            <div className="space-y-3">
-              <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">Observações (opcional)</Label>
-              <Textarea
-                id="observacoes"
-                value={assignObservations}
-                onChange={(e) => setAssignObservations(e.target.value)}
-                placeholder="Observações sobre a vinculação..."
-                rows={4}
-                className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200 resize-none"
-              />
+          </DialogHeader>
+
+          <div className="flex-1 p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
+            <div className="space-y-6">
+              {/* Barra de Busca */}
+              <div className="relative">
+                <FontAwesomeIcon icon={faSearch} 
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" 
+                />
+                <Input
+                  placeholder="Buscar mentores por nome, email ou área de atuação..."
+                  value={mentorSearchTerm}
+                  onChange={(e) => setMentorSearchTerm(e.target.value)}
+                  className="pl-10 h-12 border-2 border-gray-200 focus:border-stone-600 focus:ring-stone-600/20"
+                />
+              </div>
+
+              {/* Lista de Mentores */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Mentores Disponíveis ({filteredMentors.length})
+                  </h3>
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-green-100 border border-green-200 rounded"></div>
+                      <span className="text-gray-600">Qualificado</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 bg-orange-100 border border-orange-200 rounded"></div>
+                      <span className="text-gray-600">Pendente</span>
+                    </div>
+                  </div>
+                </div>
+
+                {filteredMentors.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FontAwesomeIcon icon={faUserTie} className="h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      {mentorSearchTerm ? 'Nenhum mentor encontrado' : 'Nenhum mentor qualificado disponível'}
+                    </h3>
+                    <p className="text-gray-500">
+                      {mentorSearchTerm 
+                        ? `Não há mentores correspondentes à busca "${mentorSearchTerm}".`
+                        : 'Não há mentores com protocolo concluído no momento.'
+                      }
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredMentors.map((mentor) => (
+                      <div
+                        key={mentor.id}
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                          selectedMentor === mentor.id
+                            ? 'border-stone-600 bg-stone-50 shadow-md'
+                            : mentor.protocolo_concluido
+                              ? 'border-green-200 bg-green-50 hover:border-green-300 hover:shadow-sm'
+                              : 'border-orange-200 bg-orange-50 hover:border-orange-300 hover:shadow-sm'
+                        }`}
+                        onClick={() => setSelectedMentor(mentor.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback className="bg-stone-100 text-stone-700 font-semibold">
+                              {mentor.nome?.split(' ').map(n => n?.[0] || '').join('').slice(0, 2).toUpperCase() || 'M'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 truncate">
+                                {mentor.nome}
+                              </h4>
+                              {selectedMentor === mentor.id && (
+                                <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-green-600" />
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mb-2">{mentor.email}</p>
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 text-xs text-gray-500">
+                                <FontAwesomeIcon icon={faBriefcase} className="h-3 w-3" />
+                                <span>{mentor.area_atuacao}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge 
+                                  className={`text-xs ${
+                                    mentor.protocolo_concluido 
+                                      ? 'bg-green-100 text-green-800 border-green-200' 
+                                      : 'bg-orange-100 text-orange-800 border-orange-200'
+                                  }`}
+                                >
+                                  <FontAwesomeIcon 
+                                    icon={mentor.protocolo_concluido ? faCheckCircle : faClock} 
+                                    className="h-3 w-3 mr-1" 
+                                  />
+                                  {mentor.protocolo_concluido ? 'Qualificado' : 'Pendente'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Observações */}
+              {selectedMentor && (
+                <div className="space-y-3 border-t border-gray-200 pt-6">
+                  <Label htmlFor="observacoes" className="text-sm font-medium text-gray-700">
+                    Observações (opcional)
+                  </Label>
+                  <Textarea
+                    id="observacoes"
+                    value={assignObservations}
+                    onChange={(e) => setAssignObservations(e.target.value)}
+                    placeholder="Adicione observações sobre esta vinculação..."
+                    rows={3}
+                    className="border-2 border-gray-200 focus:border-stone-600 focus:ring-stone-600/20"
+                  />
+                </div>
+              )}
             </div>
           </div>
-          
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
             <Button
               variant="outline"
-              onClick={() => setIsAssignDialogOpen(false)}
-              className="px-6 py-2"
+              onClick={() => {
+                setIsAssignDialogOpen(false)
+                setSelectedMentor("")
+                setAssignObservations("")
+                setMentorSearchTerm("")
+              }}
+              className="px-6"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleAssignMentor}
               disabled={!selectedMentor}
-              className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white"
+              className="px-6 bg-stone-600 hover:bg-stone-700 text-white disabled:opacity-50"
             >
               <FontAwesomeIcon icon={faHandshake} className="h-4 w-4 mr-2" />
               Vincular Mentor
             </Button>
           </div>
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      </ClientOnly>
 
       {/* Business Details Modal */}
       <FileViewer
@@ -1016,6 +1217,42 @@ export default function NegociosContent() {
         isOpen={isDetailsDialogOpen}
         onClose={() => setIsDetailsDialogOpen(false)}
       />
+
+      {/* Edit Business Dialog */}
+      <ClientOnly>
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-[95vw] w-[95vw] max-h-[95vh] lg:max-w-6xl p-0 bg-white">
+            <DialogHeader className="p-6 pb-4 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-stone-600/20 rounded-lg flex items-center justify-center">
+                  <FontAwesomeIcon icon={faEdit} className="h-4 w-4 text-stone-700" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl font-bold text-gray-900">
+                    Editar Negócio
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-gray-600 mt-1">
+                    Edite as informações do negócio "{selectedBusinessForEdit?.nome}"
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="flex-1 p-6 overflow-y-auto max-h-[calc(95vh-160px)]">
+              {editFormData && (
+                <EditBusinessForm 
+                  business={editFormData}
+                  onUpdate={setEditFormData}
+                  onSave={handleUpdateBusiness}
+                  onDelete={handleDeleteBusiness}
+                  onUnassignMentor={handleUnassignMentor}
+                  onCancel={closeEditDialog}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </ClientOnly>
     </div>
   )
 }

@@ -70,6 +70,11 @@ export const API_ENDPOINTS = {
     USER_APPROVE: (id: string) => `/admin/users/${id}/approve`,
     DASHBOARD_OVERVIEW: '/admin/dashboard/overview',
     BUSINESSES: '/admin/businesses',
+    // Admin Mentors
+    MENTORS_WITH_MENTORIAS: '/admin/mentors/with-mentorias',
+    MENTOR_HISTORICO: (id: string) => `/admin/mentors/${id}/mentorias/historico`,
+    MENTOR_PERFORMANCE: (id: string) => `/admin/mentors/${id}/performance`,
+    MENTORS_RELATORIO: '/admin/mentors/relatorios/mentorias',
   },
 
   // Mentor Materials
