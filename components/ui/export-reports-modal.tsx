@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import ClientOnly from "@/components/ClientOnly"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -41,8 +42,8 @@ interface ReportFilters {
 }
 
 export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps) {
-  const [selectedReport, setSelectedReport] = useState<'mentores' | 'mentorias' | null>(null)
   const [isExporting, setIsExporting] = useState(false)
+  const [exportingType, setExportingType] = useState<'mentores' | 'mentorias' | null>(null)
   const [filters, setFilters] = useState<ReportFilters>({
     mentores: {
       periodo_inicio: '',
@@ -52,13 +53,13 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
     mentorias: {
       periodo_inicio: '',
       periodo_fim: '',
-      status: '',
-      tipo: ''
+      status: 'TODOS',
+      tipo: 'TODOS'
     }
   })
 
   const handleClose = () => {
-    setSelectedReport(null)
+    setExportingType(null)
     setFilters({
       mentores: {
         periodo_inicio: '',
@@ -68,8 +69,8 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
       mentorias: {
         periodo_inicio: '',
         periodo_fim: '',
-        status: '',
-        tipo: ''
+        status: 'TODOS',
+        tipo: 'TODOS'
       }
     })
     onClose()
@@ -78,6 +79,7 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
   const handleExportMentores = async () => {
     try {
       setIsExporting(true)
+      setExportingType('mentores')
       
       const params = new URLSearchParams()
       if (filters.mentores.periodo_inicio) {
@@ -92,17 +94,40 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
 
       const url = `/api/admin/relatorios/mentores/exportar${params.toString() ? `?${params.toString()}` : ''}`
       
-      // Create download link
+      // Get auth token
+      const token = localStorage.getItem('access_token')
+      
+      // Use fetch to handle the download properly
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/csv,application/csv',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao exportar relatório: ${response.status} ${response.statusText}`)
+      }
+
+      // Get the CSV content
+      const csvContent = await response.text()
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
-      link.href = url
+      const url_blob = URL.createObjectURL(blob)
+      link.href = url_blob
       link.download = `relatorio-mentores-${new Date().toISOString().split('T')[0]}.csv`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      URL.revokeObjectURL(url_blob)
       
       handleClose()
     } catch (error) {
       console.error('Erro ao exportar relatório de mentores:', error)
+      alert('Erro ao exportar relatório de mentores. Verifique sua conexão e tente novamente.')
     } finally {
       setIsExporting(false)
     }
@@ -111,6 +136,7 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
   const handleExportMentorias = async () => {
     try {
       setIsExporting(true)
+      setExportingType('mentorias')
       
       const params = new URLSearchParams()
       if (filters.mentorias.periodo_inicio) {
@@ -119,94 +145,55 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
       if (filters.mentorias.periodo_fim) {
         params.append('periodo_fim', filters.mentorias.periodo_fim)
       }
-      if (filters.mentorias.status) {
+      if (filters.mentorias.status && filters.mentorias.status !== 'TODOS') {
         params.append('status', filters.mentorias.status)
       }
-      if (filters.mentorias.tipo) {
+      if (filters.mentorias.tipo && filters.mentorias.tipo !== 'TODOS') {
         params.append('tipo', filters.mentorias.tipo)
       }
 
       const url = `/api/admin/relatorios/mentorias/exportar${params.toString() ? `?${params.toString()}` : ''}`
       
-      // Create download link
+      // Get auth token
+      const token = localStorage.getItem('access_token')
+      
+      // Use fetch to handle the download properly
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'text/csv,application/csv',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Erro ao exportar relatório: ${response.status} ${response.statusText}`)
+      }
+
+      // Get the CSV content
+      const csvContent = await response.text()
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
-      link.href = url
+      const url_blob = URL.createObjectURL(blob)
+      link.href = url_blob
       link.download = `relatorio-mentorias-${new Date().toISOString().split('T')[0]}.csv`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      URL.revokeObjectURL(url_blob)
       
       handleClose()
     } catch (error) {
       console.error('Erro ao exportar relatório de mentorias:', error)
+      alert('Erro ao exportar relatório de mentorias. Verifique sua conexão e tente novamente.')
     } finally {
       setIsExporting(false)
     }
   }
 
-  const handleExport = () => {
-    if (selectedReport === 'mentores') {
-      handleExportMentores()
-    } else if (selectedReport === 'mentorias') {
-      handleExportMentorias()
-    }
-  }
 
-  const renderReportSelection = () => (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">Selecione o tipo de relatório:</h3>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Relatório de Mentores */}
-        <div 
-          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-            selectedReport === 'mentores' 
-              ? 'border-stone-600 bg-stone-50' 
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-          onClick={() => setSelectedReport('mentores')}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-stone-600 rounded-lg flex items-center justify-center">
-              <FontAwesomeIcon icon={faUsers} className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900">Relatório de Mentores</h4>
-              <p className="text-sm text-gray-600">Dados completos dos mentores</p>
-            </div>
-          </div>
-          <div className="text-xs text-gray-500">
-            Inclui: informações pessoais, estatísticas, performance e status
-          </div>
-        </div>
-
-        {/* Relatório de Mentorias */}
-        <div 
-          className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
-            selectedReport === 'mentorias' 
-              ? 'border-stone-600 bg-stone-50' 
-              : 'border-gray-200 hover:border-gray-300'
-          }`}
-          onClick={() => setSelectedReport('mentorias')}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-stone-600 rounded-lg flex items-center justify-center">
-              <FontAwesomeIcon icon={faHandshake} className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900">Relatório de Mentorias</h4>
-              <p className="text-sm text-gray-600">Histórico de sessões realizadas</p>
-            </div>
-          </div>
-          <div className="text-xs text-gray-500">
-            Inclui: datas, status, avaliações, diagnósticos e resultados
-          </div>
-        </div>
-      </div>
-    </div>
-  )
 
   const renderMentoresFilters = () => (
     <div className="space-y-4">
@@ -322,7 +309,7 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
               <SelectValue placeholder="Todos os status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os status</SelectItem>
+              <SelectItem value="TODOS">Todos os status</SelectItem>
               <SelectItem value="FINALIZADA">Finalizadas</SelectItem>
               <SelectItem value="CONFIRMADA">Confirmadas</SelectItem>
               <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
@@ -345,7 +332,7 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
               <SelectValue placeholder="Todos os tipos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os tipos</SelectItem>
+              <SelectItem value="TODOS">Todos os tipos</SelectItem>
               <SelectItem value="PRIMEIRA">Primeira Mentoria</SelectItem>
               <SelectItem value="FOLLOWUP">Follow-up</SelectItem>
             </SelectContent>
@@ -358,7 +345,8 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
   if (!isOpen) return null
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <ClientOnly>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-[90vw] w-[90vw] max-h-[90vh] lg:max-w-4xl p-0 bg-white">
         <DialogHeader className="p-6 pb-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
@@ -379,58 +367,82 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
         </DialogHeader>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-160px)]">
-          {!selectedReport && renderReportSelection()}
-          
-          {selectedReport === 'mentores' && (
-            <>
-              {renderMentoresFilters()}
-              <Separator className="my-6" />
-            </>
-          )}
-          
-          {selectedReport === 'mentorias' && (
-            <>
-              {renderMentoriasFilters()}
-              <Separator className="my-6" />
-            </>
-          )}
-
-          {selectedReport && (
-            <div className="flex items-center justify-between pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setSelectedReport(null)}
-                disabled={isExporting}
-              >
-                <FontAwesomeIcon icon={faTimes} className="h-4 w-4 mr-2" />
-                Voltar
-              </Button>
+          <div className="space-y-8">
+            {/* Relatório de Mentores */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-stone-600 rounded-lg flex items-center justify-center">
+                  <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Relatório de Mentores</h3>
+                  <p className="text-sm text-gray-600">Dados completos dos mentores</p>
+                </div>
+              </div>
               
-              <div className="flex items-center gap-3">
+              {renderMentoresFilters()}
+              
+              <div className="flex justify-end">
                 <Button
-                  variant="outline"
-                  onClick={handleClose}
+                  onClick={handleExportMentores}
                   disabled={isExporting}
+                  className="bg-stone-600 hover:bg-stone-700 text-white"
                 >
-                  Cancelar
-                </Button>
-                <Button
-                  onClick={handleExport}
-                  disabled={isExporting}
-                  className="bg-stone-600 hover:bg-stone-700"
-                >
-                  {isExporting ? (
+                  {isExporting && exportingType === 'mentores' ? (
                     <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
                   )}
-                  {isExporting ? 'Exportando...' : 'Exportar CSV'}
+                  {isExporting && exportingType === 'mentores' ? 'Exportando...' : 'Exportar CSV'}
                 </Button>
               </div>
             </div>
-          )}
+
+            <Separator />
+
+            {/* Relatório de Mentorias */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-stone-600 rounded-lg flex items-center justify-center">
+                  <FontAwesomeIcon icon={faHandshake} className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Relatório de Mentorias</h3>
+                  <p className="text-sm text-gray-600">Histórico de sessões realizadas</p>
+                </div>
+              </div>
+              
+              {renderMentoriasFilters()}
+              
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleExportMentorias}
+                  disabled={isExporting}
+                  className="bg-stone-600 hover:bg-stone-700 text-white"
+                >
+                  {isExporting && exportingType === 'mentorias' ? (
+                    <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
+                  )}
+                  {isExporting && exportingType === 'mentorias' ? 'Exportando...' : 'Exportar CSV'}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end pt-6 ">
+            <Button
+              variant="outline"
+              onClick={handleClose}
+              disabled={isExporting}
+            >
+              Fechar
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
+    </ClientOnly>
   )
 }

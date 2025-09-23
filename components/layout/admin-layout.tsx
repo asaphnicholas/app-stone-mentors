@@ -29,9 +29,9 @@ const navigation = [
   { name: "Convidar Mentor", href: "/admin/convidar-mentor", icon: faUserPlus, disabled: false },
   { name: "Negócios", href: "/admin/negocios", icon: faBuilding, disabled: false },
   { name: "Conteúdos", href: "/admin/conteudos", icon: faFileText, disabled: false },
-  { name: "Mentorias", href: "/admin/mentorias", icon: faComments, disabled: true },
-  { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine, disabled: true },
-  { name: "Configurações", href: "/admin/configuracoes", icon: faCog, disabled: true },
+  // { name: "Mentorias", href: "/admin/mentorias", icon: faComments, disabled: true },
+  // { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine, disabled: true },
+  // { name: "Configurações", href: "/admin/configuracoes", icon: faCog, disabled: true },
 ]
 
 interface AdminLayoutProps {
@@ -157,18 +157,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     )}
                     
                     {/* Tooltip for collapsed sidebar */}
-                    {sidebarCollapsed && (
+                    {/* {sidebarCollapsed && (
                       <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         {item.name} - Em desenvolvimento
                       </div>
-                    )}
+                    )} */}
                     
                     {/* Tooltip for expanded sidebar */}
-                    {!sidebarCollapsed && (
+                    {/* {!sidebarCollapsed && (
                       <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
                         {item.name} - Em desenvolvimento
                       </div>
-                    )}
+                    )} */}
                   </div>
                 )
               }

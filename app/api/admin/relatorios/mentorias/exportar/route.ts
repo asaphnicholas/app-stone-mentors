@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_BASE_URL } from '@/lib/config/env'
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(request: NextRequest) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader) {
+      return NextResponse.json(
+        { message: 'Token de autorização é obrigatório' },
+        { status: 401 }
+      )
+    }
+
     const { searchParams } = new URL(request.url)
     
     // Construir URL com parâmetros
-    const backendUrl = new URL(`${API_BASE_URL}/admin/relatorios/mentorias/exportar`)
+    const backendUrl = new URL(`${BACKEND_URL}/api/v1/admin/relatorios/mentorias/exportar`)
     
     // Adicionar parâmetros de query se existirem
     const periodo_inicio = searchParams.get('periodo_inicio')
@@ -34,8 +45,7 @@ export async function GET(request: NextRequest) {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // Adicionar headers de autenticação se necessário
-        'Authorization': request.headers.get('Authorization') || '',
+        'Authorization': authHeader,
       },
     })
 
