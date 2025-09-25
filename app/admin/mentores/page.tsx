@@ -14,8 +14,10 @@ import { MentorDetailsModal } from "@/components/ui/mentor-details-modal"
 import { ExportReportsModal } from "@/components/ui/export-reports-modal"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/toast"
+import ClientOnly from "@/components/ClientOnly"
 import { usersService, type User } from "@/lib/services/users"
 import { mentorsService, type Mentor } from "@/lib/services/mentors"
+import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { 
   faUserCheck, 
@@ -47,6 +49,31 @@ export default function AdminMentoresPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeSection, setActiveSection] = useState<'pending' | 'active' | 'performance' | 'reports'>('pending')
   
+  // Estados para filtros de status
+  const [statusFilter, setStatusFilter] = useState<string>('todos')
+  const [filteredMentors, setFilteredMentors] = useState<Mentor[]>([])
+  
+  // Estados para paginação e filtros adicionais
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalMentors, setTotalMentors] = useState(0)
+  const [areaFilter, setAreaFilter] = useState<string>('todas')
+  const [protocoloFilter, setProtocoloFilter] = useState<string>('todos')
+  const [termoFilter, setTermoFilter] = useState<string>('todos')
+  
+  // Estados para mudança de status
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  
+  // Estados para estatísticas
+  const [mentorStats, setMentorStats] = useState({
+    total: 0,
+    ativos: 0,
+    nao_qualificados: 0,
+    qualificados: 0,
+    ocupados: 0,
+    indisponiveis: 0
+  })
+  
   // Estados para aprovação
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false)
@@ -77,19 +104,158 @@ export default function AdminMentoresPage() {
     loadData()
   }, [])
 
+  useEffect(() => {
+    if (activeSection === 'active') {
+      loadMentorsByStatus(statusFilter, currentPage)
+    }
+  }, [statusFilter, activeSection, currentPage, areaFilter, protocoloFilter, termoFilter, searchTerm])
+
   const loadData = async () => {
     try {
       setIsLoading(true)
       
-      // Load pending users
-      const pendingResponse = await usersService.getPendingUsers()
-      setPendingUsers(pendingResponse.usuarios)
+      // Load pending users using the new API
+      const pendingResponse = await fetch('/api/admin/users?role=mentor&status=pendente', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      })
       
-      // Load todos os mentores ativos
-      const activeUsers = await usersService.getUsers({ role: 'mentor', status: 'ativo' })
+      if (pendingResponse.ok) {
+        const data = await pendingResponse.json()
+        // A API retorna um array direto, não um objeto
+        if (Array.isArray(data)) {
+          setPendingUsers(data)
+        } else {
+          setPendingUsers(data.mentors || data.usuarios || data.data || [])
+        }
+      }
+      
+      // Load mentores com filtro de status
+      await loadMentorsByStatus(statusFilter)
+      
+      // Load mentor statistics
+      await loadMentorStats()
+      
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao carregar dados",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loadMentorsByStatus = async (status: string, page: number = 1) => {
+    try {
+      let users: User[] = []
+      let total = 0
+      let totalPages = 1
+      
+      if (status === 'todos') {
+        // Carregar todos os mentores usando a API
+        const queryParams = new URLSearchParams()
+        queryParams.append('role', 'mentor')
+        queryParams.append('page', page.toString())
+        queryParams.append('limit', '10')
+        
+        // Adicionar filtros adicionais se selecionados
+        if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
+        if (protocoloFilter && protocoloFilter !== 'todos') queryParams.append('protocolo_concluido', protocoloFilter)
+        if (termoFilter && termoFilter !== 'todos') queryParams.append('termo_aceite', termoFilter)
+        if (searchTerm) queryParams.append('search', searchTerm)
+        
+        const response = await fetch(`/api/admin/users?${queryParams.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          // A API retorna um array direto, não um objeto
+          if (Array.isArray(data)) {
+            users = data
+            total = data.length
+            totalPages = Math.ceil(total / 10)
+          } else {
+            users = data.mentors || data.usuarios || data.data || []
+            total = data.total_count || data.total || users.length
+            totalPages = data.total_pages || Math.ceil(total / 10)
+          }
+        }
+      } else if (status === 'pendente') {
+        // Carregar pendentes usando a API
+        const queryParams = new URLSearchParams()
+        queryParams.append('role', 'mentor')
+        queryParams.append('status', 'pendente')
+        queryParams.append('page', page.toString())
+        queryParams.append('limit', '10')
+        
+        // Adicionar filtros adicionais se selecionados
+        if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
+        if (protocoloFilter && protocoloFilter !== 'todos') queryParams.append('protocolo_concluido', protocoloFilter)
+        if (termoFilter && termoFilter !== 'todos') queryParams.append('termo_aceite', termoFilter)
+        if (searchTerm) queryParams.append('search', searchTerm)
+        
+        const response = await fetch(`/api/admin/users?${queryParams.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          // A API retorna um array direto, não um objeto
+          if (Array.isArray(data)) {
+            users = data
+            total = data.length
+            totalPages = Math.ceil(total / 10)
+          } else {
+            users = data.mentors || data.usuarios || data.data || []
+            total = data.total_count || data.total || users.length
+            totalPages = data.total_pages || Math.ceil(total / 10)
+          }
+        }
+      } else {
+        // Carregar por status específico usando a nova API
+        const queryParams = new URLSearchParams()
+        queryParams.append('role', 'mentor')
+        queryParams.append('status', status)
+        queryParams.append('page', page.toString())
+        queryParams.append('limit', '10')
+        
+        // Adicionar filtros adicionais se selecionados
+        if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
+        if (protocoloFilter && protocoloFilter !== 'todos') queryParams.append('protocolo_concluido', protocoloFilter)
+        if (termoFilter && termoFilter !== 'todos') queryParams.append('termo_aceite', termoFilter)
+        if (searchTerm) queryParams.append('search', searchTerm)
+        
+        const response = await fetch(`/api/admin/users?${queryParams.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          // A API retorna um array direto, não um objeto
+          if (Array.isArray(data)) {
+            users = data
+            total = data.length
+            totalPages = Math.ceil(total / 10)
+          } else {
+            users = data.mentors || data.usuarios || data.data || []
+            total = data.total_count || data.total || users.length
+            totalPages = data.total_pages || Math.ceil(total / 10)
+          }
+        }
+      }
       
       // Converter users para mentores básicos
-      const basicMentors: Mentor[] = activeUsers.map(user => ({
+      const basicMentors: (Mentor & { status?: string })[] = users.map(user => ({
         id: user.id,
         nome: user.nome,
         email: user.email,
@@ -103,20 +269,108 @@ export default function AdminMentoresPage() {
         negocios_vinculados: 0, // Será carregado sob demanda
         nps_medio: 0, // Será carregado sob demanda
         created_at: user.created_at,
-        last_login: user.last_login
+        last_login: user.last_login,
+        status: user.status // Adicionar status do usuário
       }))
       
+      setFilteredMentors(basicMentors)
       setMentorsWithMentorias(basicMentors)
       setMentorsWithoutMentorias([])
+      setTotalMentors(total)
+      setTotalPages(totalPages)
+      setCurrentPage(page)
       
+    } catch (error) {
+      console.error('Erro ao carregar mentores por status:', error)
+    }
+  }
+
+  const loadMentorStats = async () => {
+    try {
+      // Primeiro tenta usar a API específica de estatísticas
+      const response = await fetch('/api/admin/mentors/status/stats', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMentorStats(data)
+      } else {
+        // Fallback: usa a API de usuários para obter status_summary
+        const usersResponse = await fetch('/api/admin/users?role=mentor', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          },
+        })
+
+        if (usersResponse.ok) {
+          const data = await usersResponse.json()
+          if (data.status_summary) {
+            setMentorStats(data.status_summary)
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas dos mentores:', error)
+    }
+  }
+
+  const updateMentorStatus = async (mentorId: string, newStatus: string) => {
+    try {
+      setUpdatingStatus(mentorId)
+      
+      // Mapear status para formato da API
+      const statusMapping: { [key: string]: string } = {
+        'PENDENTE': 'pendente',
+        'INATIVO': 'inativo', 
+        'NAO_QUALIFICADO': 'nao_qualificado',
+        'QUALIFICADO': 'qualificado',
+        'OCUPADO': 'ocupado',
+        'INDISPONIVEL': 'indisponivel'
+      }
+      
+      const apiStatus = statusMapping[newStatus] || newStatus.toLowerCase()
+      
+      const response = await fetch(`/api/admin/mentors/status/${mentorId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: JSON.stringify({ 
+          new_status: apiStatus,
+          reason: `Status alterado para ${newStatus.toLowerCase()} pelo admin`
+        }),
+      })
+
+      if (response.ok) {
+        addToast({
+          type: "success",
+          title: "Status atualizado",
+          message: "O status do mentor foi atualizado com sucesso.",
+        })
+        
+        // Recarregar dados
+        await loadMentorsByStatus(statusFilter, currentPage)
+        await loadMentorStats()
+      } else {
+        const errorData = await response.json().catch(() => null)
+        addToast({
+          type: "error",
+          title: "Erro ao atualizar status",
+          message: errorData?.message || "Erro interno do servidor",
+        })
+      }
     } catch (error) {
       addToast({
         type: "error",
-        title: "Erro ao carregar dados",
+        title: "Erro ao atualizar status",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
     } finally {
-      setIsLoading(false)
+      setUpdatingStatus(null)
     }
   }
 
@@ -310,29 +564,65 @@ export default function AdminMentoresPage() {
     mentor.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Aplicar filtro de busca nos mentores filtrados por status
+  const filteredMentorsBySearch = filteredMentors.filter(mentor =>
+    mentor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    mentor.email.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   // Render mentor card
-  const renderMentorCard = (mentor: Mentor) => {
-    // Assumir que os mentores vêm com status do backend
-    // Por enquanto, vamos usar 'ativo' como padrão
-    const mentorStatus = 'ativo' // Será substituído pelo mentor.status real quando disponível
+  const renderMentorCard = (mentor: Mentor & { status?: string }) => {
+    // Usar o status real do mentor da API
+    const mentorStatus = mentor.status?.toLowerCase() || 'ativo'
     
     return (
       <Card key={mentor.id} className="hover:shadow-md transition-all duration-200 border-2 border-gray-200">
         <CardHeader>
+          <div className="space-y-3">
           <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-lg">{mentor.nome}</CardTitle>
-              <CardDescription>{mentor.email}</CardDescription>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg truncate">{mentor.nome}</CardTitle>
+                <CardDescription className="truncate">{mentor.email}</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className={`border ${getStatusColors(mentorStatus)}`}>
-                {getStatusText(mentorStatus)}
-              </Badge>
-              {mentor.protocolo_concluido && (
-                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                  Qualificado
+            </div>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className={`border ${getStatusColors(mentorStatus)}`}>
+                  {getStatusText(mentorStatus)}
                 </Badge>
-              )}
+                {mentor.protocolo_concluido && (
+                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    Qualificado
+                  </Badge>
+                )}
+              </div>
+              
+              {/* Select para alterar status */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor={`status-${mentor.id}`} className="text-xs font-medium text-gray-600">
+                  Alterar Status:
+                </Label>
+                <Select 
+                  value={mentorStatus} 
+                  onValueChange={(value) => updateMentorStatus(mentor.id, value)}
+                  disabled={updatingStatus === mentor.id}
+                >
+                  <SelectTrigger className="w-40 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDENTE">Pendente</SelectItem>
+                    <SelectItem value="INATIVO">Inativo</SelectItem>
+                    <SelectItem value="NAO_QUALIFICADO">Não Qualificado</SelectItem>
+                    <SelectItem value="QUALIFICADO">Qualificado</SelectItem>
+                    <SelectItem value="OCUPADO">Ocupado</SelectItem>
+                    <SelectItem value="INDISPONIVEL">Indisponível</SelectItem>
+                  </SelectContent>
+                </Select>
+                {updatingStatus === mentor.id && (
+                  <div className="w-4 h-4 border-2 border-stone-600 border-t-transparent rounded-full animate-spin"></div>
+                )}
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -590,95 +880,231 @@ export default function AdminMentoresPage() {
 
       {/* Seção de Mentores Ativos */}
       {activeSection === 'active' && (
+        <ClientOnly>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-gray-900">
-              Mentores Ativos ({filteredMentorsWithMentorias.length})
+              Mentores Ativos ({filteredMentorsBySearch.length})
             </h3>
             <div className="text-sm text-gray-500">
-              {searchTerm ? `Mostrando resultados para "${searchTerm}"` : 'Todos os mentores cadastrados'}
+              {searchTerm ? `Mostrando resultados para "${searchTerm}"` : 'Filtrados por status'}
             </div>
           </div>
 
-          {filteredMentorsWithMentorias.length === 0 ? (
+          {/* Filtros de Status */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="status-filter" className="text-sm font-medium">
+                Status:
+              </Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Selecione um status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os Status</SelectItem>
+                  <SelectItem value="pendente">Pendentes</SelectItem>
+                  <SelectItem value="ativo">Ativos</SelectItem>
+                  <SelectItem value="nao_qualificado">Não Qualificados</SelectItem>
+                  <SelectItem value="qualificado">Qualificados</SelectItem>
+                  <SelectItem value="ocupado">Ocupados</SelectItem>
+                  <SelectItem value="indisponivel">Indisponíveis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="area-filter" className="text-sm font-medium">
+                Área:
+              </Label>
+              <Select value={areaFilter} onValueChange={setAreaFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Todas as áreas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas as áreas</SelectItem>
+                  {AREAS_ATUACAO.map((area) => (
+                    <SelectItem key={String(area.value)} value={String(area.value)}>
+                      {String(area.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="protocolo-filter" className="text-sm font-medium">
+                Protocolo:
+              </Label>
+              <Select value={protocoloFilter} onValueChange={setProtocoloFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="true">Concluído</SelectItem>
+                  <SelectItem value="false">Não concluído</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Label htmlFor="termo-filter" className="text-sm font-medium">
+                Termo:
+              </Label>
+              <Select value={termoFilter} onValueChange={setTermoFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="true">Aceito</SelectItem>
+                  <SelectItem value="false">Não aceito</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {filteredMentorsBySearch.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FontAwesomeIcon icon={faUserCheck} className="h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {searchTerm ? 'Nenhum mentor encontrado' : 'Nenhum mentor cadastrado'}
+                  {searchTerm ? 'Nenhum mentor encontrado' : 'Nenhum mentor encontrado'}
                 </h3>
                 <p className="text-gray-500 text-center">
                   {searchTerm 
                     ? `Não há mentores correspondentes à busca "${searchTerm}".`
-                    : 'Não há mentores ativos cadastrados no momento.'
+                    : `Não há mentores com status "${statusFilter}".`
                   }
                 </p>
               </CardContent>
             </Card>
           ) : (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredMentorsWithMentorias.map(renderMentorCard)}
+                {filteredMentorsBySearch.map(renderMentorCard)}
+              </div>
+              
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-gray-500">
+                    Mostrando {((currentPage - 1) * 10) + 1} a {Math.min(currentPage * 10, totalMentors)} de {totalMentors} mentores
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Anterior
+                    </Button>
+                    <span className="text-sm text-gray-500">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Próxima
+                    </Button>
+                  </div>
             </div>
+              )}
+            </>
           )}
         </div>
+        </ClientOnly>
       )}
 
       {/* Seção de Performance */}
       {activeSection === 'performance' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-500">Total de Mentores</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-gray-900">
-                  {mentorsWithMentorias.length}
+                  {mentorStats.total}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Mentores ativos cadastrados
+                  Total de mentores cadastrados
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Mentores Qualificados</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500">Mentores Ativos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">
-                  {mentorsWithMentorias.filter(m => m.protocolo_concluido).length}
+                <div className="text-2xl font-bold text-green-600">
+                  {mentorStats.ativos}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Protocolo concluído
+                  Já foram aceitos
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Pendências</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500">Não Qualificados</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">
-                  {pendingUsers.length}
+                <div className="text-2xl font-bold text-yellow-600">
+                  {mentorStats.nao_qualificados}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Aguardando aprovação
+                  Ativos sem trilha de formação
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-500">Dados Detalhados</CardTitle>
+                <CardTitle className="text-sm font-medium text-gray-500">Qualificados</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm text-gray-900">
-                  Disponível
+                <div className="text-2xl font-bold text-blue-600">
+                  {mentorStats.qualificados}
                 </div>
                 <p className="text-xs text-gray-500 mt-1">
-                  Busque mentores para ver performance
+                  Ativos e qualificados
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">Ocupados</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600">
+                  {mentorStats.ocupados}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Com negócio vinculado
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">Indisponíveis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {mentorStats.indisponiveis}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Não podem fazer mentorias
                 </p>
               </CardContent>
             </Card>
@@ -686,19 +1112,19 @@ export default function AdminMentoresPage() {
 
           <Card>
                   <CardHeader>
-              <CardTitle>Análise de Performance</CardTitle>
+              <CardTitle>Status dos Mentores</CardTitle>
               <CardDescription>
-                Para ver dados detalhados de performance, busque mentores específicos na seção "Mentores Ativos"
+                Visão geral dos mentores por status. Clique em "Mentores Ativos" para gerenciar individualmente.
               </CardDescription>
             </CardHeader>
             <CardContent className="py-8">
               <div className="text-center text-gray-500">
                 <FontAwesomeIcon icon={faChartLine} className="h-12 w-12 mb-4" />
-                <p className="text-lg font-medium mb-2">Dados de Performance Sob Demanda</p>
+                <p className="text-lg font-medium mb-2">Gestão de Status</p>
                 <p className="text-sm">
-                  Os dados detalhados de mentorias, NPS e performance são carregados individualmente para cada mentor.
+                  Os status dos mentores podem ser alterados manualmente pelo admin.
                   <br />
-                  Use a busca na seção "Mentores Ativos" e clique em "Performance" no card do mentor desejado.
+                  Use a seção "Mentores Ativos" para gerenciar status individuais.
                 </p>
                       </div>
             </CardContent>

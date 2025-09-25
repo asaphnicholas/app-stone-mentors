@@ -442,6 +442,25 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
           </div>
         </div>
       </DialogContent>
+      
+      {/* Loading Overlay - Por cima da modal */}
+      {isExporting && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <div className="bg-white rounded-lg p-8 max-w-md mx-4 text-center shadow-xl">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="w-16 h-16 border-4 border-stone-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Gerando Relatório
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Seu relatório está sendo gerado, não feche ou saia da tela
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Dialog>
     </ClientOnly>
   )

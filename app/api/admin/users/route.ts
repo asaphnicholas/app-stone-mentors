@@ -4,9 +4,8 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(request: NextRequest) {
   try {
-    // Get authorization header
     const authHeader = request.headers.get('authorization')
-    
+
     if (!authHeader) {
       return NextResponse.json(
         { message: 'Token de autorização é obrigatório' },
@@ -14,12 +13,41 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Get query parameters
     const { searchParams } = new URL(request.url)
-    const queryString = searchParams.toString()
+    
+    // Construir query parameters
+    const queryParams = new URLSearchParams()
+    
+    // Parâmetros obrigatórios
+    queryParams.append('role', 'mentor')
+    
+    // Parâmetros opcionais
+    const status = searchParams.get('status')
+    if (status) queryParams.append('status', status)
+    
+    const area_atuacao = searchParams.get('area_atuacao')
+    if (area_atuacao) queryParams.append('area_atuacao', area_atuacao)
+    
+    const search = searchParams.get('search')
+    if (search) queryParams.append('search', search)
+    
+    const protocolo_concluido = searchParams.get('protocolo_concluido')
+    if (protocolo_concluido) queryParams.append('protocolo_concluido', protocolo_concluido)
+    
+    const termo_aceite = searchParams.get('termo_aceite')
+    if (termo_aceite) queryParams.append('termo_aceite', termo_aceite)
+    
+    const page = searchParams.get('page') || '1'
+    queryParams.append('page', page)
+    
+    const limit = searchParams.get('limit') || '10'
+    queryParams.append('limit', limit)
 
-    // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/admin/users${queryString ? `?${queryString}` : ''}`, {
+    const backendUrl = `${BACKEND_URL}/api/v1/admin/users?${queryParams.toString()}`
+
+    console.log('Fazendo requisição para:', backendUrl)
+
+    const response = await fetch(backendUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -27,21 +55,27 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    const data = await response.json()
-
     if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
       return NextResponse.json(
-        { message: data.message || data.detail || 'Erro ao buscar usuários' },
+        {
+          erro: 'Erro ao buscar usuários',
+          details: errorData || `Status: ${response.status} - ${response.statusText}`
+        },
         { status: response.status }
       )
     }
 
-    return NextResponse.json(data, { status: 200 })
+    const data = await response.json()
+    return NextResponse.json(data)
 
   } catch (error) {
-    console.error('Admin users proxy error:', error)
+    console.error('Erro no proxy de usuários:', error)
     return NextResponse.json(
-      { message: 'Erro interno do servidor' },
+      {
+        erro: 'Erro interno do servidor',
+        message: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
       { status: 500 }
     )
   }

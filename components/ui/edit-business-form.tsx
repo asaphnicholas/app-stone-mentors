@@ -22,6 +22,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons"
 import { Business } from "@/lib/services/businesses"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
+import { AREAS_NEGOCIO } from "@/lib/constants/areas-negocio"
 
 interface EditBusinessFormProps {
   business: Business
@@ -74,6 +75,8 @@ export function EditBusinessForm({
         return 'bg-red-100 text-red-800 border-red-200'
       case 'mentor_pendente':
         return 'bg-orange-100 text-orange-800 border-orange-200'
+      case 'desengajado':
+        return 'bg-gray-100 text-gray-600 border-gray-300'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
@@ -132,7 +135,7 @@ export function EditBusinessForm({
                   <SelectValue placeholder="Selecione uma área" />
                 </SelectTrigger>
                 <SelectContent>
-                  {AREAS_ATUACAO.map((area) => (
+                  {AREAS_NEGOCIO.map((area) => (
                     <SelectItem key={area.value} value={area.value}>
                       {area.label}
                     </SelectItem>
@@ -151,9 +154,10 @@ export function EditBusinessForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ATIVO">Ativo</SelectItem>
-                  <SelectItem value="INATIVO">Inativo</SelectItem>
-                  <SelectItem value="MENTOR_PENDENTE">Mentor Pendente</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                  <SelectItem value="mentor_pendente">Mentor Pendente</SelectItem>
+                  <SelectItem value="desengajado">Desengajado</SelectItem>
                 </SelectContent>
               </Select>
             </div>

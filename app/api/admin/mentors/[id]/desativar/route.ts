@@ -1,22 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_BASE_URL } from '@/lib/config/env'
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    // Get authorization header
+    const authHeader = request.headers.get('authorization')
+    
+    if (!authHeader) {
+      return NextResponse.json(
+        { message: 'Token de autorização é obrigatório' },
+        { status: 401 }
+      )
+    }
+
     const mentorId = params.id
     const body = await request.json()
 
     console.log('Desativando mentor:', mentorId, 'com dados:', body)
 
     // Fazer requisição para o backend
-    const response = await fetch(`${API_BASE_URL}/admin/mentors/${mentorId}/desativar`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/admin/mentors/${mentorId}/desativar`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': request.headers.get('Authorization') || '',
+        'Authorization': authHeader,
       },
       body: JSON.stringify(body),
     })

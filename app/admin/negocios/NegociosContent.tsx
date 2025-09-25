@@ -40,6 +40,7 @@ import { FileViewer } from "@/components/ui/file-viewer"
 import { EditBusinessForm } from "@/components/ui/edit-business-form"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
+import { AREAS_NEGOCIO } from "@/lib/constants/areas-negocio"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 import ClientOnly from "@/components/ClientOnly"
 
@@ -441,6 +442,31 @@ export default function NegociosContent() {
   // Separate businesses by status
   const businessesWithoutMentor = filteredBusinesses.filter(b => !b.mentor_id)
   const businessesWithMentor = filteredBusinesses.filter(b => b.mentor_id)
+  const businessesDesengajados = filteredBusinesses.filter(b => b.status?.toLowerCase() === 'desengajado')
+
+  // Helper function to get card styling based on business status
+  const getCardStyling = (business: Business) => {
+    if (business.status?.toLowerCase() === 'desengajado') {
+      return {
+        cardClass: "border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-br from-gray-100 to-gray-200",
+        contentClass: "p-6",
+        iconClass: "w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg",
+        titleClass: "text-xl font-bold text-gray-600",
+        textClass: "text-gray-500",
+        badgeClass: "bg-gray-200 text-gray-600 border-gray-300"
+      }
+    }
+    
+    // Default styling for active businesses
+    return {
+      cardClass: "group border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 bg-gradient-to-br from-white to-green-50 overflow-hidden",
+      contentClass: "relative p-6 z-10",
+      iconClass: "w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg",
+      titleClass: "text-xl font-bold text-gray-900",
+      textClass: "text-gray-600",
+      badgeClass: "bg-stone-green-light/10 text-stone-green-dark border-0"
+    }
+  }
 
   // Renderizar loading state até hidratação completa ou enquanto carrega dados
   if (!isHydrated || isLoading) {
@@ -500,7 +526,7 @@ export default function NegociosContent() {
                       <SelectValue placeholder="Selecione a área" />
                     </SelectTrigger>
                     <SelectContent>
-                      {AREAS_ATUACAO.map((area) => (
+                      {AREAS_NEGOCIO.map((area) => (
                         <SelectItem key={area.value} value={area.value}>
                           {area.label}
                         </SelectItem>
@@ -668,7 +694,7 @@ export default function NegociosContent() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-stone-green-light/10 to-stone-green-dark/10">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
@@ -706,6 +732,20 @@ export default function NegociosContent() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Com Mentor</p>
                 <p className="text-2xl font-bold text-gray-900">{businessesWithMentor.length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-gray-50 to-gray-100">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg">
+                <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-600">Desengajados</p>
+                <p className="text-2xl font-bold text-gray-700">{businessesDesengajados.length}</p>
               </div>
             </div>
           </CardContent>
@@ -749,6 +789,8 @@ export default function NegociosContent() {
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="ativo">Ativo</SelectItem>
                   <SelectItem value="inativo">Inativo</SelectItem>
+                  <SelectItem value="mentor_pendente">Aguardando Mentor</SelectItem>
+                  <SelectItem value="desengajado">Desengajado</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -761,7 +803,7 @@ export default function NegociosContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas</SelectItem>
-                  {AREAS_ATUACAO.map((area) => (
+                  {AREAS_NEGOCIO.map((area) => (
                     <SelectItem key={area.value} value={area.value}>
                       {area.label}
                     </SelectItem>
@@ -899,30 +941,34 @@ export default function NegociosContent() {
             </div>
           ) : (
             <div className="space-y-4">
-              {businessesWithMentor.map((business) => (
-                <Card key={business.id} className="group border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 bg-gradient-to-br from-white to-green-50 overflow-hidden">
+              {businessesWithMentor.map((business) => {
+                const styling = getCardStyling(business)
+                return (
+                <Card key={business.id} className={styling.cardClass}>
                   
-                  <CardContent className="relative p-6 z-10">
+                  <CardContent className={styling.contentClass}>
                     {/* Header com status de sucesso */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-4">
                         <div className="relative">
-                          <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                          <div className={`${styling.iconClass} group-hover:scale-110 transition-transform duration-300`}>
                             <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
                           </div>
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                            <FontAwesomeIcon icon={faCheckCircle} className="h-2 w-2 text-white" />
-                          </div>
+                          {business.status?.toLowerCase() !== 'desengajado' && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                              <FontAwesomeIcon icon={faCheckCircle} className="h-2 w-2 text-white" />
+                            </div>
+                          )}
                         </div>
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-stone-green-dark transition-colors">
+                          <h3 className={`${styling.titleClass} mb-2 group-hover:text-stone-green-dark transition-colors`}>
                             {business.nome}
                           </h3>
                           <div className="flex items-center gap-2">
-                            <Badge className="bg-gradient-to-r from-stone-green-light to-stone-green-dark text-white font-medium px-2 py-1 text-xs shadow-md">
+                            <Badge className={business.status?.toLowerCase() === 'desengajado' ? styling.badgeClass : "bg-gradient-to-r from-stone-green-light to-stone-green-dark text-white font-medium px-2 py-1 text-xs shadow-md"}>
                               {business.area_atuacao}
                             </Badge>
-                            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium px-2 py-1 text-xs shadow-md">
+                            <Badge className={business.status?.toLowerCase() === 'desengajado' ? styling.badgeClass : "bg-gradient-to-r from-green-500 to-emerald-500 text-white font-medium px-2 py-1 text-xs shadow-md"}>
                               Com Mentor
                             </Badge>
                           </div>
@@ -934,25 +980,25 @@ export default function NegociosContent() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div className="space-y-3">
                         {business.nome_empreendedor && (
-                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+                          <div className={`flex items-center gap-3 p-3 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'} rounded-lg flex items-center justify-center`}>
                               <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-gray-600">Empreendedor</p>
-                              <p className="font-semibold text-gray-900 text-sm">{business.nome_empreendedor}</p>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Empreendedor</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.nome_empreendedor}</p>
                             </div>
                           </div>
                         )}
                         
                         {business.telefone && (
-                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                          <div className={`flex items-center gap-3 p-3 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-purple-500 to-pink-500'} rounded-lg flex items-center justify-center`}>
                               <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-white" />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-gray-600">Telefone</p>
-                              <p className="font-semibold text-gray-900 text-sm">{business.telefone}</p>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Telefone</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.telefone}</p>
                             </div>
                           </div>
                         )}
@@ -960,25 +1006,25 @@ export default function NegociosContent() {
                       
                       <div className="space-y-3">
                         {business.numero_funcionarios && (
-                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
-                            <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                          <div className={`flex items-center gap-3 p-3 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-orange-500 to-red-500'} rounded-lg flex items-center justify-center`}>
                               <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-white" />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-gray-600">Funcionários</p>
-                              <p className="font-semibold text-gray-900 text-sm">{business.numero_funcionarios}</p>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Funcionários</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.numero_funcionarios}</p>
                             </div>
                           </div>
                         )}
                         
                         {business.faturamento_mensal && business.faturamento_mensal > 0 && (
-                          <div className="flex items-center gap-3 p-3 bg-white/80 rounded-lg shadow-sm">
-                            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                          <div className={`flex items-center gap-3 p-3 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-green-500 to-emerald-500'} rounded-lg flex items-center justify-center`}>
                               <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-white" />
                             </div>
                             <div>
-                              <p className="text-xs font-medium text-gray-600">Faturamento</p>
-                              <p className="font-semibold text-gray-900 text-sm">{formatCurrencyDisplay(business.faturamento_mensal)}</p>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Faturamento</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{formatCurrencyDisplay(business.faturamento_mensal)}</p>
                             </div>
                           </div>
                         )}
@@ -987,23 +1033,23 @@ export default function NegociosContent() {
 
                     {/* Mentor em destaque */}
                     {business.mentor_nome && (
-                      <div className="mb-4 p-4 bg-gradient-to-r from-stone-green-light/20 to-stone-green-dark/20 rounded-xl border border-stone-green-light/30">
+                      <div className={`mb-4 p-4 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-r from-gray-100/20 to-gray-200/20 rounded-xl border border-gray-300/30' : 'bg-gradient-to-r from-stone-green-light/20 to-stone-green-dark/20 rounded-xl border border-stone-green-light/30'}`}>
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-12 w-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark ring-2 ring-white shadow-md">
+                          <Avatar className={`h-12 w-12 ${business.status?.toLowerCase() === 'desengajado' ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-stone-green-light to-stone-green-dark'} ring-2 ring-white shadow-md`}>
                             <AvatarFallback className="text-white font-semibold text-sm">
                               {business.mentor_nome.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <FontAwesomeIcon icon={faUserTie} className="h-3 w-3 text-stone-green-dark" />
-                              <p className="text-xs font-medium text-gray-600">Mentor Responsável</p>
+                              <FontAwesomeIcon icon={faUserTie} className={`h-3 w-3 ${business.status?.toLowerCase() === 'desengajado' ? 'text-gray-500' : 'text-stone-green-dark'}`} />
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Mentor Responsável</p>
                             </div>
-                            <h4 className="text-lg font-bold text-gray-900">{business.mentor_nome}</h4>
+                            <h4 className={`text-lg font-bold ${styling.titleClass}`}>{business.mentor_nome}</h4>
                             {business.data_vinculacao_mentor && (
                               <div className="flex items-center gap-2 mt-1">
-                                <FontAwesomeIcon icon={faCalendarAlt} className="h-3 w-3 text-stone-green-dark" />
-                                <p className="text-xs text-stone-green-dark font-medium">
+                                <FontAwesomeIcon icon={faCalendarAlt} className={`h-3 w-3 ${business.status?.toLowerCase() === 'desengajado' ? 'text-gray-500' : 'text-stone-green-dark'}`} />
+                                <p className={`text-xs ${business.status?.toLowerCase() === 'desengajado' ? 'text-gray-500' : 'text-stone-green-dark'} font-medium`}>
                                   Vinculado em {formatDateToBR(business.data_vinculacao_mentor)}
                                 </p>
                               </div>
@@ -1033,11 +1079,170 @@ export default function NegociosContent() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+                )
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Businesses Desengajados - Only show if there are desengajados */}
+      {businessesDesengajados.length > 0 && (
+        <Card className="border-0 shadow-xl bg-gradient-to-br from-gray-50 to-gray-100">
+          <CardHeader>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg">
+                <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-bold text-gray-700">
+                  Desengajados ({businessesDesengajados.length})
+                </CardTitle>
+                <p className="text-gray-600">Negócios que foram desengajados</p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {businessesDesengajados.map((business) => {
+                const styling = getCardStyling(business)
+                return (
+                <Card key={business.id} className={styling.cardClass}>
+                  
+                  <CardContent className={styling.contentClass}>
+                    {/* Header com status desengajado */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className={`${styling.iconClass} group-hover:scale-110 transition-transform duration-300`}>
+                            <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className={`${styling.titleClass} mb-2 group-hover:text-gray-500 transition-colors`}>
+                            {business.nome}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <Badge className={styling.badgeClass}>
+                              {business.area_atuacao}
+                            </Badge>
+                            <Badge className={styling.badgeClass}>
+                              Desengajado
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Informações do empreendedor */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div className="space-y-3">
+                        {business.nome_empreendedor && (
+                          <div className={`flex items-center gap-3 p-3 ${styling.contentClass.includes('bg-gray') ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${styling.iconClass.includes('gray') ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'} rounded-lg flex items-center justify-center`}>
+                              <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Empreendedor</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.nome_empreendedor}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {business.telefone && (
+                          <div className={`flex items-center gap-3 p-3 ${styling.contentClass.includes('bg-gray') ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${styling.iconClass.includes('gray') ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-purple-500 to-pink-500'} rounded-lg flex items-center justify-center`}>
+                              <FontAwesomeIcon icon={faPhone} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Telefone</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.telefone}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {business.numero_funcionarios && (
+                          <div className={`flex items-center gap-3 p-3 ${styling.contentClass.includes('bg-gray') ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${styling.iconClass.includes('gray') ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-orange-500 to-red-500'} rounded-lg flex items-center justify-center`}>
+                              <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Funcionários</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{business.numero_funcionarios}</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {business.faturamento_mensal && business.faturamento_mensal > 0 && (
+                          <div className={`flex items-center gap-3 p-3 ${styling.contentClass.includes('bg-gray') ? 'bg-gray-100/80' : 'bg-white/80'} rounded-lg shadow-sm`}>
+                            <div className={`w-8 h-8 ${styling.iconClass.includes('gray') ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-green-500 to-emerald-500'} rounded-lg flex items-center justify-center`}>
+                              <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-white" />
+                            </div>
+                            <div>
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Faturamento</p>
+                              <p className={`font-semibold ${styling.titleClass} text-sm`}>{formatCurrencyDisplay(business.faturamento_mensal)}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mentor em destaque (se houver) */}
+                    {business.mentor_nome && (
+                      <div className={`mb-4 p-4 ${styling.contentClass.includes('bg-gray') ? 'bg-gradient-to-r from-gray-100/20 to-gray-200/20 rounded-xl border border-gray-300/30' : 'bg-gradient-to-r from-stone-green-light/20 to-stone-green-dark/20 rounded-xl border border-stone-green-light/30'}`}>
+                        <div className="flex items-center gap-3">
+                          <Avatar className={`h-12 w-12 ${styling.iconClass.includes('gray') ? 'bg-gradient-to-br from-gray-400 to-gray-500' : 'bg-gradient-to-br from-stone-green-light to-stone-green-dark'} ring-2 ring-white shadow-md`}>
+                            <AvatarFallback className="text-white font-semibold text-sm">
+                              {business.mentor_nome.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <FontAwesomeIcon icon={faUserTie} className={`h-3 w-3 ${styling.iconClass.includes('gray') ? 'text-gray-500' : 'text-stone-green-dark'}`} />
+                              <p className={`text-xs font-medium ${styling.textClass}`}>Mentor Responsável</p>
+                            </div>
+                            <h4 className={`text-lg font-bold ${styling.titleClass}`}>{business.mentor_nome}</h4>
+                            {business.data_vinculacao_mentor && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <FontAwesomeIcon icon={faCalendarAlt} className={`h-3 w-3 ${styling.iconClass.includes('gray') ? 'text-gray-500' : 'text-stone-green-dark'}`} />
+                                <p className={`text-xs ${styling.iconClass.includes('gray') ? 'text-gray-500' : 'text-stone-green-dark'} font-medium`}>
+                                  Vinculado em {formatDateToBR(business.data_vinculacao_mentor)}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Ações */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                      <Button
+                        onClick={() => openDetailsDialog(business)}
+                        className="flex-1 h-12 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white shadow-lg hover:shadow-xl transition-all duration-300 text-base font-semibold"
+                      >
+                        <FontAwesomeIcon icon={faBriefcase} className="h-4 w-4 mr-2" />
+                        Ver Detalhes
+                      </Button>
+                      <Button
+                        onClick={() => openEditDialog(business)}
+                        variant="outline"
+                        className="flex-1 h-12 border-2 border-stone-600 text-stone-600 hover:bg-stone-600 hover:text-white transition-all duration-300 text-base font-semibold"
+                      >
+                        <FontAwesomeIcon icon={faEdit} className="h-4 w-4 mr-2" />
+                        Editar Negócio
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Assign Mentor Dialog */}
       <ClientOnly>

@@ -27,7 +27,7 @@ export interface Business {
   desafios_principais?: string
   objetivos_mentoria?: string
   observacoes?: string
-  status: 'ativo' | 'inativo'
+  status: 'ativo' | 'inativo' | 'mentor_pendente' | 'desengajado'
   mentor_id?: string
   mentor_nome?: string
   mentor_email?: string
@@ -52,7 +52,7 @@ export interface BusinessDetails {
   desafios_principais?: string
   objetivos_mentoria?: string
   observacoes?: string
-  status: 'ativo' | 'inativo'
+  status: 'ativo' | 'inativo' | 'mentor_pendente' | 'desengajado'
   data_criacao: string
   data_atualizacao: string
   
