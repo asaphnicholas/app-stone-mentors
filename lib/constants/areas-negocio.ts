@@ -1,28 +1,32 @@
 // Áreas de atuação para negócios
 export const AREAS_NEGOCIO = [
   { 
-    value: "SERVICOS", 
-    label: "Serviços" 
+    value: "ALIMENTACAO", 
+    label: "Alimentação" 
   },
   { 
-    value: "COMERCIO", 
-    label: "Comércio" 
+    value: "MODA", 
+    label: "Moda" 
+  },
+  { 
+    value: "BELEZA", 
+    label: "Beleza" 
   },
   { 
     value: "TECNOLOGIA", 
     label: "Tecnologia" 
   },
   { 
-    value: "FINANCAS", 
-    label: "Finanças" 
+    value: "SAUDE_BEM_ESTAR", 
+    label: "Saúde e bem-estar" 
   },
   { 
-    value: "JURIDICO_COMPLIANCE", 
-    label: "Jurídico & Compliance" 
+    value: "SERVICOS", 
+    label: "Serviços" 
   },
   { 
-    value: "REGULATORIO", 
-    label: "Regulatório" 
+    value: "OUTRO", 
+    label: "Outro" 
   },
 ] as const
 
