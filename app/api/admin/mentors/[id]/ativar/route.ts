@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_BASE_URL } from '@/lib/config/env'
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const mentorId = params.id
+    const { id: mentorId } = await params
     const body = await request.json()
 
     console.log('Ativando mentor:', mentorId, 'com dados:', body)
 
     // Fazer requisição para o backend
-    const response = await fetch(`${API_BASE_URL}/admin/mentors/${mentorId}/ativar`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/admin/mentors/${mentorId}/ativar`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

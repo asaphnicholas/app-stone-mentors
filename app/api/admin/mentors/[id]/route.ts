@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { API_BASE_URL } from '@/lib/config/env'
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const mentorId = params.id
+    const { id: mentorId } = await params
     const { searchParams } = new URL(request.url)
     
     // Obter parâmetros de query
@@ -21,7 +22,7 @@ export async function DELETE(
     }
 
     // Construir URL com parâmetros
-    const backendUrl = new URL(`${API_BASE_URL}/admin/mentors/${mentorId}`)
+    const backendUrl = new URL(`${BACKEND_URL}/api/v1/admin/mentors/${mentorId}`)
     backendUrl.searchParams.append('motivo', motivo)
     if (forcar) {
       backendUrl.searchParams.append('forcar', forcar)
