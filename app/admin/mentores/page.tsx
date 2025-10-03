@@ -155,9 +155,10 @@ export default function AdminMentoresPage() {
       let totalPages = 1
       
       if (status === 'todos') {
-        // Carregar todos os mentores usando a API
+        // 1. Listar Todos os Mentores Ativos
         const queryParams = new URLSearchParams()
         queryParams.append('role', 'mentor')
+        queryParams.append('status', 'ativo')
         queryParams.append('page', page.toString())
         queryParams.append('limit', '10')
         
@@ -187,7 +188,7 @@ export default function AdminMentoresPage() {
           }
         }
       } else if (status === 'pendente') {
-        // Carregar pendentes usando a API
+        // 4. Mentores Pendentes de Aprovação
         const queryParams = new URLSearchParams()
         queryParams.append('role', 'mentor')
         queryParams.append('status', 'pendente')
@@ -227,9 +228,21 @@ export default function AdminMentoresPage() {
         queryParams.append('page', page.toString())
         queryParams.append('limit', '10')
         
+        // Adicionar filtros específicos baseados no status
+        if (status === 'ativo') {
+          // Para mentores ativos, sempre adicionar filtro de protocolo se selecionado
+          // 2. Mentores Qualificados (Protocolo Concluído): protocolo_concluido=true
+          // 3. Mentores Não Qualificados: protocolo_concluido=false
+          if (protocoloFilter && protocoloFilter !== 'todos') {
+            queryParams.append('protocolo_concluido', protocoloFilter)
+          }
+        } else if (status === 'ocupado') {
+          // 5. Mentores Ocupados (com negócio vinculado)
+          // Status ocupado já é filtrado pelo backend
+        }
+        
         // Adicionar filtros adicionais se selecionados
         if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
-        if (protocoloFilter && protocoloFilter !== 'todos') queryParams.append('protocolo_concluido', protocoloFilter)
         if (termoFilter && termoFilter !== 'todos') queryParams.append('termo_aceite', termoFilter)
         if (searchTerm) queryParams.append('search', searchTerm)
         
@@ -902,12 +915,10 @@ export default function AdminMentoresPage() {
                   <SelectValue placeholder="Selecione um status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todos os Status</SelectItem>
-                  <SelectItem value="pendente">Pendentes</SelectItem>
-                  <SelectItem value="ativo">Ativos</SelectItem>
-                  <SelectItem value="nao_qualificado">Não Qualificados</SelectItem>
-                  <SelectItem value="qualificado">Qualificados</SelectItem>
-                  <SelectItem value="ocupado">Ocupados</SelectItem>
+                  <SelectItem value="todos">Todos os Mentores</SelectItem>
+                  <SelectItem value="pendente">Pendentes de Aprovação</SelectItem>
+                  <SelectItem value="ativo">Mentores Ativos</SelectItem>
+                  <SelectItem value="ocupado">Mentores Ocupados</SelectItem>
                   <SelectItem value="indisponivel">Indisponíveis</SelectItem>
                 </SelectContent>
               </Select>
@@ -934,16 +945,16 @@ export default function AdminMentoresPage() {
 
             <div className="flex items-center gap-2">
               <Label htmlFor="protocolo-filter" className="text-sm font-medium">
-                Protocolo:
+                Qualificação:
               </Label>
               <Select value={protocoloFilter} onValueChange={setProtocoloFilter}>
-                <SelectTrigger className="w-32">
-                  <SelectValue placeholder="Todos" />
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Todas as qualificações" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="true">Concluído</SelectItem>
-                  <SelectItem value="false">Não concluído</SelectItem>
+                  <SelectItem value="todos">Todas as Qualificações</SelectItem>
+                  <SelectItem value="true">Qualificados</SelectItem>
+                  <SelectItem value="false">Não Qualificados</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -1318,17 +1329,25 @@ export default function AdminMentoresPage() {
                 required
               />
             </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="force-delete"
-                checked={forceDelete}
-                onChange={(e) => setForceDelete(e.target.checked)}
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-              />
-              <Label htmlFor="force-delete" className="text-sm">
-                Forçar deleção mesmo com dados vinculados
-              </Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="force-delete"
+                  checked={forceDelete}
+                  onChange={(e) => setForceDelete(e.target.checked)}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <Label htmlFor="force-delete" className="text-sm font-medium">
+                  Forçar deleção mesmo com dados vinculados
+                </Label>
+              </div>
+              <div className="ml-6 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-xs text-yellow-800">
+                  <strong>Atenção:</strong> Marque esta opção se o mentor possui materiais de treinamento ou negócios vinculados. 
+                  Esta ação irá cancelar todas as mentorias ativas e desvincular os negócios associados ao mentor.
+                </p>
+              </div>
             </div>
             <div className="flex items-center justify-end gap-3">
               <Button variant="outline" onClick={closeActionDialogs}>
