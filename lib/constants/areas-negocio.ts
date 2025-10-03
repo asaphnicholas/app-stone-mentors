@@ -1,5 +1,53 @@
-// Áreas de atuação para negócios
+// Áreas de atuação para negócios (conforme documentação da API)
 export const AREAS_NEGOCIO = [
+  { 
+    value: "TECNOLOGIA", 
+    label: "Tecnologia" 
+  },
+  { 
+    value: "SAUDE", 
+    label: "Saúde" 
+  },
+  { 
+    value: "EDUCACAO", 
+    label: "Educação" 
+  },
+  { 
+    value: "FINANCAS", 
+    label: "Finanças" 
+  },
+  { 
+    value: "COMERCIO", 
+    label: "Comércio" 
+  },
+  { 
+    value: "SERVICOS", 
+    label: "Serviços" 
+  },
+  { 
+    value: "INDUSTRIA", 
+    label: "Indústria" 
+  },
+  { 
+    value: "AGRONEGOCIO", 
+    label: "Agronegócio" 
+  },
+  { 
+    value: "TURISMO", 
+    label: "Turismo" 
+  },
+  { 
+    value: "CONSTRUCAO", 
+    label: "Construção" 
+  },
+  { 
+    value: "TRANSPORTE", 
+    label: "Transporte" 
+  },
+  { 
+    value: "ENTRETENIMENTO", 
+    label: "Entretenimento" 
+  },
   { 
     value: "ALIMENTACAO", 
     label: "Alimentação" 
@@ -13,20 +61,8 @@ export const AREAS_NEGOCIO = [
     label: "Beleza" 
   },
   { 
-    value: "TECNOLOGIA", 
-    label: "Tecnologia" 
-  },
-  { 
-    value: "SAUDE_BEM_ESTAR", 
-    label: "Saúde e bem-estar" 
-  },
-  { 
-    value: "SERVICOS", 
-    label: "Serviços" 
-  },
-  { 
-    value: "OUTRO", 
-    label: "Outro" 
+    value: "OUTROS", 
+    label: "Outros" 
   },
 ] as const
 

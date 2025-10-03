@@ -4,7 +4,7 @@ import { env } from '@/lib/config/env'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -28,7 +28,8 @@ export async function PUT(
     // Usar o token apropriado (cookie ou header)
     const authToken = token || request.headers.get('Authorization')?.replace('Bearer ', '')
 
-    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${params.id}`, {
+    const { id } = await params
+    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +82,8 @@ export async function DELETE(
     // Usar o token apropriado (cookie ou header)
     const authToken = token || request.headers.get('Authorization')?.replace('Bearer ', '')
 
-    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${params.id}`, {
+    const { id: deleteId } = await params
+    const response = await fetch(`${env.BACKEND_URL}/api/v1/admin/businesses/${deleteId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${authToken}`,

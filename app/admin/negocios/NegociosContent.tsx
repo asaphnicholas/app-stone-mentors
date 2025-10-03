@@ -897,7 +897,7 @@ export default function NegociosContent() {
                         )}
                       </div>
                       
-                      <div className="ml-6">
+                      <div className="ml-6 flex flex-col gap-2">
                         <Button
                           onClick={() => openAssignDialog(business)}
                           className="bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-12 px-6"
@@ -905,6 +905,27 @@ export default function NegociosContent() {
                           <FontAwesomeIcon icon={faUserTie} className="h-4 w-4 mr-2" />
                           Vincular Mentor
                         </Button>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => openEditDialog(business)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-10 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
+                          >
+                            <FontAwesomeIcon icon={faEdit} className="h-3 w-3 mr-1" />
+                            Editar
+                          </Button>
+                          <Button
+                            onClick={() => handleDeleteBusiness(business.id)}
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 h-10 border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                          >
+                            <FontAwesomeIcon icon={faTrashAlt} className="h-3 w-3 mr-1" />
+                            Excluir
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>

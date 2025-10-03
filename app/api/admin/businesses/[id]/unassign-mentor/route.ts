@@ -4,7 +4,7 @@ import { env } from '@/lib/config/env'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const cookieStore = await cookies()
@@ -44,7 +44,8 @@ export async function DELETE(
     // Usar o token apropriado (cookie ou header)
     const authToken = token || request.headers.get('Authorization')?.replace('Bearer ', '')
     
-    const url = new URL(`${env.BACKEND_URL}/api/v1/admin/businesses/${params.id}/unassign-mentor`)
+    const { id } = await params
+    const url = new URL(`${env.BACKEND_URL}/api/v1/admin/businesses/${id}/unassign-mentor`)
     url.searchParams.set('motivo', motivo)
 
     console.log('Making request to:', url.toString())
