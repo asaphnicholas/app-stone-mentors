@@ -12,13 +12,18 @@ export async function POST(request: NextRequest) {
     console.log('Forwarding to backend:', backendUrl)
     
     // Get authorization header from request
-    const authHeader = request.headers.get('authorization')
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization')
+    
+    if (!authHeader) {
+      return NextResponse.json(
+        { message: 'Token de autorização é obrigatório' },
+        { status: 401 }
+      )
     }
     
-    if (authHeader) {
-      headers.Authorization = authHeader
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Authorization': authHeader,
     }
     
     const response = await fetch(backendUrl, {
