@@ -28,8 +28,8 @@ const navigation = [
   { name: "Mentores", href: "/admin/mentores", icon: faUsers, disabled: false },
   { name: "Convidar Mentor", href: "/admin/convidar-mentor", icon: faUserPlus, disabled: false },
   { name: "Negócios", href: "/admin/negocios", icon: faBuilding, disabled: false },
+  { name: "Mentorias", href: "/admin/mentorias", icon: faComments, disabled: false },
   { name: "Conteúdos", href: "/admin/conteudos", icon: faFileText, disabled: false },
-  // { name: "Mentorias", href: "/admin/mentorias", icon: faComments, disabled: true },
   // { name: "Relatórios", href: "/admin/relatorios", icon: faChartLine, disabled: true },
   // { name: "Configurações", href: "/admin/configuracoes", icon: faCog, disabled: true },
 ]

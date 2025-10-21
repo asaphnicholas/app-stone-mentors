@@ -53,9 +53,7 @@ export default function AdminMentoresPage() {
   const [statusFilter, setStatusFilter] = useState<string>('todos')
   const [filteredMentors, setFilteredMentors] = useState<Mentor[]>([])
   
-  // Estados para paginação e filtros adicionais
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  // Estados para filtros adicionais
   const [totalMentors, setTotalMentors] = useState(0)
   const [areaFilter, setAreaFilter] = useState<string>('todas')
   const [protocoloFilter, setProtocoloFilter] = useState<string>('todos')
@@ -104,11 +102,12 @@ export default function AdminMentoresPage() {
     loadData()
   }, [])
 
+  // Carregar mentores quando filtros mudarem
   useEffect(() => {
     if (activeSection === 'active') {
-      loadMentorsByStatus(statusFilter, currentPage)
+      loadMentorsByStatus(statusFilter)
     }
-  }, [statusFilter, activeSection, currentPage, areaFilter, protocoloFilter, termoFilter, searchTerm])
+  }, [statusFilter, activeSection, areaFilter, protocoloFilter, termoFilter, searchTerm])
 
   const loadData = async () => {
     try {
@@ -148,23 +147,30 @@ export default function AdminMentoresPage() {
     }
   }
 
-  const loadMentorsByStatus = async (status: string, page: number = 1) => {
+  const loadMentorsByStatus = async (status: string) => {
     try {
+      setIsLoading(true)
       let users: User[] = []
       let total = 0
-      let totalPages = 1
       
       if (status === 'todos') {
-        // 1. Listar Todos os Mentores Ativos
+        // 1. Listar Todos os Mentores (sem filtros por padrão)
         const queryParams = new URLSearchParams()
         queryParams.append('role', 'mentor')
-        queryParams.append('status', 'ativo')
-        queryParams.append('page', page.toString())
-        queryParams.append('limit', '10')
+        queryParams.append('limit', '0')
+        
+        // Aplicar filtros apenas se explicitamente selecionados
+        if (protocoloFilter === 'true') {
+          // Usa o novo parâmetro qualificado=true que retorna todos os mentores qualificados
+          queryParams.append('qualificado', 'true')
+          queryParams.append('protocolo_concluido', 'true')
+        } else if (protocoloFilter === 'false') {
+          // Mentores não qualificados
+          queryParams.append('protocolo_concluido', 'false')
+        }
         
         // Adicionar filtros adicionais se selecionados
         if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
-        if (protocoloFilter && protocoloFilter !== 'todos') queryParams.append('protocolo_concluido', protocoloFilter)
         if (termoFilter && termoFilter !== 'todos') queryParams.append('termo_aceite', termoFilter)
         if (searchTerm) queryParams.append('search', searchTerm)
         
@@ -180,11 +186,9 @@ export default function AdminMentoresPage() {
           if (Array.isArray(data)) {
             users = data
             total = data.length
-            totalPages = Math.ceil(total / 10)
           } else {
             users = data.mentors || data.usuarios || data.data || []
             total = data.total_count || data.total || users.length
-            totalPages = data.total_pages || Math.ceil(total / 10)
           }
         }
       } else if (status === 'pendente') {
@@ -192,8 +196,7 @@ export default function AdminMentoresPage() {
         const queryParams = new URLSearchParams()
         queryParams.append('role', 'mentor')
         queryParams.append('status', 'pendente')
-        queryParams.append('page', page.toString())
-        queryParams.append('limit', '10')
+        queryParams.append('limit', '0')
         
         // Adicionar filtros adicionais se selecionados
         if (areaFilter && areaFilter !== 'todas') queryParams.append('area_atuacao', areaFilter)
@@ -213,32 +216,34 @@ export default function AdminMentoresPage() {
           if (Array.isArray(data)) {
             users = data
             total = data.length
-            totalPages = Math.ceil(total / 10)
           } else {
             users = data.mentors || data.usuarios || data.data || []
             total = data.total_count || data.total || users.length
-            totalPages = data.total_pages || Math.ceil(total / 10)
           }
         }
       } else {
         // Carregar por status específico usando a nova API
         const queryParams = new URLSearchParams()
         queryParams.append('role', 'mentor')
-        queryParams.append('status', status)
-        queryParams.append('page', page.toString())
-        queryParams.append('limit', '10')
+        queryParams.append('limit', '0')
         
-        // Adicionar filtros específicos baseados no status
-        if (status === 'ativo') {
-          // Para mentores ativos, sempre adicionar filtro de protocolo se selecionado
-          // 2. Mentores Qualificados (Protocolo Concluído): protocolo_concluido=true
-          // 3. Mentores Não Qualificados: protocolo_concluido=false
-          if (protocoloFilter && protocoloFilter !== 'todos') {
-            queryParams.append('protocolo_concluido', protocoloFilter)
+        // NOVA LÓGICA: Para status específico com filtro de qualificação
+        if (protocoloFilter === 'true') {
+          // Usa o novo parâmetro qualificado=true que retorna todos os mentores qualificados
+          queryParams.append('qualificado', 'true')
+          queryParams.append('protocolo_concluido', 'true')
+          // Se tem filtro de status específico, adicionar também
+          if (status !== 'todos') {
+            queryParams.append('status', status)
           }
-        } else if (status === 'ocupado') {
-          // 5. Mentores Ocupados (com negócio vinculado)
-          // Status ocupado já é filtrado pelo backend
+        } else {
+          // Lógica antiga: filtrar apenas por status
+          queryParams.append('status', status)
+          
+          // Adicionar filtro de protocolo se necessário
+          if (protocoloFilter === 'false') {
+            queryParams.append('protocolo_concluido', 'false')
+          }
         }
         
         // Adicionar filtros adicionais se selecionados
@@ -258,11 +263,9 @@ export default function AdminMentoresPage() {
           if (Array.isArray(data)) {
             users = data
             total = data.length
-            totalPages = Math.ceil(total / 10)
           } else {
             users = data.mentors || data.usuarios || data.data || []
             total = data.total_count || data.total || users.length
-            totalPages = data.total_pages || Math.ceil(total / 10)
           }
         }
       }
@@ -290,11 +293,19 @@ export default function AdminMentoresPage() {
       setMentorsWithMentorias(basicMentors)
       setMentorsWithoutMentorias([])
       setTotalMentors(total)
-      setTotalPages(totalPages)
-      setCurrentPage(page)
+      
+      // Scroll para o topo da lista ao carregar novos dados
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       
     } catch (error) {
       console.error('Erro ao carregar mentores por status:', error)
+      addToast({
+        type: "error",
+        title: "Erro ao carregar mentores",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -366,7 +377,7 @@ export default function AdminMentoresPage() {
         })
         
         // Recarregar dados
-        await loadMentorsByStatus(statusFilter, currentPage)
+        await loadMentorsByStatus(statusFilter)
         await loadMentorStats()
       } else {
         const errorData = await response.json().catch(() => null)
@@ -583,13 +594,19 @@ export default function AdminMentoresPage() {
     mentor.email.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+
   // Render mentor card
   const renderMentorCard = (mentor: Mentor & { status?: string }) => {
     // Usar o status real do mentor da API
     const mentorStatus = mentor.status?.toLowerCase() || 'ativo'
     
+    // Determinar cor da borda baseado na qualificação
+    const borderColor = mentor.protocolo_concluido 
+      ? 'border-green-300' 
+      : 'border-amber-300'
+    
     return (
-      <Card key={mentor.id} className="hover:shadow-md transition-all duration-200 border-2 border-gray-200">
+      <Card key={mentor.id} className={`hover:shadow-md transition-all duration-200 border-2 ${borderColor}`}>
         <CardHeader>
           <div className="space-y-3">
           <div className="flex items-start justify-between">
@@ -685,38 +702,15 @@ export default function AdminMentoresPage() {
               </Button>
             </div>
             
-            <div className="flex items-center gap-2">
-              {mentorStatus === 'ativo' ? (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                  onClick={() => openDeactivateDialog(mentor)}
-                >
-                  <FontAwesomeIcon icon={faUserSlash} className="h-3 w-3 mr-1" />
-                  Desativar
-                </Button>
-              ) : (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="flex-1 text-green-600 border-green-200 hover:bg-green-50"
-                  onClick={() => handleActivateMentor(mentor)}
-                >
-                  <FontAwesomeIcon icon={faUserCheck} className="h-3 w-3 mr-1" />
-                  Ativar
-                </Button>
-              )}
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
-                onClick={() => openDeleteDialog(mentor)}
-              >
-                <FontAwesomeIcon icon={faTrashAlt} className="h-3 w-3 mr-1" />
-                Deletar
-              </Button>
-            </div>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="w-full text-red-600 border-red-200 hover:bg-red-50"
+              onClick={() => openDeleteDialog(mentor)}
+            >
+              <FontAwesomeIcon icon={faTrashAlt} className="h-3 w-3 mr-1" />
+              Deletar
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -785,7 +779,7 @@ export default function AdminMentoresPage() {
           className="flex items-center gap-2"
         >
             <FontAwesomeIcon icon={faUserCheck} className="h-4 w-4" />
-          Mentores Ativos ({mentorsWithMentorias.length + mentorsWithoutMentorias.length})
+          Mentores ({mentorsWithMentorias.length + mentorsWithoutMentorias.length})
         </Button>
         <Button
           variant={activeSection === 'performance' ? 'default' : 'outline'}
@@ -896,11 +890,30 @@ export default function AdminMentoresPage() {
         <ClientOnly>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xl font-semibold text-gray-900">
-              Mentores Ativos ({filteredMentorsBySearch.length})
-            </h3>
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900">
+                Mentores ({filteredMentorsBySearch.length})
+              </h3>
+              <div className="flex items-center gap-4 mt-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 border-2 border-green-300 rounded"></div>
+                  <span className="text-sm text-gray-600">Qualificado (Protocolo concluído)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 border-2 border-amber-300 rounded"></div>
+                  <span className="text-sm text-gray-600">Não Qualificado (Aguardando protocolo)</span>
+                </div>
+              </div>
+              {protocoloFilter === 'true' && (
+                <div className="mt-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-xs text-blue-700">
+                    💡 <strong>Modo Qualificados:</strong> Mostrando todos os mentores com protocolo concluído (independente do status: ativos + ocupados)
+                  </p>
+                </div>
+              )}
+            </div>
             <div className="text-sm text-gray-500">
-              {searchTerm ? `Mostrando resultados para "${searchTerm}"` : 'Filtrados por status'}
+              {searchTerm ? `Mostrando resultados para "${searchTerm}"` : protocoloFilter === 'true' ? `Qualificados: ${totalMentors} mentor(es)` : 'Filtrados por status'}
             </div>
           </div>
 
@@ -974,9 +987,35 @@ export default function AdminMentoresPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Botão Limpar Filtros */}
+            {(statusFilter !== 'todos' || areaFilter !== 'todas' || protocoloFilter !== 'todos' || termoFilter !== 'todos' || searchTerm) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm("")
+                  setStatusFilter("todos")
+                  setAreaFilter("todas")
+                  setProtocoloFilter("todos")
+                  setTermoFilter("todos")
+                }}
+                className="ml-auto"
+              >
+                <FontAwesomeIcon icon={faTimes} className="h-3 w-3 mr-2" />
+                Limpar Filtros
+              </Button>
+            )}
           </div>
 
-          {filteredMentorsBySearch.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
+                <p className="text-gray-500">Carregando mentores...</p>
+              </div>
+            </div>
+          ) : filteredMentorsBySearch.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <FontAwesomeIcon icon={faUserCheck} className="h-12 w-12 text-gray-400 mb-4" />
@@ -992,41 +1031,9 @@ export default function AdminMentoresPage() {
               </CardContent>
             </Card>
           ) : (
-            <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredMentorsBySearch.map(renderMentorCard)}
-              </div>
-              
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
-                    Mostrando {((currentPage - 1) * 10) + 1} a {Math.min(currentPage * 10, totalMentors)} de {totalMentors} mentores
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      Anterior
-                    </Button>
-                    <span className="text-sm text-gray-500">
-                      Página {currentPage} de {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Próxima
-                    </Button>
-                  </div>
+              {filteredMentorsBySearch.map(renderMentorCard)}
             </div>
-              )}
-            </>
           )}
         </div>
         </ClientOnly>
