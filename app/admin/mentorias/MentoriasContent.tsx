@@ -142,11 +142,6 @@ export default function MentoriasContent() {
   const [dataInicioFilter, setDataInicioFilter] = useState<string>("")
   const [dataFimFilter, setDataFimFilter] = useState<string>("")
 
-  // Estados de paginação
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalMentorias, setTotalMentorias] = useState(0)
-  const itemsPerPage = 20
 
   // Modal de detalhes
   const [selectedMentoria, setSelectedMentoria] = useState<MentoriaDetalhes | null>(null)
@@ -158,17 +153,10 @@ export default function MentoriasContent() {
     loadMentorias()
   }, [])
 
-  // Resetar página quando filtros mudarem
-  useEffect(() => {
-    if (currentPage !== 1) {
-      setCurrentPage(1)
-    }
-  }, [statusFilter, tipoFilter, dataInicioFilter, dataFimFilter, searchTerm])
-
-  // Carregar mentorias quando filtros ou página mudarem
+  // Carregar mentorias quando filtros mudarem
   useEffect(() => {
     loadMentorias()
-  }, [statusFilter, tipoFilter, dataInicioFilter, dataFimFilter, currentPage, searchTerm])
+  }, [statusFilter, tipoFilter, dataInicioFilter, dataFimFilter, searchTerm])
 
   // Atualizar estatísticas quando filtros de data mudarem
   useEffect(() => {
@@ -203,23 +191,21 @@ export default function MentoriasContent() {
         tipo: tipoFilter !== "todos" ? tipoFilter : undefined,
         data_inicio: dataInicioFilter || undefined,
         data_fim: dataFimFilter || undefined,
-        skip: (currentPage - 1) * itemsPerPage,
-        limit: itemsPerPage,
+        limit: 0, // 0 = sem limite, retorna todas
         search: searchTerm || undefined,
       }
 
-      console.log('Carregando mentorias - Página:', currentPage, 'Filtros:', params)
+      console.log('Carregando mentorias - Filtros:', params)
 
       const result = await adminMentoriasService.listMentorias(params)
       
       setMentorias(result.mentorias)
-      setTotalMentorias(result.total)
-      setTotalPages(Math.ceil(result.total / itemsPerPage))
 
-      console.log('Mentorias carregadas:', result.mentorias.length, 'de', result.total, 'total')
-      
-      // Scroll para o topo da lista ao carregar novos dados
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      console.log('✅ Mentorias carregadas:', {
+        quantidade: result.mentorias.length,
+        total: result.total,
+        filtrosAplicados: result.filtros_aplicados
+      })
     } catch (error) {
       console.error('Erro ao carregar mentorias:', error)
       addToast({
@@ -230,8 +216,6 @@ export default function MentoriasContent() {
       
       // Em caso de erro, limpar a lista
       setMentorias([])
-      setTotalMentorias(0)
-      setTotalPages(1)
     } finally {
       setIsLoading(false)
     }
@@ -514,14 +498,14 @@ export default function MentoriasContent() {
               </div>
               <div>
                 <CardTitle className="text-2xl font-bold">
-                  Lista de Mentorias ({totalMentorias})
+                  Lista de Mentorias ({mentorias.length})
                 </CardTitle>
                 <CardDescription>
                   {searchTerm 
-                    ? `Resultados para "${searchTerm}"`
+                    ? `Mostrando ${mentorias.length} resultado(s) para "${searchTerm}"`
                     : statusFilter !== "todos" || tipoFilter !== "todos" || dataInicioFilter || dataFimFilter
-                      ? 'Mentorias filtradas'
-                      : 'Todas as mentorias do sistema'}
+                      ? `Mostrando ${mentorias.length} mentoria(s) filtrada(s)`
+                      : `Todas as ${mentorias.length} mentoria(s) do sistema`}
                 </CardDescription>
               </div>
             </div>
@@ -549,7 +533,6 @@ export default function MentoriasContent() {
                     setTipoFilter("todos")
                     setDataInicioFilter("")
                     setDataFimFilter("")
-                    setCurrentPage(1)
                   }}
                 >
                   Limpar Filtros
@@ -695,37 +678,6 @@ export default function MentoriasContent() {
                   )
                 })}
               </Accordion>
-            </div>
-          )}
-
-          {/* Paginação */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t mt-8">
-              <div className="text-sm text-gray-500">
-                Mostrando {((currentPage - 1) * itemsPerPage) + 1} a{' '}
-                {Math.min(currentPage * itemsPerPage, totalMentorias)} de {totalMentorias} mentorias
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Anterior
-                </Button>
-                <span className="text-sm text-gray-500">
-                  Página {currentPage} de {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Próxima
-                </Button>
-              </div>
             </div>
           )}
         </CardContent>
