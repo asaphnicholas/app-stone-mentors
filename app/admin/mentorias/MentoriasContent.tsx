@@ -298,6 +298,7 @@ export default function MentoriasContent() {
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { label: string; color: string }> = {
       DISPONIVEL: { label: "Disponível", color: "bg-gray-100 text-gray-800 border-gray-200" },
+      AGENDADA: { label: "Agendada", color: "bg-purple-100 text-purple-800 border-purple-200" },
       CONFIRMADA: { label: "Confirmada", color: "bg-blue-100 text-blue-800 border-blue-200" },
       EM_ANDAMENTO: { label: "Em Andamento", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
       FINALIZADA: { label: "Finalizada", color: "bg-green-100 text-green-800 border-green-200" },
@@ -444,6 +445,7 @@ export default function MentoriasContent() {
                 <SelectContent>
                   <SelectItem value="todos">Todos os Status</SelectItem>
                   <SelectItem value="DISPONIVEL">Disponível</SelectItem>
+                  <SelectItem value="AGENDADA">Agendada</SelectItem>
                   <SelectItem value="CONFIRMADA">Confirmada</SelectItem>
                   <SelectItem value="EM_ANDAMENTO">Em Andamento</SelectItem>
                   <SelectItem value="FINALIZADA">Finalizada</SelectItem>
