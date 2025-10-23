@@ -74,7 +74,7 @@ export interface MentoriaDetails {
   id: string
   data_agendada: string
   tipo: 'primeira' | 'followup'
-  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+  status: 'disponivel' | 'agendada' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
   duracao_minutos: number
   created_at: string
   confirmada_at?: string
@@ -213,7 +213,7 @@ class BusinessesService {
       console.log('BusinessesService.getAvailableMentors')
       
       const result = await apiService.get<AvailableMentor[]>(
-        `${API_ENDPOINTS.ADMIN.USERS}?role=mentor&status=ativo`,
+        `${API_ENDPOINTS.ADMIN.USERS}?role=mentor&limit=0`,
         true
       )
       console.log('BusinessesService.getAvailableMentors - Resultado:', result)

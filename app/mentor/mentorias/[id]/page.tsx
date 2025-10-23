@@ -242,13 +242,20 @@ export default function MentoriaDetailsPage() {
   }
 
   const handleViewDiagnosticoDetails = async () => {
-    if (!mentoria?.diagnostico?.id) return
+    if (!mentoria?.diagnostico?.id) {
+      console.log('handleViewDiagnosticoDetails: Não há diagnóstico ID disponível')
+      return
+    }
 
+    console.log('handleViewDiagnosticoDetails: Iniciando busca do diagnóstico ID:', mentoria.diagnostico.id)
+    
     try {
       const details = await mentoriasService.getDiagnosticoById(mentoria.diagnostico.id)
+      console.log('handleViewDiagnosticoDetails: Diagnóstico carregado:', details)
       setDiagnosticoDetails(details)
       setIsDiagnosticoDetailsOpen(true)
     } catch (error) {
+      console.error('handleViewDiagnosticoDetails: Erro ao carregar diagnóstico:', error)
       addToast({
         type: "error",
         title: "Erro ao carregar diagnóstico",
@@ -488,7 +495,7 @@ export default function MentoriaDetailsPage() {
             {/* Passo 1: Confirmar */}
             <div className="flex flex-col items-center gap-2">
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
-                mentoria.status === 'disponivel' 
+                mentoria.status === 'disponivel' || mentoria.status === 'agendada'
                   ? 'bg-stone-green-dark text-white' 
                   : 'bg-green-500 text-white'
               }`}>
@@ -496,19 +503,19 @@ export default function MentoriaDetailsPage() {
               </div>
               <span className="text-sm font-medium text-gray-700">Confirmar</span>
               <span className={`text-xs px-2 py-1 rounded-full ${
-                mentoria.status === 'disponivel' 
+                mentoria.status === 'disponivel' || mentoria.status === 'agendada'
                   ? 'bg-stone-green-light/20 text-stone-green-dark' 
                   : 'bg-green-100 text-green-700'
               }`}>
-                {mentoria.status === 'disponivel' ? 'Pendente' : 'Concluído'}
+                {mentoria.status === 'disponivel' || mentoria.status === 'agendada' ? 'Pendente' : 'Concluído'}
               </span>
             </div>
 
             {/* Seta */}
             <div className="flex-1 h-0.5 bg-gray-200 relative">
               <div className={`absolute top-0 left-0 h-full transition-all duration-500 ${
-                mentoria.status !== 'disponivel' ? 'bg-green-500' : 'bg-gray-200'
-              }`} style={{ width: mentoria.status !== 'disponivel' ? '100%' : '0%' }}></div>
+                mentoria.status !== 'disponivel' && mentoria.status !== 'agendada' ? 'bg-green-500' : 'bg-gray-200'
+              }`} style={{ width: mentoria.status !== 'disponivel' && mentoria.status !== 'agendada' ? '100%' : '0%' }}></div>
             </div>
 
             {/* Passo 2: Check-in */}
@@ -597,6 +604,7 @@ export default function MentoriaDetailsPage() {
         </CardContent>
       </Card>
 
+
       {/* Ações da Mentoria */}
       <Card className="border-0 shadow-lg">
         <CardHeader>
@@ -610,7 +618,7 @@ export default function MentoriaDetailsPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Confirmar Mentoria */}
-            {mentoria.status === 'disponivel' && (
+            {(mentoria.status === 'disponivel' || mentoria.status === 'agendada') && (
               <Button
                 onClick={handleConfirmMentoria}
                 disabled={isConfirming}
@@ -727,7 +735,7 @@ export default function MentoriaDetailsPage() {
               
               <div className="pt-4 border-t border-gray-200">
                 <Button
-                  onClick={() => setIsDiagnosticoDetailsOpen(true)}
+                  onClick={handleViewDiagnosticoDetails}
                   className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white"
                 >
                   <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 mr-2" />
@@ -995,13 +1003,13 @@ export default function MentoriaDetailsPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {[
-                        { key: 'organizacao_financeira', label: 'Organização Financeira e Controle de Despesas' },
-                        { key: 'divulgacao_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
-                        { key: 'estrategia_comercial', label: 'Estratégia Comercial e Vendas' },
-                        { key: 'relacionamento_cliente', label: 'Relacionamento e Atendimento ao Cliente' },
-                        { key: 'ferramentas_digitais', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
-                        { key: 'planejamento_gestao', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
-                        { key: 'conhecimento_legal', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
+                        { key: 'controle_financeiro', label: 'Controle Financeiro e Organização de Despesas' },
+                        { key: 'divulgação_marketing', label: 'Divulgação, Marketing e Produção de Conteúdo' },
+                        { key: 'atrair_clientes_vender', label: 'Estratégia Comercial e Vendas' },
+                        { key: 'atender_clientes', label: 'Relacionamento e Atendimento ao Cliente' },
+                        { key: 'ferramentas_gestao', label: 'Uso de Ferramentas Digitais, Aplicativos e Planilhas' },
+                        { key: 'organizacao_negocio', label: 'Planejamento, Gestão do Tempo e Organização de Processos' },
+                        { key: 'obrigacoes_legais_juridicas', label: 'Conhecimento das Obrigações Legais e Jurídicas do Negócio' }
                       ].map((item) => {
                         const value = diagnosticoDetails[item.key]
                         if (!value) return null
@@ -1044,6 +1052,51 @@ export default function MentoriaDetailsPage() {
                   </Card>
                 )}
 
+                {/* Dores Secundárias */}
+                {(diagnosticoDetails.falta_caixa_financiamento || diagnosticoDetails.dificuldade_funcionarios || diagnosticoDetails.clientes_reclamando || diagnosticoDetails.relacionamento_fornecedores) && (
+                  <Card className="border-0 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                          <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-white" />
+                        </div>
+                        Dores Secundárias
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {diagnosticoDetails.falta_caixa_financiamento && (
+                          <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                            <p className="text-sm font-medium text-gray-600">Falta de Caixa/Financiamento:</p>
+                            <p className="font-semibold text-gray-900">{diagnosticoDetails.falta_caixa_financiamento}</p>
+                          </div>
+                        )}
+                        
+                        {diagnosticoDetails.dificuldade_funcionarios && (
+                          <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                            <p className="text-sm font-medium text-gray-600">Dificuldade com Funcionários:</p>
+                            <p className="font-semibold text-gray-900">{diagnosticoDetails.dificuldade_funcionarios}</p>
+                          </div>
+                        )}
+                        
+                        {diagnosticoDetails.clientes_reclamando && (
+                          <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                            <p className="text-sm font-medium text-gray-600">Clientes Reclamando:</p>
+                            <p className="font-semibold text-gray-900">{diagnosticoDetails.clientes_reclamando}</p>
+                          </div>
+                        )}
+                        
+                        {diagnosticoDetails.relacionamento_fornecedores && (
+                          <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                            <p className="text-sm font-medium text-gray-600">Relacionamento com Fornecedores:</p>
+                            <p className="font-semibold text-gray-900">{diagnosticoDetails.relacionamento_fornecedores}</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Teste Psicométrico */}
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
@@ -1055,27 +1108,20 @@ export default function MentoriaDetailsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {diagnosticoDetails.perfil_risco && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {diagnosticoDetails.perfil_investimento && (
                         <div>
-                          <p className="text-sm font-medium text-gray-600">Perfil de Risco:</p>
+                          <p className="text-sm font-medium text-gray-600">Perfil de Investimento:</p>
                           <Badge className="bg-purple-100 text-purple-700 border-purple-200 mt-1">
-                            {diagnosticoDetails.perfil_risco}
+                            {diagnosticoDetails.perfil_investimento}
                           </Badge>
                         </div>
                       )}
                       
-                      {diagnosticoDetails.questao_logica && (
+                      {diagnosticoDetails.motivo_desistencia && (
                         <div>
-                          <p className="text-sm font-medium text-gray-600">Questão Lógica:</p>
-                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.questao_logica}</p>
-                        </div>
-                      )}
-                      
-                      {diagnosticoDetails.questao_memoria && (
-                        <div>
-                          <p className="text-sm font-medium text-gray-600">Questão de Memória:</p>
-                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.questao_memoria}</p>
+                          <p className="text-sm font-medium text-gray-600">Motivo de Desistência:</p>
+                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.motivo_desistencia}</p>
                         </div>
                       )}
                     </div>
@@ -1095,14 +1141,14 @@ export default function MentoriaDetailsPage() {
                   <CardContent>
                     <div className="space-y-4">
                       {[
-                        { key: 'personalidade_agir_primeiro', label: 'Prefiro agir primeiro e me preocupar depois' },
-                        { key: 'personalidade_solucoes_problemas', label: 'Gosto de pensar em várias soluções para um problema' },
-                        { key: 'personalidade_pressentimento', label: 'Sigo primeiro meu pressentimento' },
-                        { key: 'personalidade_prazo', label: 'Faço as coisas antes do prazo' },
-                        { key: 'personalidade_fracasso_opcao', label: 'Fracasso não é uma opção para mim' },
-                        { key: 'personalidade_decisao_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
-                        { key: 'personalidade_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
-                        { key: 'personalidade_sucesso', label: 'Sempre acreditei que teria sucesso' }
+                        { key: 'agir_primeiro_consequencias_depois', label: 'Prefiro agir primeiro e me preocupar depois' },
+                        { key: 'pensar_varias_solucoes', label: 'Gosto de pensar em várias soluções para um problema' },
+                        { key: 'seguir_primeiro_pressentimento', label: 'Sigo primeiro meu pressentimento' },
+                        { key: 'fazer_coisas_antes_prazo', label: 'Faço as coisas antes do prazo' },
+                        { key: 'fracasso_nao_opcao', label: 'Fracasso não é uma opção para mim' },
+                        { key: 'decisao_negocio_correta', label: 'Minhas decisões sobre negócio são sempre corretas' },
+                        { key: 'focar_oportunidades_riscos', label: 'Foco mais em oportunidades do que em riscos' },
+                        { key: 'acreditar_sucesso', label: 'Sempre acreditei que teria sucesso' }
                       ].map((item) => {
                         const value = diagnosticoDetails[item.key]
                         if (!value) return null

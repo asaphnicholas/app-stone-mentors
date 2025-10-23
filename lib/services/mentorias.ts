@@ -30,7 +30,7 @@ export interface MentorBusiness {
     id: string
     data_agendada: string
     tipo: 'primeira' | 'followup'
-    status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+    status: 'disponivel' | 'agendada' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
     duracao_minutos: number
     created_at: string
     confirmada_at?: string
@@ -49,7 +49,7 @@ export interface Mentoria {
   }
   data_agendada: string
   tipo: 'primeira' | 'followup'
-  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+  status: 'disponivel' | 'agendada' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
   duracao_minutos: number
   confirmada_at?: string
   checkin_at?: string
@@ -302,7 +302,7 @@ export interface MentoriaHistory {
   id: string
   data_agendada: string
   tipo: 'primeira' | 'followup'
-  status: 'disponivel' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
+  status: 'disponivel' | 'agendada' | 'confirmada' | 'em_andamento' | 'andamento' | 'finalizada'
   duracao_minutos: number
   created_at: string
   confirmada_at?: string
