@@ -298,7 +298,7 @@ export default function MentoriasContent() {
   }
 
   const getTipoBadge = (tipo: string) => {
-    return tipo === "PRIMEIRA" ? (
+    return tipo === "primeira" ? (
       <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
         Primeira
       </Badge>
@@ -358,7 +358,7 @@ export default function MentoriasContent() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <MetricCard
-            title="Total de Mentorias"
+            title="Total de reuniões (agendadas, confirmadas e finalizadas)"
             value={stats.total_mentorias}
             icon={<FontAwesomeIcon icon={faHandshake} className="h-7 w-7 text-white" />}
             description={`${stats.mentorias_finalizadas} finalizadas de ${stats.total_mentorias} totais`}
@@ -379,7 +379,7 @@ export default function MentoriasContent() {
             color="yellow"
           />
           <MetricCard
-            title="Negócios Atendidos"
+            title="Negócios com Mentores"
             value={stats.total_negocios_atendidos}
             icon={<FontAwesomeIcon icon={faBuilding} className="h-7 w-7 text-white" />}
             description={`Média de ${stats.media_mentorias_por_negocio.toFixed(1)} mentorias por negócio`}
@@ -446,8 +446,8 @@ export default function MentoriasContent() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os Tipos</SelectItem>
-                  <SelectItem value="PRIMEIRA">Primeira Mentoria</SelectItem>
-                  <SelectItem value="FOLLOWUP">Follow-up</SelectItem>
+                  <SelectItem value="primeira">Primeira Mentoria</SelectItem>
+                  <SelectItem value="followup">Follow-up</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -333,8 +333,8 @@ export function ExportReportsModal({ isOpen, onClose }: ExportReportsModalProps)
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="TODOS">Todos os tipos</SelectItem>
-              <SelectItem value="PRIMEIRA">Primeira Mentoria</SelectItem>
-              <SelectItem value="FOLLOWUP">Follow-up</SelectItem>
+              <SelectItem value="primeira">Primeira Mentoria</SelectItem>
+              <SelectItem value="followup">Follow-up</SelectItem>
             </SelectContent>
           </Select>
         </div>

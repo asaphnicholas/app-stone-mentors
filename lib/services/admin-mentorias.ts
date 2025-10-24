@@ -61,7 +61,7 @@ export interface Mentoria {
   id: string
   negocio: MentoriaNegocio
   mentor: MentoriaMentor
-  tipo: 'PRIMEIRA' | 'FOLLOWUP'
+  tipo: 'primeira' | 'followup'
   status: 'DISPONIVEL' | 'CONFIRMADA' | 'EM_ANDAMENTO' | 'FINALIZADA' | 'CANCELADA'
   data_agendada: string
   data_confirmada?: string

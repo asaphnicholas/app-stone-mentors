@@ -59,7 +59,7 @@ export interface CheckoutData {
 export interface Mentoria {
   id: string
   data_agendada: string
-  tipo: 'PRIMEIRA' | 'FOLLOWUP'
+  tipo: 'primeira' | 'followup'
   status: 'DISPONIVEL' | 'CONFIRMADA' | 'EM_ANDAMENTO' | 'FINALIZADA' | 'CANCELADA'
   duracao_minutos: number
   created_at: string
