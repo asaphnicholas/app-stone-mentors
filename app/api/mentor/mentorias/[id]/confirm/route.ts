@@ -31,8 +31,18 @@ export async function POST(
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error('Backend error:', errorData)
+
+      const errorMessage =
+        errorData.message ||
+        errorData.detail ||
+        errorData.error ||
+        `HTTP ${response.status}: ${response.statusText}`
+
       return NextResponse.json(
-        { message: errorData.message || `HTTP ${response.status}: ${response.statusText}` },
+        {
+          message: errorMessage,
+          details: errorData,
+        },
         { status: response.status }
       )
     }
