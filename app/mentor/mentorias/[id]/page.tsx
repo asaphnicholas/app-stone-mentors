@@ -1045,7 +1045,7 @@ export default function MentoriaDetailsPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-gray-900 bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                      <p className="text-gray-900 bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500 whitespace-pre-line break-words">
                         {diagnosticoDetails.dor_principal}
                       </p>
                     </CardContent>
@@ -1068,28 +1068,36 @@ export default function MentoriaDetailsPage() {
                         {diagnosticoDetails.falta_caixa_financiamento && (
                           <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                             <p className="text-sm font-medium text-gray-600">Falta de Caixa/Financiamento:</p>
-                            <p className="font-semibold text-gray-900">{diagnosticoDetails.falta_caixa_financiamento}</p>
+                            <p className="font-semibold text-gray-900 whitespace-pre-line break-words">
+                              {diagnosticoDetails.falta_caixa_financiamento}
+                            </p>
                           </div>
                         )}
                         
                         {diagnosticoDetails.dificuldade_funcionarios && (
                           <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                             <p className="text-sm font-medium text-gray-600">Dificuldade com Funcionários:</p>
-                            <p className="font-semibold text-gray-900">{diagnosticoDetails.dificuldade_funcionarios}</p>
+                            <p className="font-semibold text-gray-900 whitespace-pre-line break-words">
+                              {diagnosticoDetails.dificuldade_funcionarios}
+                            </p>
                           </div>
                         )}
                         
                         {diagnosticoDetails.clientes_reclamando && (
                           <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                             <p className="text-sm font-medium text-gray-600">Clientes Reclamando:</p>
-                            <p className="font-semibold text-gray-900">{diagnosticoDetails.clientes_reclamando}</p>
+                            <p className="font-semibold text-gray-900 whitespace-pre-line break-words">
+                              {diagnosticoDetails.clientes_reclamando}
+                            </p>
                           </div>
                         )}
                         
                         {diagnosticoDetails.relacionamento_fornecedores && (
                           <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
                             <p className="text-sm font-medium text-gray-600">Relacionamento com Fornecedores:</p>
-                            <p className="font-semibold text-gray-900">{diagnosticoDetails.relacionamento_fornecedores}</p>
+                            <p className="font-semibold text-gray-900 whitespace-pre-line break-words">
+                              {diagnosticoDetails.relacionamento_fornecedores}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1121,7 +1129,9 @@ export default function MentoriaDetailsPage() {
                       {diagnosticoDetails.motivo_desistencia && (
                         <div>
                           <p className="text-sm font-medium text-gray-600">Motivo de Desistência:</p>
-                          <p className="font-semibold text-gray-900 mt-1">{diagnosticoDetails.motivo_desistencia}</p>
+                          <p className="font-semibold text-gray-900 mt-1 whitespace-pre-line break-words">
+                            {diagnosticoDetails.motivo_desistencia}
+                          </p>
                         </div>
                       )}
                     </div>

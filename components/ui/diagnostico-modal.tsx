@@ -25,7 +25,8 @@ import {
   faCheckCircle,
   faTimes,
   faSave,
-  faEdit
+  faEdit,
+  faClipboardList
 } from "@fortawesome/free-solid-svg-icons"
 import { useToast } from "@/components/ui/toast"
 import { mentoriasService } from "@/lib/services/mentorias"
@@ -78,6 +79,111 @@ interface DiagnosticoModalProps {
   onSuccess: () => void
 }
 
+type DiagnosticoField = keyof DiagnosticoData
+
+type StepGuide = {
+  description: string
+  tips: string[]
+}
+
+const DEFAULT_GUIDE: StepGuide = {
+  description: "Preencha as informações com base no que foi alinhado com o empreendedor e mantenha o máximo de detalhes possíveis.",
+  tips: [
+    "Revise as respostas antes de avançar para evitar retrabalho.",
+    "Use a própria fala do empreendedor sempre que precisar registrar um contexto."
+  ],
+}
+
+const STEP_GUIDE: Record<number, StepGuide> = {
+  1: {
+    description: "Registre os dados básicos confirmados com o empreendedor. Eles serão usados para contatos e relatórios.",
+    tips: [
+      "Confirme telefone e e-mail durante a mentoria para evitar dados incorretos.",
+      "Se não houver uma data precisa para o tempo de funcionamento, registre a melhor estimativa combinada."
+    ],
+  },
+  2: {
+    description: "Avalie a maturidade de cada área com a percepção compartilhada pelo empreendedor. Utilize notas de 0 (muito baixo) a 4 (muito alto).",
+    tips: [
+      "Explique a escala antes de registrar a nota para alinhar expectativas.",
+      "Se optar por 0 ou 4, registre mentalmente o motivo para possíveis questionamentos futuros."
+    ],
+  },
+  3: {
+    description: "Documente a principal dor do momento e detalhe o contexto de cada desafio para orientar os próximos passos.",
+    tips: [
+      "Prefira frases completas que deixem claro o cenário e o impacto no negócio.",
+      "Caso exista mais de uma dor, priorize aquela que impede o negócio de avançar."
+    ],
+  },
+  4: {
+    description: "Mapeie o perfil comportamental do empreendedor. Essas respostas ajudam a personalizar os encaminhamentos.",
+    tips: [
+      "Utilize exemplos da conversa para justificar o perfil de investimento escolhido.",
+      "Registre os gatilhos reais que poderiam levar à desistência."
+    ],
+  },
+  5: {
+    description: "Atribua a intensidade de comportamentos e crenças usando a percepção do mentor e do empreendedor.",
+    tips: [
+      "Não deixe itens zerados por falta de resposta; negocie uma nota que represente a fala do empreendedor.",
+      "Se houver dúvida, registre um comentário em observações gerais da mentoria."
+    ],
+  },
+}
+
+const REQUIRED_FIELDS: Record<number, { field: DiagnosticoField; label: string }[]> = {
+  1: [
+    { field: "nome_completo", label: "Nome completo" },
+    { field: "email", label: "E-mail" },
+    { field: "telefone_whatsapp", label: "Telefone WhatsApp" },
+    { field: "status_negocio", label: "Status do negócio" },
+    { field: "tempo_funcionamento", label: "Tempo de funcionamento" },
+    { field: "setor_atuacao", label: "Setor de atuação" },
+  ],
+  3: [
+    { field: "dor_principal", label: "Dor principal" },
+    { field: "falta_caixa_financiamento", label: "Falta de caixa / financiamento" },
+    { field: "dificuldade_funcionarios", label: "Dificuldades com funcionários" },
+    { field: "clientes_reclamando", label: "Clientes reclamando" },
+    { field: "relacionamento_fornecedores", label: "Relacionamento com fornecedores" },
+  ],
+  4: [
+    { field: "perfil_investimento", label: "Perfil de investimento" },
+    { field: "motivo_desistencia", label: "Motivo de desistência" },
+  ],
+}
+
+const FIELD_HELPERS: Partial<Record<DiagnosticoField, string>> = {
+  nome_completo: "Use o mesmo nome registrado no cadastro ou documento oficial.",
+  email: "Preferencialmente o e-mail que o empreendedor acompanha diariamente.",
+  telefone_whatsapp: "Inclua o DDD e confirme se o número possui WhatsApp ativo.",
+  status_negocio: "Ajuda o programa a entender se o negócio já está rodando ou ainda em planejamento.",
+  tempo_funcionamento: "Escolha a faixa mais próxima do tempo informado na mentoria.",
+  setor_atuacao: "Selecione o setor predominante do negócio para melhor categorização.",
+  dor_principal: "Descreva com as palavras do empreendedor qual dor impede o avanço do negócio.",
+  falta_caixa_financiamento: "Detalhe os desafios financeiros, como falta de capital de giro ou crédito.",
+  dificuldade_funcionarios: "Registre dificuldades com contratação, treinamento ou retenção.",
+  clientes_reclamando: "Liste os principais motivos das reclamações para direcionar ações.",
+  relacionamento_fornecedores: "Explique se há atraso, negociação difícil ou dependência de poucos fornecedores.",
+  perfil_investimento: "Perfil usado para sugerir materiais e oportunidades coerentes.",
+  motivo_desistencia: "Quais fatores poderiam fazer o empreendedor desistir do negócio.",
+}
+
+const FIELD_ERROR_MESSAGES: Partial<Record<DiagnosticoField, string>> = {
+  nome_completo: "Informe o nome completo do empreendedor.",
+  email: "Precisamos de um e-mail válido para contato.",
+  telefone_whatsapp: "Inclua um telefone com DDD para contatos via WhatsApp.",
+  status_negocio: "Selecione o status atual do negócio.",
+  tempo_funcionamento: "Informe há quanto tempo o negócio funciona.",
+  setor_atuacao: "Selecione o setor de atuação.",
+  dor_principal: "Defina a dor principal alinhada com o empreendedor.",
+  falta_caixa_financiamento: "Descreva o cenário financeiro para contextualizar o diagnóstico.",
+  clientes_reclamando: "Explique as principais reclamações dos clientes.",
+  perfil_investimento: "Selecione o perfil que melhor representa o empreendedor.",
+  motivo_desistencia: "Explique o que poderia gerar desistência.",
+}
+
 export function DiagnosticoModal({ 
   mentoriaId, 
   negocioNome, 
@@ -127,9 +233,56 @@ export function DiagnosticoModal({
   
   const [isLoading, setIsLoading] = useState(false)
   const [currentStep, setCurrentStep] = useState(1)
+  const [fieldErrors, setFieldErrors] = useState<DiagnosticoField[]>([])
   const { addToast } = useToast()
 
   const totalSteps = 5
+  const currentGuide = STEP_GUIDE[currentStep] ?? DEFAULT_GUIDE
+
+  const isValueEmpty = (value: DiagnosticoData[DiagnosticoField]) =>
+    value === "" || value === null || value === undefined
+
+  const isFieldInvalid = (field: DiagnosticoField) => fieldErrors.includes(field)
+
+  const getInteractiveFieldClasses = (field: DiagnosticoField) =>
+    `border-2 transition-all duration-200 ${
+      isFieldInvalid(field)
+        ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+        : "border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+    }`
+
+  const FieldHelperText = ({ field }: { field: DiagnosticoField }) => {
+    if (isFieldInvalid(field)) {
+      return (
+        <p className="text-xs text-red-600">
+          {FIELD_ERROR_MESSAGES[field] ?? "Campo obrigatório."}
+        </p>
+      )
+    }
+
+    if (!FIELD_HELPERS[field]) {
+      return null
+    }
+
+    return <p className="text-xs text-gray-500">{FIELD_HELPERS[field]}</p>
+  }
+
+  const validateStep = (step: number) => {
+    const requirements = REQUIRED_FIELDS[step] ?? []
+    const missing = requirements
+      .filter(({ field }) => isValueEmpty(formData[field]))
+      .map(({ field }) => field)
+
+    const missingLabels = requirements
+      .filter(({ field }) => missing.includes(field))
+      .map(({ label }) => label)
+
+    return {
+      isValid: missing.length === 0,
+      missing,
+      missingLabels,
+    }
+  }
 
   // Função para aplicar máscara de telefone brasileiro
   const formatPhoneNumber = (value: string) => {
@@ -143,6 +296,10 @@ export function DiagnosticoModal({
 
   const handleInputChange = (field: keyof DiagnosticoData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+
+    if (fieldErrors.includes(field as DiagnosticoField) && !isValueEmpty(value)) {
+      setFieldErrors(prev => prev.filter(item => item !== field))
+    }
   }
 
   const handleSliderChange = (field: keyof DiagnosticoData, value: number[]) => {
@@ -150,6 +307,24 @@ export function DiagnosticoModal({
   }
 
   const handleSubmit = async () => {
+    for (let step = 1; step <= totalSteps; step++) {
+      const result = validateStep(step)
+      if (!result.isValid) {
+        const missingFields = result.missing as DiagnosticoField[]
+        setCurrentStep(step)
+        setFieldErrors(missingFields)
+        addToast({
+          type: "error",
+          title: "Finalize os campos obrigatórios",
+          message:
+            result.missingLabels.length > 0
+              ? `Passo ${step}: ${result.missingLabels.join(", ")}`
+              : "Revise os campos sinalizados em vermelho.",
+        })
+        return
+      }
+    }
+
     try {
       setIsLoading(true)
       
@@ -175,13 +350,30 @@ export function DiagnosticoModal({
   }
 
   const nextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1)
+    if (currentStep >= totalSteps) return
+
+    const result = validateStep(currentStep)
+
+    if (!result.isValid) {
+      setFieldErrors(result.missing as DiagnosticoField[])
+      addToast({
+        type: "error",
+        title: "Preencha os campos obrigatórios",
+        message:
+          result.missingLabels.length > 0
+            ? `Revise: ${result.missingLabels.join(", ")}`
+            : "Revise os campos sinalizados em vermelho.",
+      })
+      return
     }
+
+    setFieldErrors([])
+    setCurrentStep(currentStep + 1)
   }
 
   const prevStep = () => {
     if (currentStep > 1) {
+      setFieldErrors([])
       setCurrentStep(currentStep - 1)
     }
   }
@@ -217,8 +409,9 @@ export function DiagnosticoModal({
               value={formData.nome_completo}
               onChange={(e) => handleInputChange('nome_completo', e.target.value)}
               placeholder="Nome completo do empreendedor"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={getInteractiveFieldClasses('nome_completo')}
             />
+            <FieldHelperText field="nome_completo" />
           </div>
           
           <div className="space-y-2">
@@ -231,8 +424,9 @@ export function DiagnosticoModal({
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               placeholder="email@exemplo.com"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={getInteractiveFieldClasses('email')}
             />
+            <FieldHelperText field="email" />
           </div>
           
           <div className="space-y-2">
@@ -244,8 +438,9 @@ export function DiagnosticoModal({
               value={formData.telefone_whatsapp}
               onChange={(e) => handleInputChange('telefone_whatsapp', formatPhoneNumber(e.target.value))}
               placeholder="(11) 99999-9999"
-              className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={getInteractiveFieldClasses('telefone_whatsapp')}
             />
+            <FieldHelperText field="telefone_whatsapp" />
           </div>
           
           <div className="space-y-2">
@@ -253,7 +448,7 @@ export function DiagnosticoModal({
               Status do Negócio *
             </Label>
             <Select value={formData.status_negocio} onValueChange={(value) => handleInputChange('status_negocio', value)}>
-              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+              <SelectTrigger className={getInteractiveFieldClasses('status_negocio')}>
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>
               <SelectContent>
@@ -261,6 +456,7 @@ export function DiagnosticoModal({
                 <SelectItem value="Estou planejando iniciar um">Estou planejando iniciar um negócio</SelectItem>
               </SelectContent>
             </Select>
+            <FieldHelperText field="status_negocio" />
           </div>
           
           <div className="space-y-2">
@@ -268,7 +464,7 @@ export function DiagnosticoModal({
               Tempo de Funcionamento *
             </Label>
             <Select value={formData.tempo_funcionamento} onValueChange={(value) => handleInputChange('tempo_funcionamento', value)}>
-              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+              <SelectTrigger className={getInteractiveFieldClasses('tempo_funcionamento')}>
                 <SelectValue placeholder="Selecione o tempo de funcionamento" />
               </SelectTrigger>
               <SelectContent>
@@ -279,6 +475,7 @@ export function DiagnosticoModal({
                 <SelectItem value="Mais de 5 anos">Mais de 5 anos</SelectItem>
               </SelectContent>
             </Select>
+            <FieldHelperText field="tempo_funcionamento" />
           </div>
           
           <div className="space-y-2">
@@ -286,7 +483,7 @@ export function DiagnosticoModal({
               Setor de Atuação *
             </Label>
             <Select value={formData.setor_atuacao} onValueChange={(value) => handleInputChange('setor_atuacao', value)}>
-              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+              <SelectTrigger className={getInteractiveFieldClasses('setor_atuacao')}>
                 <SelectValue placeholder="Selecione o setor de atuação" />
               </SelectTrigger>
               <SelectContent>
@@ -302,6 +499,7 @@ export function DiagnosticoModal({
                 <SelectItem value="Outros">Outros</SelectItem>
               </SelectContent>
             </Select>
+            <FieldHelperText field="setor_atuacao" />
           </div>
         </div>
       </div>
@@ -376,7 +574,7 @@ export function DiagnosticoModal({
               Dor Principal do Momento
             </Label>
             <Select value={formData.dor_principal} onValueChange={(value) => handleInputChange('dor_principal', value)}>
-              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+              <SelectTrigger className={getInteractiveFieldClasses('dor_principal')}>
                 <SelectValue placeholder="Selecione a dor principal" />
               </SelectTrigger>
               <SelectContent>
@@ -386,6 +584,7 @@ export function DiagnosticoModal({
                 <SelectItem value="Finanças">Finanças</SelectItem>
               </SelectContent>
             </Select>
+            <FieldHelperText field="dor_principal" />
           </div>
 
           <div className="space-y-2">
@@ -397,8 +596,9 @@ export function DiagnosticoModal({
               value={formData.falta_caixa_financiamento}
               onChange={(e) => handleInputChange('falta_caixa_financiamento', e.target.value)}
               placeholder="Descreva as dificuldades financeiras ou de financiamento..."
-              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={`min-h-[80px] ${getInteractiveFieldClasses('falta_caixa_financiamento')}`}
             />
+            <FieldHelperText field="falta_caixa_financiamento" />
           </div>
 
           <div className="space-y-2">
@@ -410,8 +610,9 @@ export function DiagnosticoModal({
               value={formData.dificuldade_funcionarios}
               onChange={(e) => handleInputChange('dificuldade_funcionarios', e.target.value)}
               placeholder="Descreva as dificuldades relacionadas aos funcionários..."
-              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={`min-h-[80px] ${getInteractiveFieldClasses('dificuldade_funcionarios')}`}
             />
+            <FieldHelperText field="dificuldade_funcionarios" />
           </div>
 
           <div className="space-y-2">
@@ -423,8 +624,9 @@ export function DiagnosticoModal({
               value={formData.clientes_reclamando}
               onChange={(e) => handleInputChange('clientes_reclamando', e.target.value)}
               placeholder="Descreva as reclamações dos clientes..."
-              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={`min-h-[80px] ${getInteractiveFieldClasses('clientes_reclamando')}`}
             />
+            <FieldHelperText field="clientes_reclamando" />
           </div>
 
           <div className="space-y-2">
@@ -436,8 +638,9 @@ export function DiagnosticoModal({
               value={formData.relacionamento_fornecedores}
               onChange={(e) => handleInputChange('relacionamento_fornecedores', e.target.value)}
               placeholder="Descreva as dificuldades com fornecedores..."
-              className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={`min-h-[80px] ${getInteractiveFieldClasses('relacionamento_fornecedores')}`}
             />
+            <FieldHelperText field="relacionamento_fornecedores" />
           </div>
         </div>
       </div>
@@ -460,7 +663,7 @@ export function DiagnosticoModal({
               Perfil de Investimento
             </Label>
             <Select value={formData.perfil_investimento} onValueChange={(value) => handleInputChange('perfil_investimento', value)}>
-              <SelectTrigger className="border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20">
+              <SelectTrigger className={getInteractiveFieldClasses('perfil_investimento')}>
                 <SelectValue placeholder="Selecione o perfil de investimento" />
               </SelectTrigger>
               <SelectContent>
@@ -468,6 +671,7 @@ export function DiagnosticoModal({
                 <SelectItem value="Seguro">Seguro</SelectItem>
               </SelectContent>
             </Select>
+            <FieldHelperText field="perfil_investimento" />
           </div>
           
           <div className="space-y-2">
@@ -479,8 +683,9 @@ export function DiagnosticoModal({
               value={formData.motivo_desistencia}
               onChange={(e) => handleInputChange('motivo_desistencia', e.target.value)}
               placeholder="Descreva os motivos que poderiam levar à desistência do negócio..."
-              className="min-h-[120px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20"
+              className={`min-h-[120px] ${getInteractiveFieldClasses('motivo_desistencia')}`}
             />
+            <FieldHelperText field="motivo_desistencia" />
           </div>
         </div>
       </div>
@@ -622,7 +827,29 @@ export function DiagnosticoModal({
               </div>
             </div>
           ) : (
-            <div className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto space-y-6">
+              <div className="p-5 bg-stone-green-light/10 border border-stone-green-light/40 rounded-2xl shadow-sm">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-inner text-stone-green-dark mx-auto md:mx-0">
+                    <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-2 text-center md:text-left">
+                    <p className="text-xs uppercase tracking-wide text-stone-green-dark font-semibold">
+                      Orientações do passo atual
+                    </p>
+                    <p className="text-sm md:text-base text-gray-800 leading-relaxed">
+                      {currentGuide.description}
+                    </p>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                      <li>• Campos marcados com * são obrigatórios.</li>
+                      {currentGuide.tips.map((tip) => (
+                        <li key={tip}>• {tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               {renderCurrentStep()}
             </div>
           )}
