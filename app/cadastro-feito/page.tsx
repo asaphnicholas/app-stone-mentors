@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 import Script from "next/script"
 
-const WHATSAPP_LINK = "https://chat.whatsapp.com/K14OXtaNqhg8mir7Gxs21B"
+const LINKTREE_LINK = "https://linktr.ee/ImpulsoStone"
 const REDIRECT_DELAY = 5000 // 5 segundos
 
 export default function CadastroFeitoPage() {
@@ -27,7 +27,7 @@ export default function CadastroFeitoPage() {
     // Redirecionamento automático após 5 segundos
     const redirectTimeout = setTimeout(() => {
       setIsRedirecting(true)
-      window.location.href = WHATSAPP_LINK
+      window.location.href = LINKTREE_LINK
     }, REDIRECT_DELAY)
 
     return () => {
@@ -38,7 +38,7 @@ export default function CadastroFeitoPage() {
 
   const handleManualRedirect = () => {
     setIsRedirecting(true)
-    window.location.href = WHATSAPP_LINK
+    window.location.href = LINKTREE_LINK
   }
 
   return (
@@ -76,7 +76,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 
             {/* Description */}
             <p className="text-lg text-center text-gray-600 mb-8">
-              Para aproveitar tudo o que o programa oferece, entre na nossa comunidade no WhatsApp.
+              Aqui está o link com tudo que você pode acessar no Programa Impulso:
             </p>
 
             {/* Button */}
@@ -92,7 +92,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     <span>Redirecionando...</span>
                   </div>
                 ) : (
-                  "Entrar na comunidade"
+                  "Acessar conteúdo do Programa"
                 )}
               </Button>
 
