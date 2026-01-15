@@ -41,6 +41,7 @@ import { mentoriasService, type Mentoria } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 import { DiagnosticoModal } from "@/components/ui/diagnostico-modal"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -672,15 +673,27 @@ export default function MentoriaDetailsPage() {
 
             {/* Checkout - Só disponível após checkin ou quando status é andamento */}
             {(mentoria.status === 'em_andamento' && mentoria.checkin_at) || (mentoria.status as string) === 'andamento' ? (
-              <Button
-                onClick={() => setIsCheckoutDialogOpen(true)}
-                className="h-16 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg"
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
-                  <span className="text-sm font-medium">Checkout</span>
-                </div>
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button
+                      onClick={() => setIsCheckoutDialogOpen(true)}
+                      disabled={!hasDiagnosticoData(mentoria.diagnostico)}
+                      className="h-16 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <FontAwesomeIcon icon={faSignOutAlt} className="h-5 w-5" />
+                        <span className="text-sm font-medium">Checkout</span>
+                      </div>
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {!hasDiagnosticoData(mentoria.diagnostico) && (
+                  <TooltipContent>
+                    <p>Você precisa preencher o diagnóstico antes de fazer o checkout</p>
+                  </TooltipContent>
+                )}
+              </Tooltip>
             ) : null}
           </div>
         </CardContent>
