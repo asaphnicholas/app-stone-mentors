@@ -3,10 +3,10 @@ import { env } from '@/lib/config/env'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log('Proxy: PUT /api/mentor/mentorias/[id]/reschedule', { id })
     
     const backendUrl = `${env.BACKEND_URL}/api/v1/mentor/mentorias/${id}/reschedule`

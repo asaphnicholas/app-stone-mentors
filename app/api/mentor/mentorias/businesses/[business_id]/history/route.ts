@@ -3,10 +3,10 @@ import { env } from '@/lib/config/env'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { business_id: string } }
+  { params }: { params: Promise<{ business_id: string }> }
 ) {
   try {
-    const { business_id } = params
+    const { business_id } = await params
     console.log('Proxy: GET /api/mentor/mentorias/businesses/[business_id]/history', { business_id })
     
     const backendUrl = `${env.BACKEND_URL}/api/v1/mentor/mentorias/businesses/${business_id}/history`

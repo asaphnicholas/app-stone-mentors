@@ -3,10 +3,10 @@ import { env } from '@/lib/config/env'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     console.log('Proxy: POST /api/mentor/mentorias/[id]/confirm', { id })
     
     const backendUrl = `${env.BACKEND_URL}/api/v1/mentor/mentorias/${id}/confirm`

@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Table, 
   TableBody, 
@@ -20,7 +22,8 @@ import {
   faSearch, 
   faUserCheck,
   faFileAlt,
-  faSpinner
+  faSpinner,
+  faTimes
 } from "@fortawesome/free-solid-svg-icons"
 import { mentorsService } from "@/lib/services/mentors"
 import { usersService } from "@/lib/services/users"
@@ -44,6 +47,11 @@ export default function AdminMentoresPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   
+  // Estados para filtros
+  const [statusFilter, setStatusFilter] = useState<string>('todos')
+  const [areaFilter, setAreaFilter] = useState<string>('todas')
+  const [qualificacaoFilter, setQualificacaoFilter] = useState<string>('todos')
+  
   // Estados para modal de detalhes
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null)
   const [selectedMentorName, setSelectedMentorName] = useState<string>("")
@@ -56,18 +64,55 @@ export default function AdminMentoresPage() {
   }, [])
 
   useEffect(() => {
-    // Filtrar mentores baseado no termo de busca
-    if (!searchTerm.trim()) {
-      setFilteredMentors(mentors)
-    } else {
-      const filtered = mentors.filter(mentor =>
+    // Aplicar todos os filtros
+    let filtered = [...mentors]
+    
+    // Filtro de busca
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(mentor =>
         mentor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         mentor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (mentor.telefone && mentor.telefone.includes(searchTerm))
       )
-      setFilteredMentors(filtered)
     }
-  }, [searchTerm, mentors])
+    
+    // Filtro de status
+    if (statusFilter !== 'todos') {
+      filtered = filtered.filter(mentor => 
+        mentor.status.toLowerCase() === statusFilter.toLowerCase()
+      )
+    }
+    
+    // Filtro de área de atuação
+    if (areaFilter !== 'todas') {
+      filtered = filtered.filter(mentor => 
+        mentor.area_atuacao === areaFilter
+      )
+    }
+    
+    // Filtro de qualificação
+    if (qualificacaoFilter === 'qualificado') {
+      filtered = filtered.filter(mentor => mentor.protocolo_concluido)
+    } else if (qualificacaoFilter === 'nao_qualificado') {
+      filtered = filtered.filter(mentor => !mentor.protocolo_concluido)
+    }
+    
+    setFilteredMentors(filtered)
+  }, [searchTerm, statusFilter, areaFilter, qualificacaoFilter, mentors])
+  
+  const clearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("todos")
+    setAreaFilter("todas")
+    setQualificacaoFilter("todos")
+  }
+  
+  const hasActiveFilters = () => {
+    return searchTerm.trim() !== "" || 
+           statusFilter !== "todos" || 
+           areaFilter !== "todas" || 
+           qualificacaoFilter !== "todos"
+  }
 
   const loadMentors = async () => {
     try {
@@ -193,15 +238,16 @@ export default function AdminMentoresPage() {
         </Button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar e Filtros */}
       <Card>
         <CardHeader>
-          <CardTitle>Buscar Mentores</CardTitle>
+          <CardTitle>Buscar e Filtrar Mentores</CardTitle>
           <CardDescription>
-            Busque mentores por nome, email ou telefone
+            Busque mentores por nome, email ou telefone e aplique filtros para refinar os resultados
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          {/* Campo de Busca */}
           <div className="relative">
             <FontAwesomeIcon 
               icon={faSearch} 
@@ -214,11 +260,79 @@ export default function AdminMentoresPage() {
               className="pl-10"
             />
           </div>
-          {searchTerm && (
-            <p className="text-sm text-gray-500 mt-2">
-              Mostrando {filteredMentors.length} de {mentors.length} mentores
+          
+          {/* Filtros */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Filtro de Status */}
+            <div className="space-y-2">
+              <Label htmlFor="status-filter">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger id="status-filter">
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos os Status</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="qualificado">Qualificado</SelectItem>
+                  <SelectItem value="ocupado">Ocupado</SelectItem>
+                  <SelectItem value="indisponivel">Indisponível</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filtro de Área de Atuação */}
+            <div className="space-y-2">
+              <Label htmlFor="area-filter">Área de Atuação</Label>
+              <Select value={areaFilter} onValueChange={setAreaFilter}>
+                <SelectTrigger id="area-filter">
+                  <SelectValue placeholder="Todas as áreas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas as Áreas</SelectItem>
+                  {AREAS_ATUACAO.map((area) => (
+                    <SelectItem key={String(area.value)} value={String(area.value)}>
+                      {String(area.label)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Filtro de Qualificação */}
+            <div className="space-y-2">
+              <Label htmlFor="qualificacao-filter">Qualificação</Label>
+              <Select value={qualificacaoFilter} onValueChange={setQualificacaoFilter}>
+                <SelectTrigger id="qualificacao-filter">
+                  <SelectValue placeholder="Todas as qualificações" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todas as Qualificações</SelectItem>
+                  <SelectItem value="qualificado">Qualificados</SelectItem>
+                  <SelectItem value="nao_qualificado">Não Qualificados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          {/* Botão Limpar Filtros e Contador */}
+          <div className="flex items-center justify-between pt-2 border-t">
+            {hasActiveFilters() && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="flex items-center gap-2"
+              >
+                <FontAwesomeIcon icon={faTimes} className="h-3 w-3" />
+                Limpar Filtros
+              </Button>
+            )}
+            <p className="text-sm text-gray-500 ml-auto">
+              Mostrando {filteredMentors.length} de {mentors.length} mentor{mentors.length !== 1 ? 'es' : ''}
             </p>
-          )}
+          </div>
         </CardContent>
       </Card>
 
