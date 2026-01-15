@@ -16,7 +16,7 @@ import {
   faFilePdf, 
   faVideo, 
   faLink, 
-  faPresentation,
+  faFilePowerpoint,
   faUpload,
   faEdit,
   faTrash,
@@ -47,7 +47,7 @@ const MATERIAL_TYPES = [
   { value: "PDF", label: "PDF", icon: faFilePdf },
   { value: "VIDEO", label: "Vídeo", icon: faVideo },
   { value: "LINK", label: "Link", icon: faLink },
-  { value: "APRESENTACAO", label: "Apresentação", icon: faPresentation },
+  { value: "APRESENTACAO", label: "Apresentação", icon: faFilePowerpoint },
 ] as const
 
 // Validar tipos de material
