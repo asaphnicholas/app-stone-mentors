@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,8 +17,10 @@ export async function GET(
       )
     }
 
+    const { id } = await params
+
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/files/material/${params.id}/info`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/files/material/${id}/info`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

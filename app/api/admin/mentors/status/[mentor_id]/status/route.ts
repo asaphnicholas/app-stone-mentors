@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { mentor_id: string } }
+  { params }: { params: Promise<{ mentor_id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,7 +17,7 @@ export async function PUT(
       )
     }
 
-    const mentorId = params.mentor_id
+    const { mentor_id: mentorId } = await params
     const body = await request.json()
 
     // Forward request to backend

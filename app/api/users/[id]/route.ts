@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,8 +17,10 @@ export async function GET(
       )
     }
 
+    const { id } = await params
+
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/users/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/users/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +51,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -62,10 +64,11 @@ export async function PUT(
       )
     }
 
+    const { id } = await params
     const body = await request.json()
 
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/users/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/users/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -97,7 +100,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -110,8 +113,10 @@ export async function DELETE(
       )
     }
 
+    const { id } = await params
+
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/users/${params.id}`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/users/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

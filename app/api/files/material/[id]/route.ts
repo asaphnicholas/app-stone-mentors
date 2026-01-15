@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,13 +17,15 @@ export async function GET(
       )
     }
 
+    const { id } = await params
+
     // Get query parameters
     const { searchParams } = new URL(request.url)
     const expiryHours = searchParams.get('expiry_hours') || '2'
     const queryString = `expiry_hours=${expiryHours}`
 
     // Forward request to backend
-    const response = await fetch(`${BACKEND_URL}/api/v1/files/material/${params.id}?${queryString}`, {
+    const response = await fetch(`${BACKEND_URL}/api/v1/files/material/${id}?${queryString}`, {
       method: 'GET',
       headers: {
         'Authorization': authHeader,

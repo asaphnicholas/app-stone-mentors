@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,7 +17,7 @@ export async function PUT(
       )
     }
 
-    const materialId = params.id
+    const { id: materialId } = await params
     const body = await request.json()
     console.log('Admin materials PUT - ID:', materialId)
     console.log('Admin materials PUT - Body recebido:', body)
@@ -61,7 +61,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -74,7 +74,7 @@ export async function DELETE(
       )
     }
 
-    const materialId = params.id
+    const { id: materialId } = await params
     console.log('Admin materials DELETE - ID:', materialId)
     
     // Forward request to backend

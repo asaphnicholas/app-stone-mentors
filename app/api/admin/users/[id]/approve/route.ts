@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,7 +17,7 @@ export async function POST(
       )
     }
 
-    const userId = params.id
+    const { id: userId } = await params
     const body = await request.json()
     
     // Validate required fields

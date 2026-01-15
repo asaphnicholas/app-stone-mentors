@@ -8,7 +8,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -21,7 +21,7 @@ export async function GET(
       )
     }
 
-    const mentoriaId = params.id
+    const { id: mentoriaId } = await params
 
     if (!mentoriaId) {
       return NextResponse.json(

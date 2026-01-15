@@ -4,7 +4,7 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get authorization header
@@ -17,7 +17,7 @@ export async function GET(
       )
     }
 
-    const mentorId = params.id
+    const { id: mentorId } = await params
 
     // Forward request to backend
     const backendUrl = `${BACKEND_URL}/api/v1/admin/mentors/${mentorId}/performance`
