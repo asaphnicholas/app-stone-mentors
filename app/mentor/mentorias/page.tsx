@@ -165,8 +165,12 @@ export default function MentoriasPage() {
     
     // Se já tem mentoria agendada, preencher o formulário com os dados existentes
     if (business.proxima_mentoria) {
+      // Convert ISO 8601 to datetime-local format (YYYY-MM-DDTHH:mm)
+      const isoDate = business.proxima_mentoria.data_agendada
+      const datetimeLocal = isoDate ? isoDate.slice(0, 16) : "" // Remove seconds and timezone
+      
       setScheduleForm({
-        data_agendada: business.proxima_mentoria.data_agendada,
+        data_agendada: datetimeLocal,
         duracao_minutos: business.proxima_mentoria.duracao_minutos
       })
     } else {
@@ -180,16 +184,30 @@ export default function MentoriasPage() {
     setIsScheduleDialogOpen(true)
   }
 
+  // Helper function to convert datetime-local to ISO 8601 format
+  const formatDateTimeForAPI = (datetimeLocal: string): string => {
+    // datetime-local returns "YYYY-MM-DDTHH:mm" format
+    // API expects "YYYY-MM-DDTHH:mm:ss" format
+    if (!datetimeLocal) return ""
+    // Add :00 seconds if not present
+    return datetimeLocal.includes(':') && datetimeLocal.split(':').length === 2
+      ? `${datetimeLocal}:00`
+      : datetimeLocal
+  }
+
   const handleScheduleMentoria = async () => {
     if (!selectedBusiness) return
 
     try {
       setIsScheduling(true)
       
+      // Format date to ISO 8601 (add seconds if needed)
+      const formattedDate = formatDateTimeForAPI(scheduleForm.data_agendada)
+      
       // Se já tem mentoria agendada, usar API de reagendamento
       if (selectedBusiness.proxima_mentoria) {
         await mentoriasService.rescheduleMentoria(selectedBusiness.proxima_mentoria.id, {
-          data_agendada: scheduleForm.data_agendada,
+          data_agendada: formattedDate,
           duracao_minutos: scheduleForm.duracao_minutos
         })
 
@@ -202,7 +220,7 @@ export default function MentoriasPage() {
         // Novo agendamento
         await mentoriasService.scheduleMentoria({
           negocio_id: selectedBusiness.negocio_id,
-          data_agendada: scheduleForm.data_agendada,
+          data_agendada: formattedDate,
           duracao_minutos: scheduleForm.duracao_minutos
         })
 

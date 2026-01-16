@@ -98,7 +98,11 @@ export default function MentoriaDetailsPage() {
   const [isDiagnosticDialogOpen, setIsDiagnosticDialogOpen] = useState(false)
   const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false)
   const [isDiagnosticoDetailsOpen, setIsDiagnosticoDetailsOpen] = useState(false)
+  const [isRescheduleDialogOpen, setIsRescheduleDialogOpen] = useState(false)
   const [diagnosticoDetails, setDiagnosticoDetails] = useState<any>(null)
+  
+  // Loading states for actions
+  const [isRescheduling, setIsRescheduling] = useState(false)
   
   // Form states
   const [checkoutForm, setCheckoutForm] = useState({
@@ -107,6 +111,10 @@ export default function MentoriaDetailsPage() {
     nota_programa: 0,
     observacoes: "",
     proximos_passos: ""
+  })
+  const [rescheduleForm, setRescheduleForm] = useState({
+    data_agendada: "",
+    duracao_minutos: 60
   })
 
   const { addToast } = useToast()
@@ -262,6 +270,50 @@ export default function MentoriaDetailsPage() {
         title: "Erro ao carregar diagnóstico",
         message: error instanceof Error ? error.message : "Erro interno do servidor",
       })
+    }
+  }
+
+  // Helper function to convert datetime-local to ISO 8601 format
+  const formatDateTimeForAPI = (datetimeLocal: string): string => {
+    // datetime-local returns "YYYY-MM-DDTHH:mm" format
+    // API expects "YYYY-MM-DDTHH:mm:ss" format
+    if (!datetimeLocal) return ""
+    // Add :00 seconds if not present
+    return datetimeLocal.includes(':') && datetimeLocal.split(':').length === 2
+      ? `${datetimeLocal}:00`
+      : datetimeLocal
+  }
+
+  const handleRescheduleMentoria = async () => {
+    if (!mentoria) return
+
+    try {
+      setIsRescheduling(true)
+      
+      // Format date to ISO 8601 (add seconds if needed)
+      const formattedDate = formatDateTimeForAPI(rescheduleForm.data_agendada)
+      
+      await mentoriasService.rescheduleMentoria(mentoria.mentoria_id, {
+        data_agendada: formattedDate,
+        duracao_minutos: rescheduleForm.duracao_minutos
+      })
+      
+      addToast({
+        type: "success",
+        title: "Agendamento atualizado!",
+        message: `Mentoria reagendada com sucesso.`,
+      })
+      
+      setIsRescheduleDialogOpen(false)
+      loadMentoriaDetails()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao reagendar mentoria",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsRescheduling(false)
     }
   }
 
@@ -448,7 +500,28 @@ export default function MentoriaDetailsPage() {
               
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Data Agendada:</span>
-                <span className="font-semibold text-gray-900">{formatDateTimeToBR(mentoria.data_agendada)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-900">{formatDateTimeToBR(mentoria.data_agendada)}</span>
+                  {(mentoria.status === 'disponivel' || mentoria.status === 'agendada') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Convert ISO 8601 to datetime-local format (YYYY-MM-DDTHH:mm)
+                        const datetimeLocal = mentoria.data_agendada ? mentoria.data_agendada.slice(0, 16) : ""
+                        setRescheduleForm({
+                          data_agendada: datetimeLocal,
+                          duracao_minutos: mentoria.duracao_minutos
+                        })
+                        setIsRescheduleDialogOpen(true)
+                      }}
+                      className="h-8 px-3"
+                    >
+                      <FontAwesomeIcon icon={faEdit} className="h-3 w-3 mr-1" />
+                      Editar
+                    </Button>
+                  )}
+                </div>
               </div>
               
               <div className="flex items-center justify-between">
@@ -911,6 +984,76 @@ export default function MentoriaDetailsPage() {
                 <FontAwesomeIcon icon={faSignOutAlt} className="h-4 w-4 mr-2" />
               )}
               {isCheckingOut ? 'Finalizando...' : 'Finalizar Mentoria'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Reagendar Mentoria */}
+      <Dialog open={isRescheduleDialogOpen} onOpenChange={setIsRescheduleDialogOpen}>
+        <DialogContent className="max-w-lg bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-gray-900">
+              Editar Agendamento
+            </DialogTitle>
+            <DialogDescription className="text-gray-600">
+              Altere a data e hora da mentoria
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <Label htmlFor="reschedule_data_agendada" className="text-sm font-medium text-gray-700">Data e Hora *</Label>
+              <Input
+                id="reschedule_data_agendada"
+                type="datetime-local"
+                value={rescheduleForm.data_agendada}
+                onChange={(e) => setRescheduleForm({ ...rescheduleForm, data_agendada: e.target.value })}
+                className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
+                required
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <Label htmlFor="reschedule_duracao" className="text-sm font-medium text-gray-700">Duração (minutos) *</Label>
+              <Select 
+                value={rescheduleForm.duracao_minutos.toString()} 
+                onValueChange={(value) => setRescheduleForm({ ...rescheduleForm, duracao_minutos: parseInt(value) })}
+              >
+                <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200">
+                  <SelectValue placeholder="Selecione a duração" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="30">30 minutos</SelectItem>
+                  <SelectItem value="60">1 hora</SelectItem>
+                  <SelectItem value="90">1h 30min</SelectItem>
+                  <SelectItem value="120">2 horas</SelectItem>
+                  <SelectItem value="180">3 horas</SelectItem>
+                  <SelectItem value="240">4 horas</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setIsRescheduleDialogOpen(false)}
+              className="px-6 py-2"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleRescheduleMentoria}
+              disabled={!rescheduleForm.data_agendada || isRescheduling}
+              className="px-6 py-2 bg-gradient-to-r from-stone-green-dark via-stone-green-light to-stone-green-bright hover:from-stone-green-bright hover:via-stone-green-light hover:to-stone-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRescheduling ? (
+                <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
+              )}
+              {isRescheduling ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
           </div>
         </DialogContent>
