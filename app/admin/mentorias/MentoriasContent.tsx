@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/toast"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -27,13 +28,19 @@ import {
   faCalendar,
   faChartLine,
   faClipboardList,
-  faChevronDown
+  faChevronDown,
+  faDownload,
+  faExclamationTriangle
 } from "@fortawesome/free-solid-svg-icons"
 import adminMentoriasService, { 
   type MentoriaStats,
   type Mentoria,
   type MentoriaDetalhes
 } from "@/lib/services/admin-mentorias"
+import diagnosticosService, {
+  type Diagnostico,
+  type ListDiagnosticosParams
+} from "@/lib/services/diagnosticos"
 
 // Types já importados do serviço
 
@@ -131,10 +138,12 @@ export default function MentoriasContent() {
   const { addToast } = useToast()
 
   // Estados
+  const [activeTab, setActiveTab] = useState<string>("mentorias")
   const [stats, setStats] = useState<MentoriaStats | null>(null)
   const [mentorias, setMentorias] = useState<Mentoria[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
 
   // Estados de filtros
   const [statusFilter, setStatusFilter] = useState<string>("todos")
@@ -142,26 +151,47 @@ export default function MentoriasContent() {
   const [dataInicioFilter, setDataInicioFilter] = useState<string>("")
   const [dataFimFilter, setDataFimFilter] = useState<string>("")
 
+  // Estados para Diagnósticos
+  const [diagnosticos, setDiagnosticos] = useState<Diagnostico[]>([])
+  const [isLoadingDiagnosticos, setIsLoadingDiagnosticos] = useState(false)
+  const [totalDiagnosticos, setTotalDiagnosticos] = useState(0)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Modal de detalhes
   const [selectedMentoria, setSelectedMentoria] = useState<MentoriaDetalhes | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const [selectedDiagnostico, setSelectedDiagnostico] = useState<Diagnostico | null>(null)
+  const [isDiagnosticoModalOpen, setIsDiagnosticoModalOpen] = useState(false)
 
+  // Debounce para searchTerm (aguarda 500ms após parar de digitar)
   useEffect(() => {
-    loadStats()
-    loadMentorias()
-  }, [])
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 500)
 
-  // Carregar mentorias quando filtros mudarem
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  // Carregar dados iniciais e quando filtros mudarem
   useEffect(() => {
     loadMentorias()
-  }, [statusFilter, tipoFilter, dataInicioFilter, dataFimFilter, searchTerm])
+    
+    // Stats só precisam ser recarregadas quando as datas mudarem
+    // (não precisam ser recarregadas para cada mudança de filtro)
+  }, [statusFilter, tipoFilter, dataInicioFilter, dataFimFilter, debouncedSearchTerm])
 
-  // Atualizar estatísticas quando filtros de data mudarem
+  // Carregar estatísticas apenas quando filtros de data mudarem
   useEffect(() => {
     loadStats()
   }, [dataInicioFilter, dataFimFilter])
+
+  // Carregar diagnósticos quando a tab for ativada ou filtros mudarem
+  useEffect(() => {
+    if (activeTab === 'diagnosticos') {
+      loadDiagnosticos()
+    }
+  }, [activeTab, dataInicioFilter, dataFimFilter])
 
   const loadStats = async () => {
     try {
@@ -191,8 +221,8 @@ export default function MentoriasContent() {
         tipo: tipoFilter !== "todos" ? tipoFilter : undefined,
         data_inicio: dataInicioFilter || undefined,
         data_fim: dataFimFilter || undefined,
-        limit: 0, // 0 = sem limite, retorna todas
-        search: searchTerm || undefined,
+        limit: 0, // 0 = sem limite, retorna todas (backend limita a 1000)
+        search: debouncedSearchTerm || undefined,
       }
 
       console.log('Carregando mentorias - Filtros:', params)
@@ -219,6 +249,75 @@ export default function MentoriasContent() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const loadDiagnosticos = async () => {
+    try {
+      setIsLoadingDiagnosticos(true)
+
+      const params: ListDiagnosticosParams = {
+        data_inicio: dataInicioFilter || undefined,
+        data_fim: dataFimFilter || undefined,
+        limit: 50, // Limitar a 50 por vez
+      }
+
+      console.log('Carregando diagnósticos - Filtros:', params)
+
+      const result = await diagnosticosService.listDiagnosticos(params)
+      
+      setDiagnosticos(result.diagnosticos)
+      setTotalDiagnosticos(result.total)
+
+      console.log('✅ Diagnósticos carregados:', {
+        quantidade: result.diagnosticos.length,
+        total: result.total
+      })
+    } catch (error) {
+      console.error('Erro ao carregar diagnósticos:', error)
+      addToast({
+        type: "error",
+        title: "Erro ao carregar diagnósticos",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+      
+      setDiagnosticos([])
+    } finally {
+      setIsLoadingDiagnosticos(false)
+    }
+  }
+
+  const handleExportDiagnosticos = async () => {
+    try {
+      setIsExporting(true)
+
+      const params: ListDiagnosticosParams = {
+        data_inicio: dataInicioFilter || undefined,
+        data_fim: dataFimFilter || undefined,
+      }
+
+      const blob = await diagnosticosService.exportDiagnosticos(params)
+      diagnosticosService.downloadCSV(blob)
+
+      addToast({
+        type: "success",
+        title: "Exportação concluída",
+        message: "Diagnósticos exportados com sucesso!",
+      })
+    } catch (error) {
+      console.error('Erro ao exportar diagnósticos:', error)
+      addToast({
+        type: "error",
+        title: "Erro ao exportar diagnósticos",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleViewDiagnostico = (diagnostico: Diagnostico) => {
+    setSelectedDiagnostico(diagnostico)
+    setIsDiagnosticoModalOpen(true)
   }
 
   const loadMentoriaDetails = async (mentoriaId: string) => {
@@ -388,19 +487,34 @@ export default function MentoriasContent() {
         </div>
       )}
 
-      {/* Filtros e Busca */}
-      <Card className="border-0 shadow-xl">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl flex items-center justify-center">
-              <FontAwesomeIcon icon={faFilter} className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-2xl font-bold">Filtros e Busca</CardTitle>
-              <CardDescription>Filtre as mentorias por status, tipo e período</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full md:w-[400px] grid-cols-2 mb-6">
+          <TabsTrigger value="mentorias" className="flex items-center gap-2">
+            <FontAwesomeIcon icon={faHandshake} className="h-4 w-4" />
+            Mentorias
+          </TabsTrigger>
+          <TabsTrigger value="diagnosticos" className="flex items-center gap-2">
+            <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4" />
+            Diagnósticos
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab: Mentorias */}
+        <TabsContent value="mentorias" className="space-y-6">
+          {/* Filtros e Busca */}
+          <Card className="border-0 shadow-xl">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-slate-600 rounded-xl flex items-center justify-center">
+                  <FontAwesomeIcon icon={faFilter} className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl font-bold">Filtros e Busca</CardTitle>
+                  <CardDescription>Filtre as mentorias por status, tipo e período</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -604,72 +718,69 @@ export default function MentoriasContent() {
                         <div className="pt-2 pb-4">
                           <div className="space-y-3">
                             {item.mentorias.map((mentoria) => (
-                              <Card key={mentoria.id} className="bg-gray-50 border-gray-200 hover:shadow-md transition-shadow">
-                                <CardContent className="p-4">
-                                  <div className="grid grid-cols-12 gap-4 items-center">
-                                    {/* Mentor */}
-                                    <div className="col-span-3">
-                                      <Label className="text-xs text-gray-500">Mentor</Label>
-                                      <div className="mt-1">
-                                        <p className="font-medium text-sm text-gray-900">{mentoria.mentor.nome}</p>
-                                        <p className="text-xs text-gray-500">{mentoria.mentor.email}</p>
-                                      </div>
-                                    </div>
-
-                                    {/* Data */}
-                                    <div className="col-span-2">
-                                      <Label className="text-xs text-gray-500">Data Agendada</Label>
-                                      <div className="flex items-center gap-2 mt-1">
-                                        <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 text-gray-400" />
-                                        <span className="text-sm text-gray-900">{formatDate(mentoria.data_agendada)}</span>
-                                      </div>
-                                    </div>
-
-                                    {/* Tipo */}
-                                    <div className="col-span-2">
-                                      <Label className="text-xs text-gray-500">Tipo</Label>
-                                      <div className="mt-1">{getTipoBadge(mentoria.tipo)}</div>
-                                    </div>
-
-                                    {/* Status */}
-                                    <div className="col-span-2">
-                                      <Label className="text-xs text-gray-500">Status</Label>
-                                      <div className="mt-1">{getStatusBadge(mentoria.status)}</div>
-                                    </div>
-
-                                    {/* NPS */}
-                                    <div className="col-span-1">
-                                      <Label className="text-xs text-gray-500">NPS</Label>
-                                      <div className="mt-1">
-                                        {mentoria.nps?.nps_medio ? (
-                                          <div className="flex items-center gap-1">
-                                            <FontAwesomeIcon icon={faStar} className="h-3 w-3 text-yellow-500" />
-                                            <span className="font-semibold text-sm text-gray-900">
-                                              {mentoria.nps.nps_medio.toFixed(1)}
-                                            </span>
-                                          </div>
-                                        ) : (
-                                          <span className="text-sm text-gray-400">-</span>
-                                        )}
-                                      </div>
-                                    </div>
-
-                                    {/* Ações */}
-                                    <div className="col-span-2 text-right">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={() => loadMentoriaDetails(mentoria.id)}
-                                        disabled={isLoadingDetails}
-                                        className="w-full"
-                                      >
-                                        <FontAwesomeIcon icon={faEye} className="h-3 w-3 mr-1" />
-                                        Ver Detalhes
-                                      </Button>
+                              <div key={mentoria.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+                                <div className="grid grid-cols-12 gap-4 items-center">
+                                  {/* Mentor */}
+                                  <div className="col-span-3">
+                                    <Label className="text-xs text-gray-500">Mentor</Label>
+                                    <div className="mt-1">
+                                      <p className="text-xs text-gray-500">{mentoria.mentor.email}</p>
                                     </div>
                                   </div>
-                                </CardContent>
-                              </Card>
+
+                                  {/* Data */}
+                                  <div className="col-span-2">
+                                    <Label className="text-xs text-gray-500">Data Agendada</Label>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <FontAwesomeIcon icon={faCalendar} className="h-3 w-3 text-gray-400" />
+                                      <span className="text-sm text-gray-900">{formatDate(mentoria.data_agendada)}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Tipo */}
+                                  <div className="col-span-2">
+                                    <Label className="text-xs text-gray-500">Tipo</Label>
+                                    <div className="mt-1">{getTipoBadge(mentoria.tipo)}</div>
+                                  </div>
+
+                                  {/* Status */}
+                                  <div className="col-span-2">
+                                    <Label className="text-xs text-gray-500">Status</Label>
+                                    <div className="mt-1">{getStatusBadge(mentoria.status)}</div>
+                                  </div>
+
+                                  {/* NPS */}
+                                  <div className="col-span-1">
+                                    <Label className="text-xs text-gray-500">NPS</Label>
+                                    <div className="mt-1">
+                                      {mentoria.nps?.nps_medio ? (
+                                        <div className="flex items-center gap-1">
+                                          <FontAwesomeIcon icon={faStar} className="h-3 w-3 text-yellow-500" />
+                                          <span className="font-semibold text-sm text-gray-900">
+                                            {mentoria.nps.nps_medio.toFixed(1)}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-sm text-gray-400">-</span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Ações */}
+                                  <div className="col-span-2 text-right">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => loadMentoriaDetails(mentoria.id)}
+                                      disabled={isLoadingDetails}
+                                      className="w-full"
+                                    >
+                                      <FontAwesomeIcon icon={faEye} className="h-3 w-3 mr-1" />
+                                      Ver Detalhes
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -685,6 +796,156 @@ export default function MentoriasContent() {
 
       {/* Espaçamento final */}
       <div className="h-8"></div>
+        </TabsContent>
+
+        {/* Tab: Diagnósticos */}
+        <TabsContent value="diagnosticos" className="space-y-6">
+          <Card className="border-0 shadow-xl">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <FontAwesomeIcon icon={faClipboardList} className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl font-bold">Diagnósticos Preenchidos</CardTitle>
+                    <CardDescription>
+                      {totalDiagnosticos} diagnóstico{totalDiagnosticos !== 1 ? 's' : ''} preenchido{totalDiagnosticos !== 1 ? 's' : ''}
+                    </CardDescription>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleExportDiagnosticos}
+                  disabled={isExporting || diagnosticos.length === 0}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {isExporting ? (
+                    <>
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2 text-white" />
+                      <span className="text-white">Exportar CSV</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* Barra de Pesquisa */}
+              <div className="mb-6">
+                <div className="relative">
+                  <FontAwesomeIcon 
+                    icon={faSearch} 
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" 
+                  />
+                  <Input
+                    placeholder="Buscar por negócio, empreendedor ou mentor..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+
+              {isLoadingDiagnosticos ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent mb-4"></div>
+                    <p className="text-gray-500">Carregando diagnósticos...</p>
+                  </div>
+                </div>
+              ) : diagnosticos.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <FontAwesomeIcon icon={faClipboardList} className="h-12 w-12 text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum diagnóstico encontrado</h3>
+                  <p className="text-gray-500 text-center">
+                    Não há diagnósticos preenchidos no período selecionado.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Negócio</TableHead>
+                        <TableHead>Empreendedor</TableHead>
+                        <TableHead>Mentor</TableHead>
+                        <TableHead>Data Mentoria</TableHead>
+                        <TableHead>Dor Principal</TableHead>
+                        <TableHead>Controle Financeiro</TableHead>
+                        <TableHead>Marketing</TableHead>
+                        <TableHead>Vendas</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {diagnosticos.map((diagnostico) => (
+                        <TableRow key={diagnostico.diagnostico_id} className="hover:bg-gray-50">
+                          <TableCell className="font-medium">{diagnostico.negocio.nome}</TableCell>
+                          <TableCell>{diagnostico.negocio.empreendedor_nome}</TableCell>
+                          <TableCell>{diagnostico.mentor.nome}</TableCell>
+                          <TableCell>{formatDate(diagnostico.mentoria.data_agendada)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                              {diagnostico.dor_principal}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <div className="w-full bg-gray-200 rounded-full h-2 max-w-[60px]">
+                                <div 
+                                  className="bg-blue-500 h-2 rounded-full" 
+                                  style={{ width: `${(diagnostico.controle_financeiro / 4) * 100}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-medium">{diagnostico.controle_financeiro}/4</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <div className="w-full bg-gray-200 rounded-full h-2 max-w-[60px]">
+                                <div 
+                                  className="bg-purple-500 h-2 rounded-full" 
+                                  style={{ width: `${(diagnostico.divulgação_marketing / 4) * 100}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-medium">{diagnostico.divulgação_marketing}/4</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <div className="w-full bg-gray-200 rounded-full h-2 max-w-[60px]">
+                                <div 
+                                  className="bg-green-500 h-2 rounded-full" 
+                                  style={{ width: `${(diagnostico.atrair_clientes_vender / 4) * 100}%` }}
+                                ></div>
+                              </div>
+                              <span className="text-xs font-medium">{diagnostico.atrair_clientes_vender}/4</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleViewDiagnostico(diagnostico)}
+                            >
+                              <FontAwesomeIcon icon={faEye} className="h-3 w-3 mr-1" />
+                              Ver Completo
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Modal de Detalhes */}
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
@@ -865,6 +1126,300 @@ export default function MentoriasContent() {
             <Button
               variant="outline"
               onClick={() => setIsDetailsModalOpen(false)}
+            >
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes do Diagnóstico */}
+      <Dialog open={isDiagnosticoModalOpen} onOpenChange={setIsDiagnosticoModalOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto bg-white border-0 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Diagnóstico Completo</DialogTitle>
+            <DialogDescription>
+              Todas as informações coletadas no diagnóstico
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDiagnostico && (
+            <div className="space-y-6">
+              {/* Informações do Negócio */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faBuilding} className="h-5 w-5 text-blue-600" />
+                    Informações do Negócio
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-500">Negócio</Label>
+                    <p className="font-semibold">{selectedDiagnostico.negocio.nome}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Empreendedor</Label>
+                    <p className="font-semibold">{selectedDiagnostico.negocio.empreendedor_nome}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Telefone</Label>
+                    <p className="font-semibold">{selectedDiagnostico.telefone_whatsapp}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Setor de Atuação</Label>
+                    <p className="font-semibold">{selectedDiagnostico.setor_atuacao}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Status do Negócio</Label>
+                    <p className="font-semibold">{selectedDiagnostico.status_negocio}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Tempo de Funcionamento</Label>
+                    <p className="font-semibold">{selectedDiagnostico.tempo_funcionamento}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Avaliações de Competências */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-green-600" />
+                    Avaliações de Competências (1-4)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Controle Financeiro</Label>
+                      <span className="font-bold text-blue-600">{selectedDiagnostico.controle_financeiro}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-blue-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.controle_financeiro / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Divulgação e Marketing</Label>
+                      <span className="font-bold text-purple-600">{selectedDiagnostico.divulgação_marketing}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-purple-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.divulgação_marketing / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Atrair Clientes / Vender</Label>
+                      <span className="font-bold text-green-600">{selectedDiagnostico.atrair_clientes_vender}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-green-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.atrair_clientes_vender / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Atender Clientes</Label>
+                      <span className="font-bold text-indigo-600">{selectedDiagnostico.atender_clientes}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-indigo-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.atender_clientes / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Ferramentas de Gestão</Label>
+                      <span className="font-bold text-orange-600">{selectedDiagnostico.ferramentas_gestao}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-orange-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.ferramentas_gestao / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Organização do Negócio</Label>
+                      <span className="font-bold text-pink-600">{selectedDiagnostico.organizacao_negocio}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-pink-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.organizacao_negocio / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-gray-700">Obrigações Legais/Jurídicas</Label>
+                      <span className="font-bold text-red-600">{selectedDiagnostico.obrigacoes_legais_juridicas}/4</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-red-500 h-3 rounded-full transition-all" 
+                        style={{ width: `${(selectedDiagnostico.obrigacoes_legais_juridicas / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Desafios e Dores */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-orange-600" />
+                    Desafios e Dores
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label className="text-gray-500">Dor Principal</Label>
+                    <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 text-base mt-1">
+                      {selectedDiagnostico.dor_principal}
+                    </Badge>
+                  </div>
+                  {selectedDiagnostico.falta_caixa_financiamento && (
+                    <div>
+                      <Label className="text-gray-500">Falta de Caixa/Financiamento</Label>
+                      <p className="text-gray-900 mt-1">{selectedDiagnostico.falta_caixa_financiamento}</p>
+                    </div>
+                  )}
+                  {selectedDiagnostico.dificuldade_funcionarios && (
+                    <div>
+                      <Label className="text-gray-500">Dificuldade com Funcionários</Label>
+                      <p className="text-gray-900 mt-1">{selectedDiagnostico.dificuldade_funcionarios}</p>
+                    </div>
+                  )}
+                  {selectedDiagnostico.clientes_reclamando && (
+                    <div>
+                      <Label className="text-gray-500">Clientes Reclamando</Label>
+                      <p className="text-gray-900 mt-1">{selectedDiagnostico.clientes_reclamando}</p>
+                    </div>
+                  )}
+                  {selectedDiagnostico.relacionamento_fornecedores && (
+                    <div>
+                      <Label className="text-gray-500">Relacionamento com Fornecedores</Label>
+                      <p className="text-gray-900 mt-1">{selectedDiagnostico.relacionamento_fornecedores}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Perfil Empreendedor */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faUser} className="h-5 w-5 text-purple-600" />
+                    Perfil Empreendedor
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-gray-500">Perfil de Investimento</Label>
+                      <p className="font-semibold">{selectedDiagnostico.perfil_investimento}</p>
+                    </div>
+                    <div>
+                      <Label className="text-gray-500">Motivo de Desistência</Label>
+                      <p className="font-semibold">{selectedDiagnostico.motivo_desistencia}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Comportamento Empreendedor */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faChartLine} className="h-5 w-5 text-teal-600" />
+                    Comportamento Empreendedor (1-4)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { key: 'agir_primeiro_consequencias_depois', label: 'Agir primeiro, consequências depois' },
+                    { key: 'pensar_varias_solucoes', label: 'Pensar em várias soluções' },
+                    { key: 'seguir_primeiro_pressentimento', label: 'Seguir primeiro pressentimento' },
+                    { key: 'fazer_coisas_antes_prazo', label: 'Fazer coisas antes do prazo' },
+                    { key: 'fracasso_nao_opcao', label: 'Fracasso não é opção' },
+                    { key: 'decisao_negocio_correta', label: 'Decisões de negócio são corretas' },
+                    { key: 'focar_oportunidades_riscos', label: 'Focar em oportunidades vs riscos' },
+                    { key: 'acreditar_sucesso', label: 'Acreditar no sucesso' }
+                  ].map((item) => {
+                    const value = selectedDiagnostico[item.key as keyof Diagnostico] as number
+                    return (
+                      <div key={item.key}>
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-gray-700 text-sm">{item.label}</Label>
+                          <span className="font-bold text-stone-green-dark">{value}/4</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-stone-green-light h-2 rounded-full transition-all" 
+                            style={{ width: `${(value / 4) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* Informações da Mentoria */}
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FontAwesomeIcon icon={faHandshake} className="h-5 w-5 text-green-600" />
+                    Informações da Mentoria
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-gray-500">Mentor</Label>
+                    <p className="font-semibold">{selectedDiagnostico.mentor.nome}</p>
+                    <p className="text-sm text-gray-600">{selectedDiagnostico.mentor.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Data da Mentoria</Label>
+                    <p className="font-semibold">{formatDate(selectedDiagnostico.mentoria.data_agendada)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Tipo</Label>
+                    {getTipoBadge(selectedDiagnostico.mentoria.tipo)}
+                  </div>
+                  <div>
+                    <Label className="text-gray-500">Status</Label>
+                    {getStatusBadge(selectedDiagnostico.mentoria.status)}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="flex justify-end mt-6">
+            <Button
+              variant="outline"
+              onClick={() => setIsDiagnosticoModalOpen(false)}
             >
               Fechar
             </Button>
