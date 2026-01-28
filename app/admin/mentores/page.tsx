@@ -15,6 +15,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { MentorDetailsModal } from "@/components/ui/mentor-details-modal"
 import { useToast } from "@/components/ui/toast"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
@@ -23,11 +24,14 @@ import {
   faUserCheck,
   faFileAlt,
   faSpinner,
-  faTimes
+  faTimes,
+  faDownload,
+  faChartLine
 } from "@fortawesome/free-solid-svg-icons"
 import { mentorsService } from "@/lib/services/mentors"
 import { usersService } from "@/lib/services/users"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
+import relatoriosService from "@/lib/services/relatorios"
 
 interface Mentor {
   id: string
@@ -56,6 +60,14 @@ export default function AdminMentoresPage() {
   const [selectedMentorId, setSelectedMentorId] = useState<string | null>(null)
   const [selectedMentorName, setSelectedMentorName] = useState<string>("")
   const [isMentorDetailsOpen, setIsMentorDetailsOpen] = useState(false)
+  
+  // Estados para modal de relatório
+  const [isRelatorioModalOpen, setIsRelatorioModalOpen] = useState(false)
+  const [tipoRelatorio, setTipoRelatorio] = useState<'mentores' | 'performance'>('mentores')
+  const [periodoInicio, setPeriodoInicio] = useState<string>("")
+  const [periodoFim, setPeriodoFim] = useState<string>("")
+  const [incluirInativos, setIncluirInativos] = useState<boolean>(false)
+  const [isExporting, setIsExporting] = useState(false)
   
   const { addToast } = useToast()
 
@@ -193,6 +205,48 @@ export default function AdminMentoresPage() {
     return date.toLocaleDateString('pt-BR')
   }
 
+  const handleExportRelatorio = async () => {
+    try {
+      setIsExporting(true)
+
+      if (tipoRelatorio === 'mentores') {
+        const blob = await relatoriosService.exportRelatorioMentores({
+          periodo_inicio: periodoInicio || undefined,
+          periodo_fim: periodoFim || undefined,
+          incluir_inativos: incluirInativos
+        })
+        relatoriosService.downloadCSV(blob, `relatorio_mentores_${new Date().toISOString().slice(0,10)}.csv`)
+      } else {
+        const blob = await relatoriosService.exportRelatorioPerformance({
+          periodo_inicio: periodoInicio || undefined,
+          periodo_fim: periodoFim || undefined
+        })
+        relatoriosService.downloadCSV(blob, `relatorio_performance_${new Date().toISOString().slice(0,10)}.csv`)
+      }
+
+      addToast({
+        type: "success",
+        title: "Relatório exportado",
+        message: "O relatório foi baixado com sucesso!",
+      })
+
+      setIsRelatorioModalOpen(false)
+      // Reset form
+      setPeriodoInicio("")
+      setPeriodoFim("")
+      setIncluirInativos(false)
+    } catch (error) {
+      console.error('Erro ao exportar relatório:', error)
+      addToast({
+        type: "error",
+        title: "Erro ao exportar relatório",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -223,15 +277,8 @@ export default function AdminMentoresPage() {
           <p className="text-gray-600 mt-2">Gerencie mentores, aprove cadastros e monitore performance</p>
         </div>
         <Button 
-          className="border-2 border-gray-300"
-          onClick={() => {
-            // TODO: Implementar exportação de relatório
-            addToast({
-              type: "info",
-              title: "Em desenvolvimento",
-              message: "Funcionalidade de exportação em breve",
-            })
-          }}
+          className="bg-green-600 hover:bg-green-700 text-white"
+          onClick={() => setIsRelatorioModalOpen(true)}
         >
           <FontAwesomeIcon icon={faFileAlt} className="h-4 w-4 mr-2" />
           Gerar Relatório
@@ -418,6 +465,123 @@ export default function AdminMentoresPage() {
         isOpen={isMentorDetailsOpen}
         onClose={closeMentorDetails}
       />
+
+      {/* Modal de Gerar Relatório */}
+      <Dialog open={isRelatorioModalOpen} onOpenChange={setIsRelatorioModalOpen}>
+        <DialogContent className="max-w-2xl bg-white border-0 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <FontAwesomeIcon icon={faFileAlt} className="h-6 w-6 text-green-600" />
+              Gerar Relatório
+            </DialogTitle>
+            <DialogDescription>
+              Escolha o tipo de relatório e configure os filtros opcionais
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Tipo de Relatório */}
+            <div className="space-y-2">
+              <Label htmlFor="tipo-relatorio" className="text-base font-semibold">Tipo de Relatório</Label>
+              <Select value={tipoRelatorio} onValueChange={(value: 'mentores' | 'performance') => setTipoRelatorio(value)}>
+                <SelectTrigger id="tipo-relatorio">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mentores">
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faUserCheck} className="h-4 w-4" />
+                      <span>Relatório de Mentores (Dados Gerais)</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="performance">
+                    <div className="flex items-center gap-2">
+                      <FontAwesomeIcon icon={faChartLine} className="h-4 w-4" />
+                      <span>Relatório de Performance (Consolidado)</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-500 mt-1">
+                {tipoRelatorio === 'mentores' 
+                  ? 'Inclui dados pessoais, estatísticas detalhadas e informações completas dos mentores'
+                  : 'Focado em métricas de performance, taxa de conclusão e NPS médio'}
+              </p>
+            </div>
+
+            {/* Período */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="periodo-inicio">Data de Início (Opcional)</Label>
+                <Input
+                  id="periodo-inicio"
+                  type="date"
+                  value={periodoInicio}
+                  onChange={(e) => setPeriodoInicio(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="periodo-fim">Data de Fim (Opcional)</Label>
+                <Input
+                  id="periodo-fim"
+                  type="date"
+                  value={periodoFim}
+                  onChange={(e) => setPeriodoFim(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Incluir Inativos (apenas para relatório de mentores) */}
+            {tipoRelatorio === 'mentores' && (
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="incluir-inativos"
+                  checked={incluirInativos}
+                  onChange={(e) => setIncluirInativos(e.target.checked)}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <Label htmlFor="incluir-inativos" className="text-sm font-medium cursor-pointer">
+                  Incluir mentores inativos
+                </Label>
+              </div>
+            )}
+
+            {/* Botões */}
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsRelatorioModalOpen(false)
+                  setPeriodoInicio("")
+                  setPeriodoFim("")
+                  setIncluirInativos(false)
+                }}
+                disabled={isExporting}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleExportRelatorio}
+                disabled={isExporting}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isExporting ? (
+                  <>
+                    <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 mr-2 animate-spin" />
+                    Exportando...
+                  </>
+                ) : (
+                  <>
+                    <FontAwesomeIcon icon={faDownload} className="h-4 w-4 mr-2" />
+                    Exportar CSV
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

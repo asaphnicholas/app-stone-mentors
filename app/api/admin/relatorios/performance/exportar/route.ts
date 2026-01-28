@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server'
 const BACKEND_URL = process.env.BACKEND_URL || 'http://127.0.0.1:8000'
 
 /**
- * GET /api/admin/relatorios/mentores/exportar
- * Exporta relatório de mentores em CSV
+ * GET /api/admin/relatorios/performance/exportar
+ * Exporta relatório de performance de mentores em CSV
  */
 export async function GET(request: NextRequest) {
   try {
@@ -22,13 +22,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     
     // Construir URL com parâmetros
-    const backendUrl = new URL(`${BACKEND_URL}/api/v1/admin/relatorios/mentores/exportar`)
+    const backendUrl = new URL(`${BACKEND_URL}/api/v1/admin/relatorios/performance/exportar`)
     
     // Passar filtros para o backend
     const allowedParams = [
       'periodo_inicio',
-      'periodo_fim',
-      'incluir_inativos'
+      'periodo_fim'
     ]
     
     allowedParams.forEach(param => {
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log('[Admin Relatorios Mentores] Fazendo requisição para:', backendUrl.toString())
+    console.log('[Admin Relatorios Performance] Fazendo requisição para:', backendUrl.toString())
 
     // Forward request to backend
     const response = await fetch(backendUrl.toString(), {
@@ -50,9 +49,9 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      console.error('[Admin Relatorios Mentores] Erro na resposta do backend:', response.status, errorData)
+      console.error('[Admin Relatorios Performance] Erro na resposta do backend:', response.status, errorData)
       return NextResponse.json(
-        { message: errorData.message || errorData.detail || 'Erro ao exportar relatório de mentores' },
+        { message: errorData.message || errorData.detail || 'Erro ao exportar relatório de performance' },
         { status: response.status }
       )
     }
@@ -60,9 +59,9 @@ export async function GET(request: NextRequest) {
     // Get CSV content
     const csvContent = await response.text()
     const contentDisposition = response.headers.get('Content-Disposition') || 
-      `attachment; filename="relatorio_mentores_${new Date().toISOString().slice(0,10).replace(/-/g, '')}_${new Date().toTimeString().slice(0,8).replace(/:/g, '')}.csv"`
+      `attachment; filename="relatorio_performance_${new Date().toISOString().slice(0,10).replace(/-/g, '')}_${new Date().toTimeString().slice(0,8).replace(/:/g, '')}.csv"`
 
-    console.log('[Admin Relatorios Mentores] Export bem-sucedido')
+    console.log('[Admin Relatorios Performance] Export bem-sucedido')
 
     // Return CSV file
     return new NextResponse(csvContent, {
@@ -74,7 +73,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Admin Relatorios Mentores] Erro no proxy:', error)
+    console.error('[Admin Relatorios Performance] Erro no proxy:', error)
     return NextResponse.json(
       { 
         message: 'Erro interno do servidor',
