@@ -26,10 +26,14 @@ import {
   faSpinner,
   faTimes,
   faDownload,
-  faChartLine
+  faChartLine,
+  faCheck,
+  faBan,
+  faClock
 } from "@fortawesome/free-solid-svg-icons"
 import { mentorsService } from "@/lib/services/mentors"
 import { usersService } from "@/lib/services/users"
+import type { User } from "@/lib/services/users"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 import relatoriosService from "@/lib/services/relatorios"
 
@@ -69,10 +73,16 @@ export default function AdminMentoresPage() {
   const [incluirInativos, setIncluirInativos] = useState<boolean>(false)
   const [isExporting, setIsExporting] = useState(false)
   
+  // Estados para mentores pendentes de aprovação
+  const [pendingMentors, setPendingMentors] = useState<User[]>([])
+  const [isLoadingPending, setIsLoadingPending] = useState(false)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+  
   const { addToast } = useToast()
 
   useEffect(() => {
     loadMentors()
+    loadPendingMentors()
   }, [])
 
   useEffect(() => {
@@ -163,6 +173,64 @@ export default function AdminMentoresPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadPendingMentors = async () => {
+    try {
+      setIsLoadingPending(true)
+      const response = await usersService.getPendingUsers()
+      const list = response.usuarios ?? []
+      setPendingMentors(Array.isArray(list) ? list : [])
+    } catch (error) {
+      console.error('Erro ao carregar mentores pendentes:', error)
+      setPendingMentors([])
+    } finally {
+      setIsLoadingPending(false)
+    }
+  }
+
+  const handleApproveMentor = async (userId: string) => {
+    try {
+      setApprovingId(userId)
+      await usersService.approveUser(userId, { status: 'ativo' })
+      addToast({
+        type: "success",
+        title: "Mentor aprovado",
+        message: "O mentor foi aprovado e já pode acessar o sistema.",
+      })
+      await loadPendingMentors()
+      await loadMentors()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao aprovar",
+        message: error instanceof Error ? error.message : "Erro ao aprovar mentor",
+      })
+    } finally {
+      setApprovingId(null)
+    }
+  }
+
+  const handleRejectMentor = async (userId: string) => {
+    try {
+      setApprovingId(userId)
+      await usersService.approveUser(userId, { status: 'inativo' })
+      addToast({
+        type: "success",
+        title: "Mentor rejeitado",
+        message: "O cadastro do mentor foi rejeitado.",
+      })
+      await loadPendingMentors()
+      await loadMentors()
+    } catch (error) {
+      addToast({
+        type: "error",
+        title: "Erro ao rejeitar",
+        message: error instanceof Error ? error.message : "Erro ao rejeitar mentor",
+      })
+    } finally {
+      setApprovingId(null)
     }
   }
 
@@ -284,6 +352,93 @@ export default function AdminMentoresPage() {
           Gerar Relatório
         </Button>
       </div>
+
+      {/* Mentores Pendentes de Aprovação */}
+      {(isLoadingPending || pendingMentors.length > 0) && (
+        <Card className="border-yellow-200 bg-yellow-50/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faClock} className="h-5 w-5 text-yellow-600" />
+              <CardTitle>Mentores Pendentes de Aprovação</CardTitle>
+            </div>
+            <CardDescription>
+              {isLoadingPending
+                ? "Carregando..."
+                : `${pendingMentors.length} mentor${pendingMentors.length !== 1 ? "es" : ""} aguardando aprovação`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingPending ? (
+              <div className="flex items-center justify-center py-6">
+                <FontAwesomeIcon icon={faSpinner} className="h-6 w-6 animate-spin text-yellow-600" />
+              </div>
+            ) : pendingMentors.length === 0 ? null : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Área de Atuação</TableHead>
+                    <TableHead>Data Cadastro</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingMentors.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell className="font-medium">{user.nome}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.telefone || "-"}</TableCell>
+                      <TableCell>
+                        {user.area_atuacao
+                          ? mentorsService.getAreaAtuacaoLabel(user.area_atuacao)
+                          : "-"}
+                      </TableCell>
+                      <TableCell>{formatDate(user.created_at)}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleApproveMentor(user.id)}
+                            disabled={approvingId !== null}
+                          >
+                            {approvingId === user.id ? (
+                              <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <FontAwesomeIcon icon={faCheck} className="h-4 w-4 mr-1" />
+                                Aprovar
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => handleRejectMentor(user.id)}
+                            disabled={approvingId !== null}
+                          >
+                            {approvingId === user.id ? (
+                              <FontAwesomeIcon icon={faSpinner} className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <FontAwesomeIcon icon={faBan} className="h-4 w-4 mr-1" />
+                                Rejeitar
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search Bar e Filtros */}
       <Card>
