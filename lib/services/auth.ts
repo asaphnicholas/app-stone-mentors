@@ -126,9 +126,9 @@ class AuthService {
         throw new ApiError('Área de atuação inválida', 400)
       }
 
-      // Validate area_formacao
+      // Validate area_formacao (escolaridade)
       if (!isValidAreaFormacao(userData.area_formacao)) {
-        throw new ApiError('Área de formação inválida', 400)
+        throw new ApiError('Escolaridade inválida', 400)
       }
 
       // Prepare registration data with role as mentor
@@ -176,9 +176,9 @@ class AuthService {
         throw new ApiError('Área de atuação inválida', 400)
       }
 
-      // Validate area_formacao if provided
+      // Validate area_formacao (escolaridade) if provided
       if (userData.area_formacao && !isValidAreaFormacao(userData.area_formacao)) {
-        throw new ApiError('Área de formação inválida', 400)
+        throw new ApiError('Escolaridade inválida', 400)
       }
 
       const response = await apiService.post<RegisterResponse>(

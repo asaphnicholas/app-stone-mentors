@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, CheckCircle, AlertCircle, Check } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
-import { AREAS_FORMACAO } from "@/lib/constants/areas-formacao"
+import { ESCOLARIDADE_OPCOES } from "@/lib/constants/areas-formacao"
 import { useAuth } from "@/contexts/auth-context"
 import { type RegisterWithTokenRequest as AuthRegisterWithTokenRequest } from "@/lib/services/auth"
 
@@ -395,19 +395,19 @@ export default function RegisterWithTokenPage() {
               </Select>
             </div>
 
-            {/* Área de formação */}
+            {/* Escolaridade */}
             <div className="space-y-2">
               <Label htmlFor="area_formacao" className="text-sm font-medium text-gray-700">
-                Área de formação
+                Escolaridade
               </Label>
               <Select value={formData.area_formacao} onValueChange={(value) => handleInputChange("area_formacao", value)}>
                 <SelectTrigger className="h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200 rounded-xl">
-                  <SelectValue placeholder="Selecione sua formação" />
+                  <SelectValue placeholder="Selecione sua escolaridade" />
                 </SelectTrigger>
                 <SelectContent>
-                  {AREAS_FORMACAO.map((area) => (
-                    <SelectItem key={area.value} value={area.value}>
-                      {area.label}
+                  {ESCOLARIDADE_OPCOES.map((opcao) => (
+                    <SelectItem key={opcao.value} value={opcao.value}>
+                      {opcao.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

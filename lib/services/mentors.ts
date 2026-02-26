@@ -1,5 +1,6 @@
 import { apiService } from './api'
 import { API_ENDPOINTS } from '@/lib/config/env'
+import { getAreaFormacaoLabel as getEscolaridadeLabel } from '@/lib/constants/areas-formacao'
 
 // Error class
 class ApiError extends Error {
@@ -365,16 +366,7 @@ class MentorsService {
   }
 
   getAreaFormacaoLabel(area: string) {
-    const areas: Record<string, string> = {
-      'CIENCIA_COMPUTACAO_TI': 'Ciência da Computação / TI',
-      'ADMINISTRACAO': 'Administração',
-      'ENGENHARIA': 'Engenharia',
-      'MARKETING': 'Marketing',
-      'FINANCAS': 'Finanças',
-      'RECURSOS_HUMANOS': 'Recursos Humanos',
-      'OUTRO': 'Outro'
-    }
-    return areas[area] || area
+    return getEscolaridadeLabel(area)
   }
 
   // Método para desativar mentor

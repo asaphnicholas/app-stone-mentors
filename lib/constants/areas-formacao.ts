@@ -1,62 +1,35 @@
-// Áreas de formação definidas no banco de dados
-// CREATE TYPE area_formacao AS ENUM (...)
-export const AREAS_FORMACAO = [
-  { 
-    value: "ADMINISTRACAO", 
-    label: "Administração" 
-  },
-  { 
-    value: "ECONOMIA_FINANCAS", 
-    label: "Economia & Finanças" 
-  },
-  { 
-    value: "ENGENHARIA", 
-    label: "Engenharia" 
-  },
-  { 
-    value: "CIENCIA_COMPUTACAO_TI", 
-    label: "Ciência da Computação & TI" 
-  },
-  { 
-    value: "MARKETING_PUBLICIDADE", 
-    label: "Marketing & Publicidade" 
-  },
-  { 
-    value: "RELACOES_PUBLICAS_JORNALISMO", 
-    label: "Relações Públicas & Jornalismo" 
-  },
-  { 
-    value: "DIREITO", 
-    label: "Direito" 
-  },
-  { 
-    value: "RECURSOS_HUMANOS_PSICOLOGIA", 
-    label: "Recursos Humanos & Psicologia" 
-  },
-  { 
-    value: "RELACOES_INTERNACIONAIS", 
-    label: "Relações Internacionais" 
-  },
-  { 
-    value: "DESIGN_UX", 
-    label: "Design & UX" 
-  },
-  { 
-    value: "OUTRO", 
-    label: "Outro" 
-  },
+// Escolaridade (campo area_formacao na API)
+// Valores enviados/recebidos pela API e labels exibidos no front
+export const ESCOLARIDADE_OPCOES = [
+  { value: 'ensino_medio_completo', label: 'Ensino Médio Completo' },
+  { value: 'ensino_medio_incompleto', label: 'Ensino Médio Incompleto' },
+  { value: 'ensino_superior_completo', label: 'Ensino Superior Completo' },
+  { value: 'ensino_superior_incompleto', label: 'Ensino Superior Incompleto' },
+  { value: 'pos_graduacao_completa', label: 'Pós-Graduação Completa' },
+  { value: 'pos_graduacao_incompleta', label: 'Pós-Graduação Incompleta' },
+  { value: 'mestrado', label: 'Mestrado' },
+  { value: 'doutorado', label: 'Doutorado' },
 ] as const
 
-// Tipo TypeScript para as áreas de formação
-export type AreaFormacao = typeof AREAS_FORMACAO[number]['value']
+/** @deprecated Use ESCOLARIDADE_OPCOES. Mantido para compatibilidade de imports. */
+export const AREAS_FORMACAO = ESCOLARIDADE_OPCOES
 
-// Função helper para obter o label de uma área de formação
-export function getAreaFormacaoLabel(value: AreaFormacao): string {
-  const area = AREAS_FORMACAO.find(area => area.value === value)
-  return area?.label || value
+export type Escolaridade = (typeof ESCOLARIDADE_OPCOES)[number]['value']
+
+/** @deprecated Use Escolaridade. Mantido para compatibilidade. */
+export type AreaFormacao = Escolaridade
+
+/**
+ * Retorna o label de escolaridade para exibição.
+ * area_formacao vazio ou desconhecido retorna "—" (não informado).
+ */
+export function getAreaFormacaoLabel(value: string | null | undefined): string {
+  if (value == null || value === '') return '—'
+  const opcao = ESCOLARIDADE_OPCOES.find((o) => o.value === value)
+  return opcao?.label ?? '—'
 }
 
-// Função helper para validar se uma área de formação é válida
-export function isValidAreaFormacao(value: string): value is AreaFormacao {
-  return AREAS_FORMACAO.some(area => area.value === value)
+/** Valida se o valor é uma das opções de escolaridade. */
+export function isValidAreaFormacao(value: string): value is Escolaridade {
+  return ESCOLARIDADE_OPCOES.some((o) => o.value === value)
 }

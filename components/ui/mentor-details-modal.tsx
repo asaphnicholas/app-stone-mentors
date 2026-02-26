@@ -230,7 +230,7 @@ export function MentorDetailsModal({
               <p className="font-semibold text-gray-900">{mentorsService.getAreaAtuacaoLabel(mentorDetails.mentor.area_atuacao)}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Área de Formação</p>
+              <p className="text-sm text-gray-600">Escolaridade</p>
               <p className="font-semibold text-gray-900">{mentorsService.getAreaFormacaoLabel(mentorDetails.mentor.area_formacao)}</p>
             </div>
             <div>
