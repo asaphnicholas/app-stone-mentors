@@ -538,80 +538,105 @@ export default function AdminMentoresPage() {
         </CardContent>
       </Card>
 
-      {/* Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Lista de Mentores</CardTitle>
-              <CardDescription>
-                {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 'es' : ''} encontrado{filteredMentors.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredMentors.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <FontAwesomeIcon icon={faUserCheck} className="h-12 w-12 text-gray-400 mb-4" />
+      {/* Lista de Mentores em Cards */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            Mentores
+          </h2>
+          <p className="text-sm text-gray-500">
+            {filteredMentors.length} mentor{filteredMentors.length !== 1 ? 'es' : ''} encontrado{filteredMentors.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+
+        {filteredMentors.length === 0 ? (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <FontAwesomeIcon icon={faUserCheck} className="h-14 w-14 text-gray-300 mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {searchTerm ? 'Nenhum mentor encontrado' : 'Nenhum mentor cadastrado'}
               </h3>
-              <p className="text-gray-500 text-center">
-                {searchTerm 
+              <p className="text-gray-500 text-center max-w-sm">
+                {searchTerm
                   ? `Não há mentores correspondentes à busca "${searchTerm}".`
-                  : 'Não há mentores cadastrados no sistema.'
-                }
+                  : 'Não há mentores cadastrados no sistema.'}
               </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Área de Atuação</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Qualificação</TableHead>
-                  <TableHead>Data de Cadastro</TableHead>
-                  <TableHead>Último Login</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredMentors.map((mentor) => (
-                  <TableRow 
-                    key={mentor.id}
-                    onClick={() => handleRowClick(mentor)}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <TableCell className="font-medium">{mentor.nome}</TableCell>
-                    <TableCell>{mentor.email}</TableCell>
-                    <TableCell>{mentor.telefone || '-'}</TableCell>
-                    <TableCell>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredMentors.map((mentor) => (
+              <Card
+                key={mentor.id}
+                className="cursor-pointer hover:shadow-lg hover:border-stone-green-dark/30 transition-all duration-200 overflow-hidden"
+                onClick={() => handleRowClick(mentor)}
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-stone-green-dark/10 flex items-center justify-center text-stone-green-dark font-bold text-lg">
+                      {mentor.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1 overflow-hidden">
+                      <CardTitle
+                        className="text-base overflow-hidden text-ellipsis whitespace-nowrap block"
+                        title={mentor.nome}
+                      >
+                        {mentor.nome}
+                      </CardTitle>
+                      <CardDescription
+                        className="text-xs mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap block"
+                        title={mentor.email}
+                      >
+                        {mentor.email}
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-0">
+                  {mentor.telefone && (
+                    <p
+                      className="text-xs text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap"
+                      title={mentor.telefone}
+                    >
+                      {mentor.telefone}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="secondary" className="text-xs font-normal">
                       {mentorsService.getAreaAtuacaoLabel(mentor.area_atuacao)}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(mentor.status)}</TableCell>
-                    <TableCell>
-                      {mentor.protocolo_concluido ? (
-                        <Badge className="bg-green-100 text-green-800 border-green-200">
-                          Qualificado
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200">
-                          Pendente
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>{formatDate(mentor.created_at)}</TableCell>
-                    <TableCell>{mentor.last_login ? formatDate(mentor.last_login) : '-'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                    </Badge>
+                    {getStatusBadge(mentor.status)}
+                    {mentor.protocolo_concluido ? (
+                      <Badge className="bg-green-100 text-green-800 border-green-200 text-xs">
+                        Qualificado
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-200 text-xs">
+                        Pendente
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Cadastro: {formatDate(mentor.created_at)}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleRowClick(mentor)
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faUserCheck} className="h-3.5 w-3 mr-2" />
+                    Ver detalhes
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Modal de Detalhes do Mentor */}
       <MentorDetailsModal
