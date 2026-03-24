@@ -230,15 +230,19 @@ export default function MentoriaDetailsPage() {
     try {
       setIsCheckingOut(true)
       await mentoriasService.checkoutMentoria(mentoria.mentoria_id, checkoutForm)
-      
+
       addToast({
         type: "success",
         title: "Mentoria finalizada!",
         message: `Mentoria para "${mentoria.negocio.nome}" foi finalizada com sucesso.`,
       })
-      
+
       setIsCheckoutDialogOpen(false)
-      loadMentoriaDetails()
+      if (checkoutForm.proximos_passos === "finalizar") {
+        router.replace("/mentor/mentorias")
+      } else {
+        loadMentoriaDetails()
+      }
     } catch (error) {
       addToast({
         type: "error",

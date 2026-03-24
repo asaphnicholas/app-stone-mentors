@@ -211,6 +211,40 @@ class AuthService {
     }
   }
 
+  /**
+   * Cadastro com convite enviando multipart (inclui foto obrigatória).
+   * O campo `area_formacao` e demais campos vão no FormData com os mesmos nomes do JSON.
+   */
+  async registerWithTokenFormData(formData: FormData): Promise<RegisterResponse> {
+    try {
+      const response = await apiService.post<RegisterResponse>(
+        '/auth/register-with-token',
+        formData,
+        false
+      )
+
+      const userToStore: User = {
+        id: response.id,
+        nome: response.nome,
+        email: response.email,
+        role: response.role,
+        status: response.status === 'pendente' ? 'inativo' : response.status,
+        telefone: response.telefone,
+        competencias: response.competencias,
+        area_atuacao: response.area_atuacao,
+        protocolo_concluido: response.protocolo_concluido,
+        created_at: response.created_at,
+        last_login: response.last_login || ''
+      }
+
+      this.storeUser(userToStore)
+
+      return response
+    } catch (error) {
+      throw this.handleAuthError(error)
+    }
+  }
+
   // Get current user data from server
   async getCurrentUserData(): Promise<User> {
     try {

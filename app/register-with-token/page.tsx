@@ -10,12 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, CheckCircle, AlertCircle, Check } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, CheckCircle, AlertCircle, Check, Camera } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 import { ESCOLARIDADE_OPCOES } from "@/lib/constants/areas-formacao"
 import { useAuth } from "@/contexts/auth-context"
-import { type RegisterWithTokenRequest as AuthRegisterWithTokenRequest } from "@/lib/services/auth"
 
 export default function RegisterWithTokenPage() {
   const searchParams = useSearchParams()
@@ -35,8 +34,10 @@ export default function RegisterWithTokenPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [token, setToken] = useState<string | null>(null)
   const [tokenValid, setTokenValid] = useState<boolean | null>(null)
+  const [fotoFile, setFotoFile] = useState<File | null>(null)
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
   const { addToast } = useToast()
-  const { registerWithToken, isLoading } = useAuth()
+  const { registerWithTokenFormData, isLoading } = useAuth()
 
   // Extract token from URL
   useEffect(() => {
@@ -53,6 +54,12 @@ export default function RegisterWithTokenPage() {
       })
     }
   }, [searchParams, addToast])
+
+  useEffect(() => {
+    return () => {
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview)
+    }
+  }, [fotoPreview])
 
   const formatPhoneNumber = (value: string) => {
     const numbers = value.replace(/\D/g, '')
@@ -75,6 +82,37 @@ export default function RegisterWithTokenPage() {
     }
   }
 
+  const MAX_FOTO_BYTES = 5 * 1024 * 1024
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setFotoFile(null)
+      setFotoPreview(null)
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      addToast({
+        type: 'error',
+        title: 'Arquivo inválido',
+        message: 'Envie apenas uma imagem (JPG, PNG ou WebP).',
+      })
+      e.target.value = ''
+      return
+    }
+    if (file.size > MAX_FOTO_BYTES) {
+      addToast({
+        type: 'error',
+        title: 'Arquivo muito grande',
+        message: 'A foto deve ter no máximo 5 MB.',
+      })
+      e.target.value = ''
+      return
+    }
+    setFotoFile(file)
+    setFotoPreview(URL.createObjectURL(file))
+  }
+
   const validateForm = () => {
     if (!formData.nome.trim()) {
       addToast({
@@ -88,8 +126,8 @@ export default function RegisterWithTokenPage() {
     if (!formData.email.trim()) {
       addToast({
         type: "error",
-        title: "Email obrigatório",
-        message: "Por favor, informe seu email",
+        title: "E-mail corporativo obrigatório",
+        message: "Por favor, informe seu e-mail corporativo",
       })
       return false
     }
@@ -124,8 +162,17 @@ export default function RegisterWithTokenPage() {
     if (!formData.telefone.trim()) {
       addToast({
         type: "error",
-        title: "Telefone obrigatório",
-        message: "Por favor, informe seu telefone",
+        title: "Telefone/WhatsApp obrigatório",
+        message: "Por favor, informe seu telefone ou WhatsApp",
+      })
+      return false
+    }
+
+    if (!fotoFile) {
+      addToast({
+        type: "error",
+        title: "Foto obrigatória",
+        message: "Por favor, anexe uma foto para concluir o cadastro.",
       })
       return false
     }
@@ -167,18 +214,19 @@ export default function RegisterWithTokenPage() {
     if (!validateForm() || !token) return
 
     try {
-      const registerData: AuthRegisterWithTokenRequest = {
-        nome: formData.nome,
-        email: formData.email,
-        senha: formData.senha,
-        telefone: formData.telefone,
-        competencias: formData.competencias || undefined,
-        area_atuacao: formData.area_atuacao as any || undefined, // Type assertion for area_atuacao
-        area_formacao: formData.area_formacao as any || undefined, // Type assertion for area_formacao
-        termo_aceite: formData.termo_aceite,
-      }
-      
-      await registerWithToken(registerData)
+      const fd = new FormData()
+      fd.append('nome', formData.nome.trim())
+      fd.append('email', formData.email.trim())
+      fd.append('senha', formData.senha)
+      fd.append('telefone', formData.telefone.trim())
+      fd.append('competencias', formData.competencias || '')
+      if (formData.area_atuacao) fd.append('area_atuacao', formData.area_atuacao)
+      if (formData.area_formacao) fd.append('area_formacao', formData.area_formacao)
+      fd.append('termo_aceite', formData.termo_aceite ? 'true' : 'false')
+      if (token) fd.append('invite_token', token)
+      if (fotoFile) fd.append('foto', fotoFile)
+
+      await registerWithTokenFormData(fd)
 
       addToast({
         type: "success",
@@ -340,14 +388,14 @@ export default function RegisterWithTokenPage() {
             {/* Email field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                E-mail
+                E-mail corporativo
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="nome.sobrenome@empresa.com"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="pl-10 h-12 border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200 rounded-xl"
@@ -359,7 +407,7 @@ export default function RegisterWithTokenPage() {
             {/* Telefone field */}
             <div className="space-y-2">
               <Label htmlFor="telefone" className="text-sm font-medium text-gray-700">
-                Telefone
+                Telefone/WhatsApp
               </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -373,6 +421,49 @@ export default function RegisterWithTokenPage() {
                   maxLength={15}
                   required
                 />
+              </div>
+            </div>
+
+            {/* Foto do mentor (obrigatória) */}
+            <div className="space-y-2">
+              <Label htmlFor="foto_mentor" className="text-sm font-medium text-gray-700">
+                Foto do mentor <span className="text-red-500">*</span>
+              </Label>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Insira sua foto aqui: Dê preferência para imagens com fundo neutro, boa iluminação e enquadramento da cintura para cima.
+              </p>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50/50 hover:border-stone-green-dark/40 transition-colors">
+                <input
+                  id="foto_mentor"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFotoChange}
+                />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div
+                    className="flex-shrink-0 w-24 h-24 rounded-xl bg-gray-200 border border-gray-300 overflow-hidden flex items-center justify-center"
+                    aria-hidden
+                  >
+                    {fotoPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={fotoPreview} alt="Pré-visualização" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => document.getElementById('foto_mentor')?.click()}
+                    >
+                      Escolher foto
+                    </Button>
+                    <p className="text-xs text-gray-500">JPG, PNG ou WebP · máx. 5 MB</p>
+                  </div>
+                </div>
               </div>
             </div>
 

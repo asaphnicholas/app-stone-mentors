@@ -15,6 +15,7 @@ interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>
   register: (userData: RegisterRequest) => Promise<void>
   registerWithToken: (userData: RegisterWithTokenRequest) => Promise<void>
+  registerWithTokenFormData: (formData: FormData) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -112,6 +113,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const registerWithTokenFormData = async (formData: FormData) => {
+    setState((prev) => ({ ...prev, isLoading: true }))
+
+    try {
+      await authService.registerWithTokenFormData(formData)
+      const user = authService.getCurrentUser()
+      setState({
+        user,
+        isLoading: false,
+        isAuthenticated: false,
+      })
+    } catch (error) {
+      setState((prev) => ({ ...prev, isLoading: false }))
+      throw error
+    }
+  }
+
   const logout = async () => {
     await authService.logout()
     setState({
@@ -122,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/")
   }
 
-  return <AuthContext.Provider value={{ ...state, login, register, registerWithToken, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ ...state, login, register, registerWithToken, registerWithTokenFormData, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

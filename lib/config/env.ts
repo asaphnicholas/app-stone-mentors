@@ -74,6 +74,7 @@ export const API_ENDPOINTS = {
     MENTORS_WITH_MENTORIAS: '/admin/mentors/with-mentorias',
     MENTOR_HISTORICO: (id: string) => `/admin/mentors/${id}/mentorias/historico`,
     MENTOR_PERFORMANCE: (id: string) => `/admin/mentors/${id}/performance`,
+    MENTOR_FOTO: (id: string) => `/admin/mentors/${id}/foto`,
     MENTORS_RELATORIO: '/admin/mentors/relatorios/mentorias',
   },
 

@@ -85,8 +85,8 @@ export default function RegisterPage() {
     if (!formData.email.trim()) {
       addToast({
         type: "error",
-        title: "Email obrigatório",
-        message: "Por favor, informe seu email",
+        title: "E-mail corporativo obrigatório",
+        message: "Por favor, informe seu e-mail corporativo",
       })
       return false
     }
@@ -121,8 +121,8 @@ export default function RegisterPage() {
     if (!formData.telefone.trim()) {
       addToast({
         type: "error",
-        title: "Telefone obrigatório",
-        message: "Por favor, informe seu telefone",
+        title: "Telefone/WhatsApp obrigatório",
+        message: "Por favor, informe seu telefone ou WhatsApp",
       })
       return false
     }
@@ -326,7 +326,7 @@ export default function RegisterPage() {
             {/* Email field */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                E-mail
+                E-mail corporativo
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -345,7 +345,7 @@ export default function RegisterPage() {
             {/* Telefone field */}
             <div className="space-y-2">
               <Label htmlFor="telefone" className="text-sm font-medium text-gray-700">
-                Telefone
+                Telefone/WhatsApp
               </Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />

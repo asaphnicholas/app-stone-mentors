@@ -29,10 +29,13 @@ import {
   faEdit,
   faMapMarkerAlt,
   faBriefcase,
-  faPlay as faPlayIcon
+  faPlay as faPlayIcon,
+  faDownload
 } from "@fortawesome/free-solid-svg-icons"
 import { mentorsService } from "@/lib/services/mentors"
+import { API_ENDPOINTS } from "@/lib/config/env"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
+import { useToast } from "@/components/ui/toast"
 
 interface MentorDetails {
   mentor: {
@@ -46,6 +49,9 @@ interface MentorDetails {
     protocolo_concluido: boolean
     created_at: string
     last_login?: string
+    foto_url?: string | null
+    url_foto?: string | null
+    foto_perfil_url?: string | null
   }
   estatisticas: {
     total_mentorias: number
@@ -111,6 +117,8 @@ export function MentorDetailsModal({
   const [mentorDetails, setMentorDetails] = useState<MentorDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDownloadingFoto, setIsDownloadingFoto] = useState(false)
+  const { addToast } = useToast()
 
   useEffect(() => {
     if (isOpen && mentorId) {
@@ -187,6 +195,49 @@ export function MentorDetailsModal({
     }
   }
 
+  const handleDownloadFoto = async () => {
+    if (!mentorId) return
+    try {
+      setIsDownloadingFoto(true)
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
+      const fetchUrl = `${base}${API_ENDPOINTS.ADMIN.MENTOR_FOTO(mentorId)}`
+      const res = await fetch(fetchUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => null)
+        throw new Error(errJson?.message || 'Não foi possível baixar a foto')
+      }
+      const blob = await res.blob()
+      const cd = res.headers.get('Content-Disposition')
+      let filename = `foto_mentor_${mentorDetails?.mentor.nome?.replace(/\s+/g, '_') || mentorId}.jpg`
+      if (cd) {
+        const m = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd)
+        if (m?.[1]) filename = m[1].replace(/['"]/g, '')
+      }
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(a.href)
+      addToast({ type: 'success', title: 'Download iniciado', message: 'A foto foi salva no seu dispositivo.' })
+    } catch (e) {
+      console.error(e)
+      addToast({
+        type: 'error',
+        title: 'Foto indisponível',
+        message: e instanceof Error ? e.message : 'Não foi possível baixar a foto do mentor.',
+      })
+    } finally {
+      setIsDownloadingFoto(false)
+    }
+  }
+
+  const m = mentorDetails?.mentor
+  const mentorFotoUrl =
+    m?.foto_url || m?.url_foto || m?.foto_perfil_url || undefined
+
   const getTipoMentoriaText = (tipo: string) => {
     switch (tipo.toLowerCase()) {
       case 'primeira':
@@ -257,6 +308,35 @@ export function MentorDetailsModal({
               <p className="text-gray-900 leading-relaxed">{mentorDetails.mentor.competencias}</p>
             </div>
           )}
+
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <p className="text-sm text-gray-600 mb-2">Foto do mentor</p>
+            {mentorFotoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={mentorFotoUrl}
+                alt={`Foto de ${mentorDetails.mentor.nome}`}
+                className="max-h-48 rounded-lg border border-gray-200 object-cover mb-3"
+              />
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                handleDownloadFoto()
+              }}
+              disabled={isDownloadingFoto}
+              className="gap-2"
+            >
+              <FontAwesomeIcon icon={faDownload} className="h-4 w-4" />
+              {isDownloadingFoto ? 'Baixando...' : 'Baixar foto'}
+            </Button>
+            <p className="text-xs text-gray-500 mt-2">
+              Se a pré-visualização não aparecer, use o botão para baixar o arquivo enviado no cadastro.
+            </p>
+          </div>
         </div>
 
         {/* Estatísticas */}

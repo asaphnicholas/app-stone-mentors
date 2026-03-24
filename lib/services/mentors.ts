@@ -24,6 +24,10 @@ export interface Mentor {
   area_atuacao: string
   area_formacao: string
   competencias: string
+  /** URL da foto (se o backend retornar) */
+  foto_url?: string | null
+  url_foto?: string | null
+  foto_perfil_url?: string | null
   protocolo_concluido: boolean
   mentorias_ativas: number
   total_mentorias: number

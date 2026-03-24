@@ -35,7 +35,13 @@ import {
   faHistory
 } from "@fortawesome/free-solid-svg-icons"
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
-import { mentoriasService, type MentorBusiness, type Mentoria } from "@/lib/services/mentorias"
+import {
+  mentoriasService,
+  type MentorBusiness,
+  type Mentoria,
+  countMentorBusinessesVinculoAtivo,
+  mentorBusinessPodeAgendarProxima,
+} from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
 
@@ -335,7 +341,9 @@ export default function MentoriasPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-600">Negócios Vinculados</p>
-                <p className="text-2xl font-bold text-gray-900">{businesses.length}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {countMentorBusinessesVinculoAtivo(businesses)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -390,12 +398,17 @@ export default function MentoriasPage() {
               <Card key={business.negocio_id} className="border-0 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white">
                 <CardContent className="p-6">
                   {/* Header do Card */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
+                  <div className="flex items-center gap-4 mb-4 min-w-0">
+                    <div className="w-12 h-12 shrink-0 bg-gradient-to-br from-stone-green-light to-stone-green-dark rounded-xl flex items-center justify-center shadow-lg">
                       <FontAwesomeIcon icon={faBuilding} className="h-6 w-6 text-white" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900">{business.negocio_nome}</h3>
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="text-lg font-bold text-gray-900 truncate"
+                        title={business.negocio_nome}
+                      >
+                        {business.negocio_nome}
+                      </h3>
                       <Badge className="bg-stone-green-light/10 text-stone-green-dark border-0 mt-1 text-xs">
                         {business.area_atuacao}
                       </Badge>
@@ -404,9 +417,11 @@ export default function MentoriasPage() {
                   
                   {/* Informações do Empreendedor */}
                   <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-stone-green-dark" />
-                      <span className="font-medium">{business.empreendedor_nome}</span>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0">
+                      <FontAwesomeIcon icon={faUser} className="h-4 w-4 shrink-0 text-stone-green-dark" />
+                      <span className="font-medium truncate" title={business.empreendedor_nome}>
+                        {business.empreendedor_nome}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <button
@@ -516,34 +531,47 @@ export default function MentoriasPage() {
                       )}
                     </div>
                   ) : business.mentorias_finalizadas > 0 ? (
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
-                          <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 text-white" />
+                    mentorBusinessPodeAgendarProxima(business) ? (
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center shadow-lg">
+                            <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm">Marque sua próxima mentoria</p>
+                            <p className="text-xs text-gray-600">Continue o acompanhamento</p>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-semibold text-gray-900 text-sm">Marque sua próxima mentoria</p>
-                          <p className="text-xs text-gray-600">Continue o acompanhamento</p>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => (window.location.href = `/mentor/mentorias/historico/${business.negocio_id}`)}
+                            className="flex-1 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
+                          >
+                            <FontAwesomeIcon icon={faHistory} className="h-4 w-4 mr-2" />
+                            Ver Histórico
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="flex gap-2">
+                    ) : (
+                      <div className="space-y-3 mb-4">
+                        <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className="bg-gray-200 text-gray-800 border-0">Finalizado</Badge>
+                          </div>
+                          <p className="text-sm text-gray-700">
+                            Ciclo de mentoria encerrado. Confira o histórico para detalhes das sessões.
+                          </p>
+                        </div>
                         <Button
                           onClick={() => (window.location.href = `/mentor/mentorias/historico/${business.negocio_id}`)}
-                          className="flex-1 bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
+                          className="w-full bg-gradient-to-r from-stone-green-dark to-stone-green-light hover:from-stone-green-light hover:to-stone-green-dark text-white shadow-lg h-10 text-sm"
                         >
                           <FontAwesomeIcon icon={faHistory} className="h-4 w-4 mr-2" />
-                          Ver Histórico
+                          Ver histórico
                         </Button>
-                        {/* <Button
-                          onClick={() => business.proxima_mentoria && (window.location.href = `/mentor/mentorias/${business.proxima_mentoria.id}`)}
-                          className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg h-10 text-sm"
-                        >
-                          <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4 mr-2" />
-                          Ver Detalhes
-                        </Button> */}
                       </div>
-                    </div>
+                    )
                   ) : (
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
@@ -563,18 +591,24 @@ export default function MentoriasPage() {
                     <Button
                       onClick={() => handleContact(business.telefone)}
                       variant="outline"
-                      className="flex-1 border-green-500 text-green-600 hover:bg-green-500 hover:text-white h-10 text-sm"
+                      className={
+                        mentorBusinessPodeAgendarProxima(business)
+                          ? "flex-1 border-green-500 text-green-600 hover:bg-green-500 hover:text-white h-10 text-sm"
+                          : "w-full border-green-500 text-green-600 hover:bg-green-500 hover:text-white h-10 text-sm"
+                      }
                     >
                       <FontAwesomeIcon icon={faWhatsapp} className="h-4 w-4 mr-2" />
                       Contatar
                     </Button>
-                    <Button
-                      onClick={() => handleScheduleSession(business)}
-                      className="flex-1 bg-none border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
-                    >
-                      <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
-                      {business.proxima_mentoria ? "Editar" : "Agendar"}
-                    </Button>
+                    {mentorBusinessPodeAgendarProxima(business) && (
+                      <Button
+                        onClick={() => handleScheduleSession(business)}
+                        className="flex-1 bg-none border-2 border-stone-green-dark text-stone-green-dark hover:bg-stone-green-dark hover:text-white"
+                      >
+                        <FontAwesomeIcon icon={faCalendarPlus} className="h-4 w-4 mr-2" />
+                        {business.proxima_mentoria ? "Editar" : "Agendar"}
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

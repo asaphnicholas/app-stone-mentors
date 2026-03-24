@@ -26,6 +26,12 @@ export interface MentorBusiness {
   total_mentorias: number
   mentorias_confirmadas: number
   mentorias_finalizadas: number
+  /** Quando false, o vínculo foi encerrado (ex.: checkout com finalizar). Registros antigos podem omitir o campo. */
+  vinculo_ativo?: boolean
+  ciclo_finalizado?: boolean
+  status_relacionamento?: string
+  /** Quando false, não exibir CTA de agendar próxima mentoria no painel. */
+  mostrar_agendar_proxima_mentoria?: boolean
   proxima_mentoria?: {
     id: string
     data_agendada: string
@@ -35,6 +41,20 @@ export interface MentorBusiness {
     created_at: string
     confirmada_at?: string
   }
+}
+
+/** Contagem de “Negócios vinculados”: só `vinculo_ativo === true`; se o campo não vier (legado), assume ativo. */
+export function countMentorBusinessesVinculoAtivo(businesses: MentorBusiness[]): number {
+  return businesses.filter((b) => (b.vinculo_ativo ?? true) === true).length
+}
+
+/** Exibir CTA “Marque sua próxima mentoria” e botão Agendar/Editar. */
+export function mentorBusinessPodeAgendarProxima(b: MentorBusiness): boolean {
+  if (b.vinculo_ativo === false) return false
+  if (b.mostrar_agendar_proxima_mentoria === false) return false
+  if (b.ciclo_finalizado === true) return false
+  if (b.status_relacionamento === "finalizado") return false
+  return true
 }
 
 export interface Mentoria {
