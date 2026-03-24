@@ -32,10 +32,10 @@ import {
   faDownload,
   faExclamationTriangle
 } from "@fortawesome/free-solid-svg-icons"
-import adminMentoriasService, { 
+import adminMentoriasService, {
   type MentoriaStats,
   type Mentoria,
-  type MentoriaDetalhes
+  type MentoriaDetalhes,
 } from "@/lib/services/admin-mentorias"
 import diagnosticosService, {
   type Diagnostico,
@@ -163,6 +163,8 @@ export default function MentoriasContent() {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
   const [selectedDiagnostico, setSelectedDiagnostico] = useState<Diagnostico | null>(null)
   const [isDiagnosticoModalOpen, setIsDiagnosticoModalOpen] = useState(false)
+  const [loadingDiagnosticoMentoriaId, setLoadingDiagnosticoMentoriaId] = useState<string | null>(null)
+  const [downloadingDiagnosticoKey, setDownloadingDiagnosticoKey] = useState<string | null>(null)
 
   // Debounce para searchTerm (aguarda 500ms após parar de digitar)
   useEffect(() => {
@@ -319,6 +321,58 @@ export default function MentoriasContent() {
     setSelectedDiagnostico(diagnostico)
     setIsDiagnosticoModalOpen(true)
   }
+
+  const handleViewMentoriaDiagnostico = async (mentoria: Mentoria) => {
+    try {
+      setLoadingDiagnosticoMentoriaId(mentoria.id)
+      const data = await adminMentoriasService.getMentoriaDiagnostico(mentoria.id)
+      setSelectedDiagnostico(data)
+      setIsDiagnosticoModalOpen(true)
+    } catch (error) {
+      console.error("Erro ao carregar diagnóstico da mentoria:", error)
+      addToast({
+        type: "error",
+        title: "Erro ao carregar diagnóstico",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setLoadingDiagnosticoMentoriaId(null)
+    }
+  }
+
+  const handleDownloadMentoriaDiagnostico = async (mentoria: Mentoria, format: "json" | "csv") => {
+    const key = `${mentoria.id}-${format}`
+    try {
+      setDownloadingDiagnosticoKey(key)
+      const blob = await adminMentoriasService.downloadMentoriaDiagnosticoExport(
+        mentoria.id,
+        format,
+        mentoria.recursos_diagnostico
+      )
+      const ext = format === "json" ? "json" : "csv"
+      adminMentoriasService.downloadBlob(blob, `diagnostico_mentoria_${mentoria.id}.${ext}`)
+      addToast({
+        type: "success",
+        title: "Download iniciado",
+        message: `Arquivo .${ext} gerado com sucesso.`,
+      })
+    } catch (error) {
+      console.error("Erro ao exportar diagnóstico da mentoria:", error)
+      addToast({
+        type: "error",
+        title: "Erro ao baixar arquivo",
+        message: error instanceof Error ? error.message : "Erro interno do servidor",
+      })
+    } finally {
+      setDownloadingDiagnosticoKey(null)
+    }
+  }
+
+  const showDiagnosticoRow = (m: Mentoria) =>
+    m.tem_diagnostico ||
+    !!m.diagnostico_id ||
+    !!m.diagnostico_preview ||
+    !!(m.recursos_diagnostico && Object.keys(m.recursos_diagnostico).length > 0)
 
   const loadMentoriaDetails = async (mentoriaId: string) => {
     try {
@@ -780,6 +834,105 @@ export default function MentoriasContent() {
                                     </Button>
                                   </div>
                                 </div>
+
+                                {showDiagnosticoRow(mentoria) && (
+                                  <div className="mt-3 pt-3 border-t border-gray-200 space-y-3">
+                                    {mentoria.diagnostico_preview && (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
+                                        {mentoria.diagnostico_preview.nome_completo && (
+                                          <div>
+                                            <span className="text-gray-500">Nome: </span>
+                                            <span className="font-medium text-gray-900">
+                                              {mentoria.diagnostico_preview.nome_completo}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {mentoria.diagnostico_preview.setor_atuacao && (
+                                          <div>
+                                            <span className="text-gray-500">Setor: </span>
+                                            <span className="font-medium text-gray-900">
+                                              {mentoria.diagnostico_preview.setor_atuacao}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {mentoria.diagnostico_preview.dor_principal && (
+                                          <div className="sm:col-span-2">
+                                            <span className="text-gray-500">Dor principal: </span>
+                                            <span className="font-medium text-gray-900">
+                                              {mentoria.diagnostico_preview.dor_principal}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {mentoria.diagnostico_preview.criado_em && (
+                                          <div>
+                                            <span className="text-gray-500">Preenchido em: </span>
+                                            <span className="font-medium text-gray-900">
+                                              {formatDate(mentoria.diagnostico_preview.criado_em)}
+                                            </span>
+                                          </div>
+                                        )}
+                                  </div>
+                                    )}
+                                    <div className="flex flex-wrap gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="secondary"
+                                        onClick={() => handleViewMentoriaDiagnostico(mentoria)}
+                                        disabled={loadingDiagnosticoMentoriaId === mentoria.id}
+                                        className="bg-stone-100 hover:bg-stone-200"
+                                      >
+                                        {loadingDiagnosticoMentoriaId === mentoria.id ? (
+                                          <div className="h-3 w-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                        ) : (
+                                          <FontAwesomeIcon icon={faClipboardList} className="h-3 w-3 mr-1" />
+                                        )}
+                                        Ver diagnóstico
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleDownloadMentoriaDiagnostico(mentoria, "json")}
+                                        disabled={
+                                          downloadingDiagnosticoKey === `${mentoria.id}-json` ||
+                                          !(
+                                            mentoria.tem_diagnostico ||
+                                            mentoria.diagnostico_id ||
+                                            (mentoria.recursos_diagnostico &&
+                                              Object.keys(mentoria.recursos_diagnostico).length > 0)
+                                          )
+                                        }
+                                      >
+                                        {downloadingDiagnosticoKey === `${mentoria.id}-json` ? (
+                                          <div className="h-3 w-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                        ) : (
+                                          <FontAwesomeIcon icon={faDownload} className="h-3 w-3 mr-1" />
+                                        )}
+                                        Baixar JSON
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleDownloadMentoriaDiagnostico(mentoria, "csv")}
+                                        disabled={
+                                          downloadingDiagnosticoKey === `${mentoria.id}-csv` ||
+                                          !(
+                                            mentoria.tem_diagnostico ||
+                                            mentoria.diagnostico_id ||
+                                            (mentoria.recursos_diagnostico &&
+                                              Object.keys(mentoria.recursos_diagnostico).length > 0)
+                                          )
+                                        }
+                                      >
+                                        {downloadingDiagnosticoKey === `${mentoria.id}-csv` ? (
+                                          <div className="h-3 w-3 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-1" />
+                                        ) : (
+                                          <FontAwesomeIcon icon={faDownload} className="h-3 w-3 mr-1" />
+                                        )}
+                                        Baixar CSV
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>

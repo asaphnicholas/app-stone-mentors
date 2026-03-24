@@ -1,4 +1,6 @@
 import { apiService } from './api'
+import { STORAGE_KEYS } from '@/lib/config/env'
+import type { Diagnostico } from './diagnosticos'
 
 // Error class
 class ApiError extends Error {
@@ -57,6 +59,28 @@ export interface MentoriaNPS {
   nps_legado?: number
 }
 
+/** Preview na listagem GET /admin/mentorias (quando há diagnóstico) */
+export interface DiagnosticoPreviewListagem {
+  nome_completo?: string
+  setor_atuacao?: string
+  dor_principal?: string
+  criado_em?: string
+}
+
+/**
+ * Caminhos relativos devolvidos pela API (ex.: sob /api/v1/admin/...).
+ * O front resolve para o proxy Next `/api/admin/...`.
+ */
+export interface RecursosDiagnostico {
+  /** GET JSON completo do diagnóstico */
+  diagnostico?: string
+  /** Export com format=json */
+  export_json?: string
+  /** Export com format=csv */
+  export_csv?: string
+  [key: string]: string | undefined
+}
+
 export interface Mentoria {
   id: string
   negocio: MentoriaNegocio
@@ -72,6 +96,9 @@ export interface Mentoria {
   tem_checkout: boolean
   nps?: MentoriaNPS
   created_at: string
+  diagnostico_id?: string | null
+  diagnostico_preview?: DiagnosticoPreviewListagem | null
+  recursos_diagnostico?: RecursosDiagnostico | null
 }
 
 export interface MentoriasListResponse {
@@ -277,6 +304,110 @@ class AdminMentoriasService {
       console.error('AdminMentoriasService.getMentoriaDetails - Erro:', error)
       throw this.handleError(error)
     }
+  }
+
+  /**
+   * GET /api/admin/mentorias/{id}/diagnostico
+   * Mesmo payload que GET /api/admin/diagnosticos/mentoria/{id}
+   */
+  async getMentoriaDiagnostico(mentoriaId: string): Promise<Diagnostico> {
+    try {
+      console.log('AdminMentoriasService.getMentoriaDiagnostico - ID:', mentoriaId)
+      const result = await apiService.get<Diagnostico>(
+        `/admin/mentorias/${mentoriaId}/diagnostico`,
+        true
+      )
+      return result
+    } catch (error) {
+      console.error('AdminMentoriasService.getMentoriaDiagnostico - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  /**
+   * Resolve URL do proxy Next para export (usa recursos_diagnostico da listagem quando existir).
+   */
+  resolveMentoriaDiagnosticoExportUrl(
+    mentoriaId: string,
+    format: 'json' | 'csv',
+    recursos?: RecursosDiagnostico | null
+  ): string {
+    const apiBaseUrl = typeof window !== 'undefined'
+      ? (process.env.NEXT_PUBLIC_API_BASE_URL || '/api')
+      : '/api'
+
+    const key = format === 'json' ? 'export_json' : 'export_csv'
+    const raw = recursos?.[key]
+
+    const normalize = (path: string): string => {
+      if (path.startsWith('http://') || path.startsWith('https://')) return path
+      if (path.startsWith('/api/v1')) {
+        return `${apiBaseUrl}${path.replace(/^\/api\/v1/, '')}`
+      }
+      if (path.startsWith('/api/admin')) {
+        return `${apiBaseUrl}${path.replace(/^\/api/, '')}`
+      }
+      if (path.startsWith('/')) {
+        return path.startsWith(apiBaseUrl) ? path : `${apiBaseUrl}${path}`
+      }
+      return `${apiBaseUrl}/${path.replace(/^\//, '')}`
+    }
+
+    if (raw) {
+      return normalize(raw)
+    }
+
+    return `${apiBaseUrl}/admin/mentorias/${mentoriaId}/diagnostico/export?format=${format}`
+  }
+
+  /**
+   * GET /api/admin/mentorias/{id}/diagnostico/export?format=json|csv
+   */
+  async downloadMentoriaDiagnosticoExport(
+    mentoriaId: string,
+    format: 'json' | 'csv',
+    recursos?: RecursosDiagnostico | null
+  ): Promise<Blob> {
+    try {
+      const url = this.resolveMentoriaDiagnosticoExportUrl(mentoriaId, format, recursos)
+      const token =
+        typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) : null
+      if (!token) {
+        throw new ApiError('Token de autenticação não encontrado', 401)
+      }
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new ApiError(
+          errorData?.message || 'Erro ao baixar export do diagnóstico',
+          response.status,
+          errorData
+        )
+      }
+
+      return response.blob()
+    } catch (error) {
+      console.error('AdminMentoriasService.downloadMentoriaDiagnosticoExport - Erro:', error)
+      throw this.handleError(error)
+    }
+  }
+
+  downloadBlob(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', filename)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   }
 
   /**
