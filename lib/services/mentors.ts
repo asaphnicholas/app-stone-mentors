@@ -1,5 +1,5 @@
 import { apiService } from './api'
-import { API_ENDPOINTS } from '@/lib/config/env'
+import { API_ENDPOINTS, STORAGE_KEYS } from '@/lib/config/env'
 import { getAreaFormacaoLabel as getEscolaridadeLabel } from '@/lib/constants/areas-formacao'
 
 // Error class
@@ -30,6 +30,10 @@ export interface Mentor {
   foto_perfil_url?: string | null
   protocolo_concluido: boolean
   mentorias_ativas: number
+  /**
+   * Métrica conforme contrato da API de listagem: pode ser sessões ou conexões — o rótulo na UI deve refletir o que o backend documentar.
+   * Preferir labels explícitos (“sessões” vs “conexões”) em cada tela.
+   */
   total_mentorias: number
   negocios_vinculados: number
   nps_medio: number
@@ -85,7 +89,9 @@ export interface Mentoria {
 export interface MentorHistorico {
   mentor: Mentor
   estatisticas: {
+    /** Total de sessões/registros de mentoria (encontros). */
     total_mentorias: number
+    /** Conexões/ciclos finalizados (empreendimentos), não soma de sessões no cliente. */
     mentorias_finalizadas: number
     mentorias_ativas: number
     nps_medio: number
@@ -104,6 +110,10 @@ export interface MentorPerformance {
     area_formacao: string
   }
   estatisticas_gerais: {
+    /**
+     * Métrica de desempenho no mesmo “eixo” que `negocios_unicos_mentorados` (conexões/empreendimentos);
+     * na UI não somar os dois — escolha um indicador ou mostre um só com rótulo claro.
+     */
     total_mentorias_realizadas: number
     mentorias_agendadas: number
     taxa_conclusao: number
@@ -196,6 +206,42 @@ class MentorsService {
       message: 'Erro interno do servidor',
       status: 500
     } as ApiError
+  }
+
+  /** URL para pré-visualização da foto (pública, via proxy Next). */
+  getMentorFotoPublicUrl(mentorId: string): string {
+    const base = typeof window !== 'undefined'
+      ? (process.env.NEXT_PUBLIC_API_BASE_URL || '/api')
+      : '/api'
+    return `${base}${API_ENDPOINTS.MENTORS.FOTO_PUBLIC(mentorId)}`
+  }
+
+  /**
+   * Download da foto pelo endpoint admin autenticado.
+   */
+  async downloadMentorFotoAdmin(mentorId: string): Promise<{ blob: Blob; filename: string }> {
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN) : null
+    if (!token) {
+      throw { message: 'Sessão expirada. Faça login novamente.', status: 401 }
+    }
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
+    const url = `${base}${API_ENDPOINTS.ADMIN.MENTOR_FOTO(mentorId)}`
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => null)
+      throw { message: errJson?.message || 'Não foi possível baixar a foto', status: res.status }
+    }
+    const blob = await res.blob()
+    const cd = res.headers.get('Content-Disposition')
+    let filename = `foto_mentor_${mentorId}.jpg`
+    if (cd) {
+      const m = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd)
+      if (m?.[1]) filename = m[1].replace(/['"]/g, '')
+    }
+    return { blob, filename }
   }
 
   // Listar mentores com/sem mentorias ativas

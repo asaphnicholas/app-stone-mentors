@@ -284,9 +284,9 @@ export default function BusinessHistoryPage() {
                 <FontAwesomeIcon icon={faChartLine} className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600">Total de Mentorias</p>
+                <p className="text-xs font-medium text-gray-600">Sessões registradas</p>
                 <p className="text-2xl font-bold text-gray-900">{historyData.total_mentorias}</p>
-                <p className="text-xs text-blue-600 font-medium">Sessões realizadas</p>
+                <p className="text-xs text-blue-600 font-medium">Total de registros de mentoria</p>
               </div>
             </div>
           </CardContent>
@@ -299,9 +299,9 @@ export default function BusinessHistoryPage() {
                 <FontAwesomeIcon icon={faCheckCircle} className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-600">Mentorias Finalizadas</p>
+                <p className="text-xs font-medium text-gray-600">Sessões finalizadas</p>
                 <p className="text-2xl font-bold text-gray-900">{historyData.mentorias_finalizadas}</p>
-                <p className="text-xs text-green-600 font-medium">Com sucesso</p>
+                <p className="text-xs text-green-600 font-medium">Encontros concluídos neste negócio</p>
               </div>
             </div>
           </CardContent>

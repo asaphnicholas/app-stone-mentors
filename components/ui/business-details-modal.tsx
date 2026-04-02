@@ -249,7 +249,7 @@ export function BusinessDetailsModal({
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div className="text-center p-6 bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-2xl shadow-lg">
                       <FontAwesomeIcon icon={faHandshake} className="h-8 w-8 mx-auto mb-3" />
-                      <p className="text-sm font-medium mb-1">Total</p>
+                      <p className="text-sm font-medium mb-1">Sessões (total)</p>
                       <p className="text-3xl font-bold">{businessDetails.total_mentorias}</p>
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-yellow-500 to-orange-500 text-white rounded-2xl shadow-lg">
@@ -269,7 +269,7 @@ export function BusinessDetailsModal({
                     </div>
                     <div className="text-center p-6 bg-gradient-to-br from-gray-500 to-slate-500 text-white rounded-2xl shadow-lg">
                       <FontAwesomeIcon icon={faCheckCircle} className="h-8 w-8 mx-auto mb-3" />
-                      <p className="text-sm font-medium mb-1">Finalizadas</p>
+                      <p className="text-sm font-medium mb-1">Sessões finalizadas</p>
                       <p className="text-3xl font-bold">{businessDetails.mentorias_finalizadas}</p>
                     </div>
                   </div>

@@ -212,13 +212,13 @@ class AuthService {
   }
 
   /**
-   * Cadastro com convite enviando multipart (inclui foto obrigatória).
-   * O campo `area_formacao` e demais campos vão no FormData com os mesmos nomes do JSON.
+   * Cadastro ativo de mentor via multipart (POST /api/v1/auth/register-mentor-active).
+   * Inclui `foto` obrigatória nesse fluxo. Campos como texto no FormData.
    */
   async registerWithTokenFormData(formData: FormData): Promise<RegisterResponse> {
     try {
       const response = await apiService.post<RegisterResponse>(
-        '/auth/register-with-token',
+        '/auth/register-mentor-active',
         formData,
         false
       )

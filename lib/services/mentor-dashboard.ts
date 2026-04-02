@@ -13,9 +13,14 @@ class ApiError extends Error {
   }
 }
 
-// Types
+// Types — GET /api/v1/mentor/dashboard → mentorias_realizadas
 export interface MentoriasRealizadas {
+  /** Total de registros de mentoria (sessões/encontros), não “conexões”. */
   total_mentorias: number
+  /**
+   * Conexões (empreendimentos/negócios) com pelo menos uma mentoria finalizada —
+   * não somar no cliente contagens por sessão; use este campo para o número grande de “finalizadas” no sentido de ciclo/conexão.
+   */
   concluidas: number
   tempo_medio_meses: number
 }
@@ -45,6 +50,7 @@ export interface MentoriaAtiva {
 }
 
 export interface MentorDashboard {
+  /** Métricas agregadas; use `concluidas` para o card de conexões finalizadas e `total_mentorias` para sessões. */
   mentorias_realizadas: MentoriasRealizadas
   conteudos_concluidos: ConteudosConcluidos
   status_qualificacao: StatusQualificacao

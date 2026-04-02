@@ -10,9 +10,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, Check } from "lucide-react"
+import { Mail, Lock, Eye, EyeOff, User, Phone, Award, Users, TrendingUp, Target, Check, Camera } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { type RegisterRequest } from "@/lib/services/auth"
 import { useToast } from "@/components/ui/toast"
 import { AREAS_ATUACAO } from "@/lib/constants/areas-atuacao"
 import { ESCOLARIDADE_OPCOES } from "@/lib/constants/areas-formacao"
@@ -33,7 +32,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [inviteToken, setInviteToken] = useState<string | null>(null)
-  const { register, isLoading } = useAuth()
+  const [fotoFile, setFotoFile] = useState<File | null>(null)
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null)
+  const { registerWithTokenFormData, isLoading } = useAuth()
   const { addToast } = useToast()
 
   // Detect invite token from URL
@@ -48,6 +49,56 @@ export default function RegisterPage() {
       })
     }
   }, [searchParams, addToast])
+
+  useEffect(() => {
+    return () => {
+      if (fotoPreview) URL.revokeObjectURL(fotoPreview)
+    }
+  }, [fotoPreview])
+
+  const MAX_FOTO_BYTES = 5 * 1024 * 1024
+
+  const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setFotoFile(null)
+      setFotoPreview(null)
+      return
+    }
+    if (!file.type.startsWith("image/")) {
+      addToast({
+        type: "error",
+        title: "Arquivo inválido",
+        message: "Envie apenas uma imagem (JPG, PNG ou WebP).",
+      })
+      e.target.value = ""
+      return
+    }
+    const allowed = ["image/jpeg", "image/png", "image/webp"]
+    if (!allowed.includes(file.type)) {
+      addToast({
+        type: "error",
+        title: "Formato não aceito",
+        message: "Use JPEG, PNG ou WebP.",
+      })
+      e.target.value = ""
+      return
+    }
+    if (file.size > MAX_FOTO_BYTES) {
+      addToast({
+        type: "error",
+        title: "Arquivo muito grande",
+        message: "A foto deve ter no máximo 5 MB.",
+      })
+      e.target.value = ""
+      return
+    }
+    setFotoFile(file)
+    setFotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev)
+      return URL.createObjectURL(file)
+    })
+  }
 
   const formatPhoneNumber = (value: string) => {
     // Remove todos os caracteres não numéricos
@@ -127,6 +178,15 @@ export default function RegisterPage() {
       return false
     }
 
+    if (!fotoFile) {
+      addToast({
+        type: "error",
+        title: "Foto obrigatória",
+        message: "Anexe uma foto para concluir o cadastro.",
+      })
+      return false
+    }
+
     if (!formData.competencias.trim()) {
       addToast({
         type: "error",
@@ -172,24 +232,24 @@ export default function RegisterPage() {
     if (!validateForm()) return
 
     try {
-      const registerData: RegisterRequest = {
-        nome: formData.nome,
-        email: formData.email,
-        senha: formData.senha,
-        telefone: formData.telefone,
-        competencias: formData.competencias,
-        area_atuacao: formData.area_atuacao as any, // Type assertion for area_atuacao
-        area_formacao: formData.area_formacao as any, // Type assertion for area_formacao
-        invite_token: inviteToken,
-        termo_aceite: formData.termo_aceite,
-      }
-      
-      await register(registerData)
+      const fd = new FormData()
+      fd.append("nome", formData.nome.trim())
+      fd.append("email", formData.email.trim())
+      fd.append("senha", formData.senha)
+      fd.append("telefone", formData.telefone.trim())
+      fd.append("competencias", formData.competencias.trim())
+      fd.append("area_atuacao", formData.area_atuacao)
+      fd.append("area_formacao", formData.area_formacao)
+      fd.append("termo_aceite", formData.termo_aceite ? "true" : "false")
+      if (inviteToken) fd.append("invite_token", inviteToken)
+      fd.append("foto", fotoFile)
+
+      await registerWithTokenFormData(fd)
 
       addToast({
         type: "success",
         title: "Cadastro realizado com sucesso!",
-        message: inviteToken 
+        message: inviteToken
           ? "Sua conta foi criada e ativada automaticamente como MENTOR. Faça login para acessar a plataforma e complete o protocolo de qualificação."
           : "Sua conta foi criada. Agora você pode fazer login para acessar a plataforma.",
       })
@@ -359,6 +419,49 @@ export default function RegisterPage() {
                   maxLength={15}
                   required
                 />
+              </div>
+            </div>
+
+            {/* Foto do mentor (obrigatória) — POST register-mentor-active multipart */}
+            <div className="space-y-2">
+              <Label htmlFor="foto_mentor" className="text-sm font-medium text-gray-700">
+                Foto do mentor <span className="text-red-500">*</span>
+              </Label>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Insira sua foto aqui: Dê preferência para imagens com fundo neutro, boa iluminação e enquadramento da cintura para cima.
+              </p>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 bg-gray-50/50 hover:border-stone-green-dark/40 transition-colors">
+                <input
+                  id="foto_mentor"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFotoChange}
+                />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div
+                    className="flex-shrink-0 w-24 h-24 rounded-xl bg-gray-200 border border-gray-300 overflow-hidden flex items-center justify-center"
+                    aria-hidden
+                  >
+                    {fotoPreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={fotoPreview} alt="Pré-visualização" className="w-full h-full object-cover" />
+                    ) : (
+                      <Camera className="w-8 h-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={() => document.getElementById("foto_mentor")?.click()}
+                    >
+                      Escolher foto
+                    </Button>
+                    <p className="text-xs text-gray-500">JPG, PNG ou WebP · máx. 5 MB</p>
+                  </div>
+                </div>
               </div>
             </div>
 

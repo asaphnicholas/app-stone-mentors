@@ -15,9 +15,11 @@ class ApiError extends Error {
   }
 }
 
-// Types
+// Types — GET admin/mentorias/stats (contrato da API)
 export interface MentoriaStats {
+  /** Total de registros de mentoria (sessões/encontros) no período. */
   total_mentorias: number
+  /** Conexões/ciclos finalizados (empreendimentos), alinhado ao backend — não confundir com soma de sessões no front. */
   mentorias_finalizadas: number
   mentorias_agendadas: number
   mentorias_em_andamento: number

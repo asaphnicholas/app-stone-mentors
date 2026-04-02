@@ -511,17 +511,17 @@ export default function MentoriasContent() {
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           <MetricCard
-            title="Total de reuniões (agendadas, confirmadas e finalizadas)"
+            title="Total de mentorias (sessões)"
             value={stats.total_mentorias}
             icon={<FontAwesomeIcon icon={faHandshake} className="h-7 w-7 text-white" />}
-            description={`${stats.mentorias_finalizadas} finalizadas de ${stats.total_mentorias} totais`}
+            description="Registros de encontros (agendadas, confirmadas e finalizadas)"
             color="blue"
           />
           <MetricCard
-            title="Mentorias Finalizadas"
+            title="Conexões finalizadas"
             value={stats.mentorias_finalizadas}
             icon={<FontAwesomeIcon icon={faCheckCircle} className="h-7 w-7 text-white" />}
-            description={`Taxa de conclusão: ${stats.taxa_conclusao.toFixed(1)}%`}
+            description={`Empreendimentos com ciclo encerrado · taxa ${stats.taxa_conclusao.toFixed(1)}%`}
             color="green"
           />
           <MetricCard

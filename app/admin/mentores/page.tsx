@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, type MouseEvent } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,6 +47,9 @@ interface Mentor {
   protocolo_concluido: boolean
   created_at: string
   last_login?: string
+  foto_url?: string | null
+  url_foto?: string | null
+  foto_perfil_url?: string | null
 }
 
 export default function AdminMentoresPage() {
@@ -77,8 +80,43 @@ export default function AdminMentoresPage() {
   const [pendingMentors, setPendingMentors] = useState<User[]>([])
   const [isLoadingPending, setIsLoadingPending] = useState(false)
   const [approvingId, setApprovingId] = useState<string | null>(null)
-  
+  const [downloadingFotoId, setDownloadingFotoId] = useState<string | null>(null)
+
   const { addToast } = useToast()
+
+  const mentorFotoDisplaySrc = (m: Mentor) =>
+    m.foto_url || m.url_foto || m.foto_perfil_url || null
+
+  const handleDownloadMentorFoto = async (e: MouseEvent<HTMLButtonElement>, mentor: Mentor) => {
+    e.stopPropagation()
+    try {
+      setDownloadingFotoId(mentor.id)
+      const { blob, filename } = await mentorsService.downloadMentorFotoAdmin(mentor.id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = filename
+      a.click()
+      URL.revokeObjectURL(url)
+      addToast({
+        type: "success",
+        title: "Download iniciado",
+        message: "A foto foi salva no seu dispositivo.",
+      })
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: string }).message)
+          : "Não foi possível baixar a foto."
+      addToast({
+        type: "error",
+        title: "Foto indisponível",
+        message: msg,
+      })
+    } finally {
+      setDownloadingFotoId(null)
+    }
+  }
 
   useEffect(() => {
     loadMentors()
@@ -573,9 +611,18 @@ export default function AdminMentoresPage() {
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-stone-green-dark/10 flex items-center justify-center text-stone-green-dark font-bold text-lg">
-                      {mentor.nome.charAt(0).toUpperCase()}
-                    </div>
+                    {mentorFotoDisplaySrc(mentor) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mentorFotoDisplaySrc(mentor)!}
+                        alt=""
+                        className="flex-shrink-0 w-12 h-12 rounded-full object-cover border border-stone-green-dark/20 bg-gray-100"
+                      />
+                    ) : (
+                      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-stone-green-dark/10 flex items-center justify-center text-stone-green-dark font-bold text-lg">
+                        {mentor.nome.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1 overflow-hidden">
                       <CardTitle
                         className="text-base overflow-hidden text-ellipsis whitespace-nowrap block"
@@ -619,18 +666,37 @@ export default function AdminMentoresPage() {
                   <p className="text-xs text-gray-500">
                     Cadastro: {formatDate(mentor.created_at)}
                   </p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full mt-2"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleRowClick(mentor)
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faUserCheck} className="h-3.5 w-3 mr-2" />
-                    Ver detalhes
-                  </Button>
+                  <div className="flex flex-col gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDownloadMentorFoto(e, mentor)
+                      }}
+                      disabled={downloadingFotoId === mentor.id}
+                    >
+                      {downloadingFotoId === mentor.id ? (
+                        <FontAwesomeIcon icon={faSpinner} className="h-3.5 w-3 mr-2 animate-spin" />
+                      ) : (
+                        <FontAwesomeIcon icon={faDownload} className="h-3.5 w-3 mr-2" />
+                      )}
+                      Baixar foto
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRowClick(mentor)
+                      }}
+                    >
+                      <FontAwesomeIcon icon={faUserCheck} className="h-3.5 w-3 mr-2" />
+                      Ver detalhes
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

@@ -44,6 +44,7 @@ import {
 } from "@/lib/services/mentorias"
 import { useToast } from "@/components/ui/toast"
 import { formatDateToBR, formatDateTimeToBR } from "@/lib/utils/date"
+import { mentorDashboardService } from "@/lib/services/mentor-dashboard"
 
 // Hook para detectar hidratação
 function useHydration() {
@@ -109,6 +110,8 @@ const LoadingState = () => (
 
 export default function MentoriasPage() {
   const [businesses, setBusinesses] = useState<MentorBusiness[]>([])
+  /** Conexões com ciclo finalizado — mesmo valor que mentorias_realizadas.concluidas (GET /mentor/dashboard). */
+  const [conexoesFinalizadasDashboard, setConexoesFinalizadasDashboard] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("ativas")
   
@@ -153,8 +156,14 @@ export default function MentoriasPage() {
   const loadData = async () => {
     try {
       setIsLoading(true)
-      const businessesData = await mentoriasService.getMentorBusinesses()
+      const [businessesData, dashboard] = await Promise.all([
+        mentoriasService.getMentorBusinesses(),
+        mentorDashboardService.getDashboard().catch(() => null),
+      ])
       setBusinesses(businessesData)
+      setConexoesFinalizadasDashboard(
+        dashboard?.mentorias_realizadas.concluidas ?? null
+      )
     } catch (error) {
       addToast({
         type: "error",
@@ -370,9 +379,9 @@ export default function MentoriasPage() {
                 <FontAwesomeIcon icon={faCheckCircle} className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Mentorias Finalizadas</p>
+                <p className="text-sm font-medium text-gray-600">Conexões finalizadas</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {businesses.reduce((total, b) => total + b.mentorias_finalizadas, 0)}
+                  {conexoesFinalizadasDashboard !== null ? conexoesFinalizadasDashboard : "—"}
                 </p>
               </div>
             </div>
@@ -444,11 +453,11 @@ export default function MentoriasPage() {
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-4 p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-2">
                       <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-stone-green-dark" />
-                      <span className="font-medium">{business.total_mentorias} total</span>
+                      <span className="font-medium">{business.total_mentorias} sessões</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <FontAwesomeIcon icon={faCheckCircle} className="h-4 w-4 text-stone-green-dark" />
-                      <span className="font-medium">{business.mentorias_finalizadas} finalizadas</span>
+                      <span className="font-medium">{business.mentorias_finalizadas} sessões finalizadas</span>
                     </div>
                   </div>
 

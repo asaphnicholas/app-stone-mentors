@@ -351,7 +351,7 @@ export function MentorDetailsModal({
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-900">{mentorDetails.estatisticas.total_mentorias}</p>
-              <p className="text-sm text-gray-600">Total de Mentorias</p>
+              <p className="text-sm text-gray-600">Sessões registradas</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">{mentorDetails.estatisticas.mentorias_ativas}</p>
@@ -359,7 +359,7 @@ export function MentorDetailsModal({
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <p className="text-2xl font-bold text-green-600">{mentorDetails.estatisticas.mentorias_finalizadas}</p>
-              <p className="text-sm text-gray-600">Finalizadas</p>
+              <p className="text-sm text-gray-600">Conexões finalizadas</p>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <p className="text-2xl font-bold text-purple-600">{mentorDetails.estatisticas.nps_medio.toFixed(1)}</p>
@@ -367,7 +367,7 @@ export function MentorDetailsModal({
             </div>
             <div className="text-center p-4 bg-orange-50 rounded-lg">
               <p className="text-2xl font-bold text-orange-600">{mentorDetails.estatisticas.negocios_vinculados}</p>
-              <p className="text-sm text-gray-600">Negócios</p>
+              <p className="text-sm text-gray-600">Negócios vinculados</p>
             </div>
           </div>
         </div>

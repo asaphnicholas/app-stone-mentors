@@ -454,7 +454,7 @@ export function FileViewer({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-2xl font-bold text-gray-900">{businessDetails.total_mentorias}</p>
-              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-sm text-gray-600">Sessões (total)</p>
             </div>
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <p className="text-2xl font-bold text-blue-600">{businessDetails.mentorias_disponiveis}</p>
@@ -466,7 +466,7 @@ export function FileViewer({
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <p className="text-2xl font-bold text-purple-600">{businessDetails.mentorias_finalizadas}</p>
-              <p className="text-sm text-gray-600">Finalizadas</p>
+              <p className="text-sm text-gray-600">Sessões finalizadas</p>
             </div>
           </div>
         </div>

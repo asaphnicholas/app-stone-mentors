@@ -183,7 +183,7 @@ export default function MentorDashboard() {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Total de Mentorias */}
+        {/* Conexões finalizadas (valor = mentorias_realizadas.concluidas no dashboard) */}
         <Card className="group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border-0 shadow-lg overflow-hidden">
           <CardContent className="p-0">
             <div className="bg-gradient-to-br from-stone-green-light to-stone-green-dark p-6 text-white relative overflow-hidden">
@@ -192,9 +192,11 @@ export default function MentorDashboard() {
               
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex-1">
-                  <h3 className="text-sm font-medium text-white/90 mb-2">Negócios Conectados</h3>
+                  <h3 className="text-sm font-medium text-white/90 mb-2">
+                    Conexões finalizadas
+                  </h3>
                   <div className="text-3xl font-bold text-white mb-1">
-                    {dashboardData.mentorias_realizadas.total_mentorias}
+                    {dashboardData.mentorias_realizadas.concluidas}
                   </div>
                 </div>
                 
@@ -206,13 +208,13 @@ export default function MentorDashboard() {
 
             <div className="p-6 bg-white">
               <p className="text-sm text-gray-600 mb-3 leading-relaxed">
-                Total de negócios que você já mentorou com sucesso
+                Empreendimentos em que você concluiu ao menos um ciclo de mentoria (métrica do dashboard, não contagem de sessões no front).
               </p>
-              <div className="flex items-center gap-3">
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-stone-green-light/10 text-stone-green-dark">
-                  <span className="w-2 h-2 rounded-full bg-current mr-2"></span>
-                  {dashboardData.mentorias_realizadas.concluidas} concluídas
-                </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap sm:gap-x-4 sm:gap-y-1">
+                <span className="text-xs text-gray-600">
+                  <span className="font-semibold text-gray-800">Sessões registradas:</span>{' '}
+                  {dashboardData.mentorias_realizadas.total_mentorias}
+                </span>
                 <span className="text-xs text-gray-500 font-medium">
                   Tempo médio: {dashboardData.mentorias_realizadas.tempo_medio_meses} meses
                 </span>

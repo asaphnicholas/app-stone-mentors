@@ -40,6 +40,8 @@ export const API_ENDPOINTS = {
     LIST: '/mentors',
     DETAIL: (id: string) => `/mentors/${id}`,
     UPDATE: (id: string) => `/mentors/${id}`,
+    /** Foto pública (sem auth), proxy Next → GET /api/v1/mentors/{id}/foto */
+    FOTO_PUBLIC: (id: string) => `/mentors/${id}/foto`,
   },
   
   // Mentoring Sessions
