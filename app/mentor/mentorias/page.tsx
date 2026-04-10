@@ -447,6 +447,26 @@ export default function MentoriasPage() {
                         <span className="font-medium">{business.localizacao}</span>
                       </div>
                     )}
+                    {business.descricao && (
+                      <div className="text-sm text-gray-700 leading-snug pt-1 border-t border-gray-100 mt-2">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+                          Sobre o negócio
+                        </span>
+                        <p className="line-clamp-3" title={business.descricao}>
+                          {business.descricao}
+                        </p>
+                      </div>
+                    )}
+                    {business.objetivos_mentoria && (
+                      <div className="text-sm text-gray-700 leading-snug pt-1 border-t border-gray-100 mt-2">
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
+                          Foco da mentoria
+                        </span>
+                        <p className="line-clamp-3" title={business.objetivos_mentoria}>
+                          {business.objetivos_mentoria}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Stats da Mentoria */}

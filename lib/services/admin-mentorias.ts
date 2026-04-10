@@ -171,6 +171,9 @@ export interface MentoriaCheckout {
   nota_programa?: number
   nps_medio?: number
   nps_legado?: number
+  nps_processo?: number
+  nota_experiencia_mentor?: number
+  comentario_experiencia_mentor?: string
   feedback?: string
   observacoes?: string
   proximos_passos?: string

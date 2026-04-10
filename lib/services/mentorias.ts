@@ -22,6 +22,10 @@ export interface MentorBusiness {
   telefone: string
   area_atuacao: string
   localizacao: string
+  /** Resumo do negócio / foco do empreendedor (cadastro admin). */
+  descricao?: string
+  /** Objetivos da mentoria informados no cadastro do negócio. */
+  objetivos_mentoria?: string
   data_vinculacao: string
   total_mentorias: number
   mentorias_confirmadas: number
@@ -66,6 +70,8 @@ export interface Mentoria {
     telefone: string
     area_atuacao: string
     localizacao: string
+    descricao?: string
+    objetivos_mentoria?: string
   }
   data_agendada: string
   tipo: 'primeira' | 'followup'
@@ -124,6 +130,10 @@ export interface Mentoria {
     nota_mentor?: number
     nota_programa?: number
     nps?: number
+    nps_processo?: number
+    /** 0–10: experiência do mentor na mentoria (à parte da nota sobre o empreendedor). */
+    nota_experiencia_mentor?: number
+    comentario_experiencia_mentor?: string
     observacoes?: string
     proximos_passos?: string
     created_at: string
@@ -295,6 +305,11 @@ export interface CheckoutRequest {
   observacoes?: string
   proximos_passos?: string
   nps?: number // Campo legado para compatibilidade
+  /** NPS 0–10: recomendação do processo/programa (Impulso Stone). Opcional para compatibilidade com clientes antigos. */
+  nps_processo?: number
+  /** 0–10: avaliação da experiência do próprio mentor na mentoria. */
+  nota_experiencia_mentor?: number
+  comentario_experiencia_mentor?: string
 }
 
 export interface CheckoutResponse {
@@ -309,6 +324,9 @@ export interface CheckoutResponse {
   nota_programa: number
   
   nps?: number
+  nps_processo?: number
+  nota_experiencia_mentor?: number
+  comentario_experiencia_mentor?: string
   nps_medio?: number
   satisfacao_nivel?: string
   avaliacao_mentor?: string
@@ -381,6 +399,9 @@ export interface MentoriaHistory {
     nota_mentor?: number
     nota_programa?: number
     nps?: number
+    nps_processo?: number
+    nota_experiencia_mentor?: number
+    comentario_experiencia_mentor?: string
     feedback?: string
     observacoes?: string
     proximos_passos?: string

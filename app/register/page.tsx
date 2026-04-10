@@ -242,7 +242,9 @@ export default function RegisterPage() {
       fd.append("area_formacao", formData.area_formacao)
       fd.append("termo_aceite", formData.termo_aceite ? "true" : "false")
       if (inviteToken) fd.append("invite_token", inviteToken)
-      fd.append("foto", fotoFile)
+      if (fotoFile) {
+        fd.append("foto", fotoFile)
+      }
 
       await registerWithTokenFormData(fd)
 

@@ -443,6 +443,47 @@ export default function BusinessHistoryPage() {
                             </div>
                           </div>
                         )}
+                        {typeof mentoria.checkout.nps_processo === "number" && (
+                          <div className="p-3 bg-white/60 rounded-lg text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <FontAwesomeIcon icon={faChartLine} className="h-4 w-4 text-emerald-600" />
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">NPS processo</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-2">
+                              <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nps_processo)}`}>
+                                {mentoria.checkout.nps_processo}
+                              </span>
+                              <Badge className={`${getNPSColor(mentoria.checkout.nps_processo).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nps_processo)} border-0 text-xs`}>
+                                {getNPSLabel(mentoria.checkout.nps_processo)}
+                              </Badge>
+                            </div>
+                          </div>
+                        )}
+                        {typeof mentoria.checkout.nota_experiencia_mentor === "number" &&
+                          mentoria.checkout.nota_experiencia_mentor > 0 && (
+                          <div className="p-3 bg-white/60 rounded-lg md:col-span-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
+                              <span className="text-xs font-medium text-gray-600 uppercase tracking-wide text-center sm:text-left">
+                                Experiência como mentor
+                              </span>
+                              <div className="flex items-center justify-center gap-2">
+                                <span className={`text-2xl font-bold ${getNPSColor(mentoria.checkout.nota_experiencia_mentor)}`}>
+                                  {mentoria.checkout.nota_experiencia_mentor}
+                                </span>
+                                <Badge
+                                  className={`${getNPSColor(mentoria.checkout.nota_experiencia_mentor).replace('text-', 'bg-').replace('-600', '-100')} ${getNPSColor(mentoria.checkout.nota_experiencia_mentor)} border-0 text-xs`}
+                                >
+                                  {getNPSLabel(mentoria.checkout.nota_experiencia_mentor)}
+                                </Badge>
+                              </div>
+                            </div>
+                            {mentoria.checkout.comentario_experiencia_mentor && (
+                              <p className="text-sm text-gray-800 leading-relaxed text-left border-t border-green-100 pt-2 mt-1">
+                                {mentoria.checkout.comentario_experiencia_mentor}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         {/* NPS Score (compatibilidade) */}
                         {mentoria.checkout.nps && !mentoria.checkout.nota_mentoria && (
                           <div className="p-3 bg-white/60 rounded-lg text-center">

@@ -34,7 +34,8 @@ import {
   faSpinner,
   faArrowLeft,
   faClipboardList,
-  faSignOutAlt
+  faSignOutAlt,
+  faComments
 } from "@fortawesome/free-solid-svg-icons"
 import { faWhatsapp } from "@fortawesome/free-brands-svg-icons"
 import { mentoriasService, type Mentoria } from "@/lib/services/mentorias"
@@ -109,6 +110,9 @@ export default function MentoriaDetailsPage() {
     nota_mentoria: 0,
     nota_mentor: 0,
     nota_programa: 0,
+    nps_processo: 0,
+    nota_experiencia_mentor: 0,
+    comentario_experiencia_mentor: "",
     observacoes: "",
     proximos_passos: ""
   })
@@ -157,6 +161,9 @@ export default function MentoriaDetailsPage() {
           nota_mentoria: mentoriaData.checkout.nota_mentoria || 0,
           nota_mentor: mentoriaData.checkout.nota_mentor || 0,
           nota_programa: mentoriaData.checkout.nota_programa || 0,
+          nps_processo: mentoriaData.checkout.nps_processo ?? 0,
+          nota_experiencia_mentor: mentoriaData.checkout.nota_experiencia_mentor ?? 0,
+          comentario_experiencia_mentor: mentoriaData.checkout.comentario_experiencia_mentor || "",
           observacoes: mentoriaData.checkout.observacoes || "",
           proximos_passos: mentoriaData.checkout.proximos_passos || ""
         })
@@ -453,6 +460,19 @@ export default function MentoriaDetailsPage() {
                   <p className="text-sm text-gray-600">Localização</p>
                 </div>
               </div>
+
+              {mentoria.negocio.descricao && (
+                <div className="pt-2 border-t border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Sobre o negócio</p>
+                  <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.descricao}</p>
+                </div>
+              )}
+              {mentoria.negocio.objetivos_mentoria && (
+                <div className={mentoria.negocio.descricao ? "pt-2" : "pt-2 border-t border-gray-100"}>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Foco / objetivos da mentoria</p>
+                  <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.objetivos_mentoria}</p>
+                </div>
+              )}
             </div>
             
             <div className="pt-4 border-t border-gray-200">
@@ -857,6 +877,21 @@ export default function MentoriaDetailsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {typeof mentoria.checkout.nps_processo === "number" && (
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-2">NPS do processo / programa:</p>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{mentoria.checkout.nps_processo}/10</p>
+              </div>
+            )}
+            {typeof mentoria.checkout.nota_experiencia_mentor === "number" && mentoria.checkout.nota_experiencia_mentor > 0 && (
+              <div>
+                <p className="text-sm font-medium text-gray-600 mb-2">Sua experiência como mentor:</p>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{mentoria.checkout.nota_experiencia_mentor}/10</p>
+                {mentoria.checkout.comentario_experiencia_mentor && (
+                  <p className="text-gray-800 mt-2 text-sm leading-relaxed">{mentoria.checkout.comentario_experiencia_mentor}</p>
+                )}
+              </div>
+            )}
             {mentoria.checkout.observacoes && (
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-2">Observações Finais:</p>
@@ -930,6 +965,31 @@ export default function MentoriaDetailsPage() {
               </div>
             </div>
 
+            {/* NPS do processo / programa (0–10) */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                De 0 a 10, quanto você recomendaria o processo / programa (Impulso Stone)?
+              </Label>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">0</span>
+                  <div className="flex-1 mx-4">
+                    <Slider
+                      value={[checkoutForm.nps_processo]}
+                      onValueChange={(value) => setCheckoutForm({ ...checkoutForm, nps_processo: value[0] })}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full slider-green"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600">10</span>
+                </div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-stone-green-dark">{checkoutForm.nps_processo}</div>
+                </div>
+              </div>
+            </div>
 
             <div className="space-y-3">
               <Label htmlFor="checkout_observacoes" className="text-sm font-medium text-gray-700">Observações Finais</Label>
@@ -939,6 +999,46 @@ export default function MentoriaDetailsPage() {
                 onChange={(e) => setCheckoutForm({ ...checkoutForm, observacoes: e.target.value })}
                 placeholder="Descreva como foi a mentoria, pontos positivos, etc..."
                 className="min-h-[80px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
+              />
+            </div>
+
+            <div className="space-y-3 rounded-lg border border-stone-green-light/30 bg-stone-green-light/5 p-4">
+              <Label className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                <FontAwesomeIcon icon={faComments} className="h-4 w-4 text-stone-green-dark" />
+                Avalie de 0 a 10 sobre sua experiência como mentor e nos conte por que você escolheu essa nota
+              </Label>
+              <p className="text-xs text-gray-600">
+                Esta avaliação é sobre a sua vivência na mentoria (diferente da nota sobre o empreendedor e o negócio).
+              </p>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">0</span>
+                  <div className="flex-1 mx-4">
+                    <Slider
+                      value={[checkoutForm.nota_experiencia_mentor]}
+                      onValueChange={(value) =>
+                        setCheckoutForm({ ...checkoutForm, nota_experiencia_mentor: value[0] })
+                      }
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full slider-green"
+                    />
+                  </div>
+                  <span className="text-sm text-gray-600">10</span>
+                </div>
+                <div className="text-center">
+                  <span className="text-xl font-bold text-stone-green-dark">{checkoutForm.nota_experiencia_mentor}</span>
+                </div>
+              </div>
+              <Textarea
+                id="checkout_comentario_experiencia_mentor"
+                value={checkoutForm.comentario_experiencia_mentor}
+                onChange={(e) =>
+                  setCheckoutForm({ ...checkoutForm, comentario_experiencia_mentor: e.target.value })
+                }
+                placeholder="Explique o motivo da sua nota sobre sua experiência como mentor nesta sessão..."
+                className="min-h-[72px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
               />
             </div>
             
@@ -979,7 +1079,14 @@ export default function MentoriaDetailsPage() {
             </Button>
             <Button
               onClick={handleCheckoutMentoria}
-              disabled={checkoutForm.nota_mentoria === 0 || !checkoutForm.proximos_passos || isCheckingOut}
+              disabled={
+                checkoutForm.nota_mentoria === 0 ||
+                checkoutForm.nps_processo === 0 ||
+                checkoutForm.nota_experiencia_mentor === 0 ||
+                !checkoutForm.comentario_experiencia_mentor.trim() ||
+                !checkoutForm.proximos_passos ||
+                isCheckingOut
+              }
               className="px-6 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCheckingOut ? (

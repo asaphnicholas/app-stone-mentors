@@ -1253,10 +1253,60 @@ export default function MentoriasContent() {
                     <CardTitle className="text-lg">Checkout</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
+                    {(selectedMentoria.checkout.nota_mentoria != null ||
+                      selectedMentoria.checkout.nota_mentor != null ||
+                      selectedMentoria.checkout.nota_programa != null) && (
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        {selectedMentoria.checkout.nota_mentoria != null && (
+                          <div>
+                            <Label className="text-gray-500">Nota mentoria (empreendedor)</Label>
+                            <p className="font-medium">{selectedMentoria.checkout.nota_mentoria}</p>
+                          </div>
+                        )}
+                        {selectedMentoria.checkout.nota_mentor != null && (
+                          <div>
+                            <Label className="text-gray-500">Nota mentor</Label>
+                            <p className="font-medium">{selectedMentoria.checkout.nota_mentor}</p>
+                          </div>
+                        )}
+                        {selectedMentoria.checkout.nota_programa != null && (
+                          <div>
+                            <Label className="text-gray-500">Nota programa</Label>
+                            <p className="font-medium">{selectedMentoria.checkout.nota_programa}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {selectedMentoria.checkout.nps_processo != null && (
+                      <div>
+                        <Label className="text-gray-500">NPS processo / programa (0–10)</Label>
+                        <p className="font-medium">{selectedMentoria.checkout.nps_processo}</p>
+                      </div>
+                    )}
+                    {selectedMentoria.checkout.observacoes && (
+                      <div>
+                        <Label className="text-gray-500">Observações da sessão</Label>
+                        <p className="text-sm text-gray-700 mt-1 whitespace-pre-wrap">{selectedMentoria.checkout.observacoes}</p>
+                      </div>
+                    )}
                     {selectedMentoria.checkout.feedback && (
                       <div>
                         <Label className="text-gray-500">Feedback</Label>
                         <p className="text-sm text-gray-700 mt-1">{selectedMentoria.checkout.feedback}</p>
+                      </div>
+                    )}
+                    {selectedMentoria.checkout.nota_experiencia_mentor != null &&
+                      selectedMentoria.checkout.nota_experiencia_mentor > 0 && (
+                      <div className="rounded-lg border border-amber-100 bg-amber-50/50 p-3">
+                        <Label className="text-gray-700">Experiência do mentor na mentoria</Label>
+                        <p className="text-lg font-semibold text-amber-900 mt-1">
+                          Nota: {selectedMentoria.checkout.nota_experiencia_mentor}/10
+                        </p>
+                        {selectedMentoria.checkout.comentario_experiencia_mentor && (
+                          <p className="text-sm text-gray-800 mt-2 whitespace-pre-wrap">
+                            {selectedMentoria.checkout.comentario_experiencia_mentor}
+                          </p>
+                        )}
                       </div>
                     )}
                     {selectedMentoria.checkout.proximos_passos && (

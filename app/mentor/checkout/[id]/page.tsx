@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Building2, User, Clock, Star, MessageSquare, ArrowRight } from "lucide-react"
 import { useToast } from "@/components/ui/toast"
@@ -28,6 +29,10 @@ interface CheckoutFormData {
   nota_mentoria: number
   nota_mentor: number
   nota_programa: number
+  /** NPS 0–10: recomendação do processo/programa; 0 = não informado na UI */
+  nps_processo: number
+  nota_experiencia_mentor: number
+  comentario_experiencia_mentor: string
   observacoes: string
   proximos_passos: "nova_mentoria" | "finalizar"
 }
@@ -42,6 +47,9 @@ export default function CheckoutPage() {
     nota_mentoria: 0,
     nota_mentor: 0,
     nota_programa: 0,
+    nps_processo: 0,
+    nota_experiencia_mentor: 0,
+    comentario_experiencia_mentor: "",
     observacoes: "",
     proximos_passos: "nova_mentoria",
   })
@@ -56,6 +64,9 @@ export default function CheckoutPage() {
         nota_mentoria: formData.nota_mentoria,
         nota_mentor: formData.nota_mentor,
         nota_programa: formData.nota_programa,
+        nps_processo: formData.nps_processo,
+        nota_experiencia_mentor: formData.nota_experiencia_mentor,
+        comentario_experiencia_mentor: formData.comentario_experiencia_mentor.trim(),
         observacoes: formData.observacoes,
         proximos_passos: formData.proximos_passos,
       })
@@ -95,7 +106,15 @@ export default function CheckoutPage() {
     return "Detrator"
   }
 
-  const isFormValid = formData.nota_mentoria > 0 && formData.nota_mentor > 0 && formData.nota_programa > 0 && formData.observacoes.trim() && formData.proximos_passos
+  const isFormValid =
+    formData.nota_mentoria > 0 &&
+    formData.nota_mentor > 0 &&
+    formData.nota_programa > 0 &&
+    formData.nps_processo > 0 &&
+    formData.nota_experiencia_mentor > 0 &&
+    formData.comentario_experiencia_mentor.trim().length > 0 &&
+    formData.observacoes.trim() &&
+    formData.proximos_passos
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -274,6 +293,79 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
 
+        {/* NPS do processo / programa (0–10) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5 text-stone-green-light" />
+              Recomendação do processo / programa
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              De 0 a 10, quanto você recomendaria o processo / programa (Impulso Stone)?
+            </p>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>0</span>
+              <span>10</span>
+            </div>
+            <Slider
+              value={[formData.nps_processo]}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, nps_processo: value[0] }))}
+              max={10}
+              min={0}
+              step={1}
+              className="w-full"
+            />
+            <div className="text-center text-lg font-semibold text-stone-green-dark">{formData.nps_processo}</div>
+          </CardContent>
+        </Card>
+
+        {/* Experiência como mentor */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-stone-green-light" />
+              Sua experiência como mentor
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Avalie de 0 a 10 sobre sua experiência como mentor e nos conte por que você escolheu essa nota (é
+              diferente da avaliação sobre o empreendedor e o programa).
+            </p>
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>0</span>
+              <span>10</span>
+            </div>
+            <Slider
+              value={[formData.nota_experiencia_mentor]}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, nota_experiencia_mentor: value[0] }))
+              }
+              max={10}
+              min={0}
+              step={1}
+              className="w-full"
+            />
+            <div className="text-center text-lg font-semibold text-stone-green-dark">
+              {formData.nota_experiencia_mentor}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="comentario_experiencia_mentor">Por que essa nota?</Label>
+              <Textarea
+                id="comentario_experiencia_mentor"
+                value={formData.comentario_experiencia_mentor}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, comentario_experiencia_mentor: e.target.value }))
+                }
+                rows={4}
+                placeholder="Explique o motivo da sua avaliação sobre sua experiência nesta mentoria..."
+                className="resize-none"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Observações */}
         <Card>
