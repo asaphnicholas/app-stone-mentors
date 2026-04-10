@@ -186,6 +186,11 @@ export default function BusinessHistoryPage() {
     )
   }
 
+  const neg = historyData.negocio
+  const desafiosPrincipais = historyData.desafios_principais ?? neg?.desafios_principais
+  const objetivosMentoriaHist = historyData.objetivos_mentoria ?? neg?.objetivos_mentoria
+  const descricaoHist = historyData.descricao ?? neg?.descricao
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -272,6 +277,38 @@ export default function BusinessHistoryPage() {
               </div>
             </div>
           </div>
+          {(desafiosPrincipais || objetivosMentoriaHist || descricaoHist) && (
+            <div className="mt-4 space-y-3">
+              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+                <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 text-blue-600" />
+                  Desafios e Objetivos
+                </h3>
+                {desafiosPrincipais && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Desafios principais
+                    </p>
+                    <p className="text-sm text-gray-800 leading-relaxed">{desafiosPrincipais}</p>
+                  </div>
+                )}
+                {objetivosMentoriaHist && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                      Objetivos da mentoria
+                    </p>
+                    <p className="text-sm text-gray-800 leading-relaxed">{objetivosMentoriaHist}</p>
+                  </div>
+                )}
+                {descricaoHist && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Descrição</p>
+                    <p className="text-sm text-gray-800 leading-relaxed">{descricaoHist}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

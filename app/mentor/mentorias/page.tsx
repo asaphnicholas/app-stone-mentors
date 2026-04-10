@@ -447,24 +447,43 @@ export default function MentoriasPage() {
                         <span className="font-medium">{business.localizacao}</span>
                       </div>
                     )}
-                    {business.descricao && (
-                      <div className="text-sm text-gray-700 leading-snug pt-1 border-t border-gray-100 mt-2">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-                          Sobre o negócio
+                    {(business.desafios_principais ||
+                      business.objetivos_mentoria ||
+                      business.descricao) && (
+                      <div className="text-sm text-gray-700 leading-snug pt-2 border-t border-gray-100 mt-2 space-y-2">
+                        <span className="text-xs font-semibold text-gray-600 block">
+                          Desafios e objetivos
                         </span>
-                        <p className="line-clamp-3" title={business.descricao}>
-                          {business.descricao}
-                        </p>
-                      </div>
-                    )}
-                    {business.objetivos_mentoria && (
-                      <div className="text-sm text-gray-700 leading-snug pt-1 border-t border-gray-100 mt-2">
-                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1">
-                          Foco da mentoria
-                        </span>
-                        <p className="line-clamp-3" title={business.objetivos_mentoria}>
-                          {business.objetivos_mentoria}
-                        </p>
+                        {business.desafios_principais && (
+                          <div>
+                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-0.5">
+                              Desafios principais
+                            </span>
+                            <p className="line-clamp-3" title={business.desafios_principais}>
+                              {business.desafios_principais}
+                            </p>
+                          </div>
+                        )}
+                        {business.objetivos_mentoria && (
+                          <div>
+                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-0.5">
+                              Objetivos da mentoria
+                            </span>
+                            <p className="line-clamp-3" title={business.objetivos_mentoria}>
+                              {business.objetivos_mentoria}
+                            </p>
+                          </div>
+                        )}
+                        {business.descricao && (
+                          <div>
+                            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-0.5">
+                              Descrição
+                            </span>
+                            <p className="line-clamp-2" title={business.descricao}>
+                              {business.descricao}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

@@ -360,6 +360,7 @@ export default function CheckoutPage() {
                   setFormData((prev) => ({ ...prev, comentario_experiencia_mentor: e.target.value }))
                 }
                 rows={4}
+                maxLength={8000}
                 placeholder="Explique o motivo da sua avaliação sobre sua experiência nesta mentoria..."
                 className="resize-none"
               />

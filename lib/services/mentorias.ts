@@ -24,6 +24,8 @@ export interface MentorBusiness {
   localizacao: string
   /** Resumo do negócio / foco do empreendedor (cadastro admin). */
   descricao?: string
+  /** O que o empreendedor quer trabalhar — mesmo campo do admin “Desafios principais”. */
+  desafios_principais?: string
   /** Objetivos da mentoria informados no cadastro do negócio. */
   objetivos_mentoria?: string
   data_vinculacao: string
@@ -71,6 +73,7 @@ export interface Mentoria {
     area_atuacao: string
     localizacao: string
     descricao?: string
+    desafios_principais?: string
     objetivos_mentoria?: string
   }
   data_agendada: string
@@ -416,6 +419,17 @@ export interface BusinessHistoryResponse {
   telefone: string
   area_atuacao: string
   localizacao: string
+  descricao?: string
+  desafios_principais?: string
+  objetivos_mentoria?: string
+  /** Algumas respostas repetem os dados do negócio neste bloco (além do nível raiz). */
+  negocio?: {
+    id: string
+    nome: string
+    desafios_principais?: string
+    objetivos_mentoria?: string
+    descricao?: string
+  }
   data_vinculacao: string
   total_mentorias: number
   mentorias_finalizadas: number

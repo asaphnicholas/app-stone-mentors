@@ -461,16 +461,36 @@ export default function MentoriaDetailsPage() {
                 </div>
               </div>
 
-              {mentoria.negocio.descricao && (
-                <div className="pt-2 border-t border-gray-100">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Sobre o negócio</p>
-                  <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.descricao}</p>
-                </div>
-              )}
-              {mentoria.negocio.objetivos_mentoria && (
-                <div className={mentoria.negocio.descricao ? "pt-2" : "pt-2 border-t border-gray-100"}>
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Foco / objetivos da mentoria</p>
-                  <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.objetivos_mentoria}</p>
+              {(mentoria.negocio.desafios_principais ||
+                mentoria.negocio.objetivos_mentoria ||
+                mentoria.negocio.descricao) && (
+                <div className="pt-4 mt-2 border-t border-gray-200 rounded-lg bg-gray-50/80 p-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <FontAwesomeIcon icon={faClipboardList} className="h-4 w-4 text-stone-green-dark" />
+                    <p className="text-sm font-semibold text-gray-900">Desafios e Objetivos</p>
+                  </div>
+                  {mentoria.negocio.desafios_principais && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Desafios principais
+                      </p>
+                      <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.desafios_principais}</p>
+                    </div>
+                  )}
+                  {mentoria.negocio.objetivos_mentoria && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                        Objetivos da mentoria
+                      </p>
+                      <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.objetivos_mentoria}</p>
+                    </div>
+                  )}
+                  {mentoria.negocio.descricao && (
+                    <div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Descrição</p>
+                      <p className="text-sm text-gray-800 leading-relaxed">{mentoria.negocio.descricao}</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1038,6 +1058,7 @@ export default function MentoriaDetailsPage() {
                   setCheckoutForm({ ...checkoutForm, comentario_experiencia_mentor: e.target.value })
                 }
                 placeholder="Explique o motivo da sua nota sobre sua experiência como mentor nesta sessão..."
+                maxLength={8000}
                 className="min-h-[72px] border-2 border-gray-200 focus:border-stone-green-dark focus:ring-stone-green-dark/20 transition-all duration-200"
               />
             </div>
