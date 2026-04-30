@@ -110,6 +110,7 @@ const LoadingState = () => (
 
 export default function MentoriasPage() {
   const [businesses, setBusinesses] = useState<MentorBusiness[]>([])
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({})
   /** Conexões com ciclo finalizado — mesmo valor que mentorias_realizadas.concluidas (GET /mentor/dashboard). */
   const [conexoesFinalizadasDashboard, setConexoesFinalizadasDashboard] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -318,6 +319,7 @@ export default function MentoriasPage() {
   // Separar negócios com e sem próxima mentoria
   const businessesWithNextMentoria = businesses.filter(b => b.proxima_mentoria)
   const businessesWithoutNextMentoria = businesses.filter(b => !b.proxima_mentoria)
+  const DESCRIPTION_COLLAPSE_LIMIT = 120
 
   return (
     <div className="space-y-8">
@@ -479,9 +481,26 @@ export default function MentoriasPage() {
                             <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide block mb-0.5">
                               Descrição
                             </span>
-                            <p className="line-clamp-2" title={business.descricao}>
+                            <p
+                              className={expandedDescriptions[business.negocio_id] ? "" : "line-clamp-2"}
+                              title={business.descricao}
+                            >
                               {business.descricao}
                             </p>
+                            {business.descricao.length > DESCRIPTION_COLLAPSE_LIMIT && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setExpandedDescriptions((prev) => ({
+                                    ...prev,
+                                    [business.negocio_id]: !prev[business.negocio_id],
+                                  }))
+                                }
+                                className="mt-1 text-xs font-semibold text-stone-green-dark hover:text-stone-green-light transition-colors"
+                              >
+                                {expandedDescriptions[business.negocio_id] ? "Ver menos" : "Ver mais"}
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
